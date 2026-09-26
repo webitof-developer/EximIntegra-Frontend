@@ -1,0 +1,37 @@
+/**
+ * Client authentication token storage utilities
+ */
+
+const TOKEN_KEY = "exim_token";
+const USER_KEY = "exim_user";
+
+export function getStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredToken(token: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(TOKEN_KEY, token);
+    // Also set a document cookie so server or middleware can access if needed
+    document.cookie = `exim_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`;
+  } catch {
+    // Ignore storage errors in restricted contexts
+  }
+}
+
+export function clearStoredAuth(): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    document.cookie = "exim_token=; path=/; max-age=0";
+  } catch {
+    // Ignore
+  }
+}

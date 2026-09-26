@@ -32,6 +32,36 @@ export interface NavItemConfig {
   glyph?: string;
   iconName?: string;
   section: "CORE" | "ANALYTICS" | "INTELLIGENCE" | "SYSTEM";
-  badge?: "SOON" | "BETA" | "NEW" | "LIVE";
+  badge?: "SOON" | "BETA" | "NEW" | "LIVE" | "DEV";
   disabled?: boolean;
+}
+
+/* Auth Types */
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  company: string;
+  role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR" | "ADMIN";
+  tier: "ENTERPRISE" | "PROFESSIONAL" | "STARTER";
+  createdAt: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password?: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password?: string;
+  name: string;
+  company: string;
+  role?: UserProfile["role"];
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: UserProfile;
 }

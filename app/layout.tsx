@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
+import { AuthInitializer } from "@/components/auth/AuthInitializer";
 
 export const metadata: Metadata = {
   title: "EximIntegra — Trade Intelligence & Cross-Border Advisory",
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full bg-bg font-sans text-ink">
-        <StoreProvider>{children}</StoreProvider>
+        <StoreProvider>
+          <AuthInitializer>{children}</AuthInitializer>
+        </StoreProvider>
       </body>
     </html>
   );
