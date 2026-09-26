@@ -335,3 +335,48 @@ export interface CountryComparisonResponse {
   max_savings_inr: number;
   comparisons: CountryComparisonItem[];
 }
+
+/* Akshara AI Types (§6) */
+export interface AksharaToolCall {
+  id: string;
+  tool_name: string;
+  endpoint: string;
+  summary: string;
+  parameters: Record<string, any>;
+  execution_time_ms: number;
+  provenance: ProvenanceMetadata;
+}
+
+export interface ContextUpdateAction {
+  label: string;
+  payload: Partial<MaterialContext>;
+}
+
+export interface AksharaMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  tool_calls_made?: AksharaToolCall[];
+  unresolved_subclaims?: string[];
+  context_action?: ContextUpdateAction;
+  is_unresolvable_warning?: boolean;
+}
+
+export interface AksharaRequest {
+  message: string;
+  conversation_id?: string;
+  active_context?: Partial<MaterialContext>;
+}
+
+export interface AksharaResponse {
+  message_id: string;
+  conversation_id: string;
+  role: "assistant";
+  content: string;
+  timestamp: string;
+  tool_calls_made: AksharaToolCall[];
+  unresolved_subclaims: string[];
+  context_action?: ContextUpdateAction;
+  is_unresolvable_warning?: boolean;
+}
