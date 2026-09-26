@@ -237,7 +237,7 @@ export interface LandedCostResponse {
   // Total costs
   gross_landed_cost_inr: number;
   gross_landed_cost_usd: number;
-  net_landed_cost_inr: number; // excluding recoverable IGST
+  net_landed_cost_inr: number;
   net_landed_cost_usd: number;
   
   // Unit costs
@@ -251,4 +251,87 @@ export interface LandedCostResponse {
 
   // Metal yield analysis (per §2.3)
   metal_recovery?: MetalRecoveryAnalysis;
+}
+
+/* Eligibility & Scheme Types */
+export interface SchemeDetail {
+  id: string;
+  name: string;
+  category: "FTA" | "EXPORT_PROMOTION" | "DUTY_DEFERRAL" | "REMISSION";
+  status: "ELIGIBLE" | "CONDITIONALLY_ELIGIBLE" | "RESTRICTED" | "NOT_ELIGIBLE";
+  headline_benefit: string;
+  preferential_duty_rate?: number;
+  standard_mfn_rate: number;
+  duty_saving_percentage: number;
+  rules_of_origin: string;
+  documentation_required: string[];
+  effective_date: string;
+  provenance: ProvenanceMetadata;
+}
+
+export interface RegulatoryMeasure {
+  id: string;
+  agency: string;
+  title: string;
+  mandatory: boolean;
+  status: "COMPLIANCE_REQUIRED" | "EXEMPT" | "RECOMMENDED";
+  description: string;
+  provenance: ProvenanceMetadata;
+}
+
+export interface EligibilityResponse {
+  hs_code: string;
+  hs_description: string;
+  effective_as_of_date: string;
+  prominent_disclaimer: string;
+  statutory_policy_status: "Free" | "Restricted" | "Prohibited";
+  schemes: SchemeDetail[];
+  regulatory_measures: RegulatoryMeasure[];
+  last_updated: string;
+}
+
+/* Country Comparison Types */
+export interface CountryComparisonRequest {
+  hs_code: string;
+  assessable_value: number;
+  currency: string;
+  quantity: number;
+  unit: string;
+  countries: string[]; // e.g. ["US", "AE", "AU", "VN"]
+}
+
+export interface CountryComparisonItem {
+  country_code: string;
+  country_name: string;
+  flag: string;
+  trade_agreement: string;
+  is_preferential_fta: boolean;
+  cif_inr: number;
+  bcd_rate: number;
+  bcd_inr: number;
+  sws_inr: number;
+  add_inr: number;
+  igst_inr: number;
+  total_customs_duty_inr: number;
+  port_logistics_inr: number;
+  net_landed_cost_inr: number;
+  net_landed_cost_usd: number;
+  landed_cost_per_mt_inr: number;
+  landed_cost_per_mt_usd: number;
+  contained_metal_cost_mt_inr?: number;
+  savings_vs_mfn_inr: number;
+  savings_percentage: number;
+  is_recommended_arbitrage: boolean;
+  provenance: ProvenanceMetadata;
+}
+
+export interface CountryComparisonResponse {
+  hs_code: string;
+  hs_description: string;
+  quantity: number;
+  unit: string;
+  timestamp: string;
+  best_arbitrage_country: string;
+  max_savings_inr: number;
+  comparisons: CountryComparisonItem[];
 }
