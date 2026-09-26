@@ -6,7 +6,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAppSelector } from "@/store";
 import { useGetEligibilityQuery } from "@/store/eligibilityApi";
 import { SchemeEligibilityView } from "@/components/eligibility/SchemeEligibilityView";
-import { Card, ProvenanceBadge, StatusPill } from "@/components/ui";
+import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert } from "@/components/ui";
 import { formatHsCode } from "@/lib/formatters";
 import { FileCheck, Search, Scale, Sparkles, AlertCircle } from "lucide-react";
 
@@ -84,10 +84,11 @@ export default function EligibilityPage() {
               Evaluating Rules of Origin & Gazette Notifications for HS {activeHs}...
             </div>
           ) : error ? (
-            <div className="p-6 bg-red-dim border border-red/30 rounded-xl text-xs text-red flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 shrink-0" />
-              <span>Failed to fetch scheme eligibility details. Please retry.</span>
-            </div>
+            <DegradedStateAlert
+              title="Trade Scheme & Rules of Origin Unreachable"
+              endpoint={`GET /api/v1/eligibility/${activeHs}`}
+              reason={`Statutory eligibility lookup failed for HS ${activeHs}. DGFT Foreign Trade Policy repository or CEPA concession gazette feed unreachable.`}
+            />
           ) : data ? (
             <SchemeEligibilityView data={data} />
           ) : null}

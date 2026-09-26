@@ -61,6 +61,8 @@ export function StatusPill({
 
   return (
     <span
+      role="status"
+      aria-label={`Status: ${label}`}
       className={cn(
         "inline-flex items-center gap-1.5 font-medium rounded-full uppercase font-mono select-none",
         styles.pill,

@@ -15,6 +15,7 @@ import {
   StepBadge,
   StatusPill,
   ProvenanceBadge,
+  DegradedStateAlert,
 } from "@/components/ui";
 import { DutyCalculationForm } from "@/components/duty/DutyCalculationForm";
 import { DutyBreakdownView } from "@/components/duty/DutyBreakdownView";
@@ -35,6 +36,7 @@ function DutyCalculatorContent() {
     useState<DutyCalculationResponse | null>(null);
   const [lookupId, setLookupId] = useState<string>("");
   const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   // If calculation_id passed in URL query, fetch it
   const { data: fetchedCalc, isLoading: isFetching } =
@@ -50,6 +52,7 @@ function DutyCalculatorContent() {
 
   const handleCalculate = async (req: DutyCalculationRequest) => {
     try {
+      setErrorState(null);
       const res = await calculateDuty(req).unwrap();
       setCalculationResult(res);
       setIsSaved(false);
@@ -66,8 +69,11 @@ function DutyCalculatorContent() {
           dutyCalculationId: res.calculation_id,
         })
       );
-    } catch (err) {
-      alert("Failed to compute statutory duties. Please verify inputs.");
+    } catch (err: any) {
+      setErrorState(
+        err?.data?.error ||
+          "Failed to compute statutory duties from CBIC ICEGATE live engine. Valuation parameters may be invalid or tariff gazette endpoint degraded."
+      );
     }
   };
 
@@ -116,6 +122,15 @@ function DutyCalculatorContent() {
           <ProvenanceBadge type="LIVE" source="Customs First Schedule" compact />
         </div>
       </div>
+
+      {/* Error / Degraded State Alert (§3.5) */}
+      {errorState && (
+        <DegradedStateAlert
+          reason={errorState}
+          endpoint="POST /api/v1/duty/calculate"
+          onRetry={() => setErrorState(null)}
+        />
+      )}
 
       {/* Main Form Card */}
       <Card

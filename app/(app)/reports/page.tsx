@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { AppShell } from "@/components/layout/AppShell";
+import { AuthGuard } from "@/components/auth/AuthGuard";
 import {
   useGetCalculationHistoryQuery,
   useGetDatasetVersionsQuery,
@@ -145,14 +147,19 @@ function ReportsContent() {
 
 export default function ReportsPage() {
   return (
-    <React.Suspense
-      fallback={
-        <div className="p-8 text-center text-muted font-mono text-xs">
-          Loading audit reports...
-        </div>
-      }
-    >
-      <ReportsContent />
-    </React.Suspense>
+    <AuthGuard>
+      <AppShell>
+        <React.Suspense
+          fallback={
+            <div className="p-8 text-center text-muted font-mono text-xs">
+              Loading audit reports...
+            </div>
+          }
+        >
+          <ReportsContent />
+        </React.Suspense>
+      </AppShell>
+    </AuthGuard>
   );
 }
+

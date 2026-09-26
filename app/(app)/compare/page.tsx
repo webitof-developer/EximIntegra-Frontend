@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { setMaterialContext } from "@/store/contextSlice";
 import { useCompareCountriesMutation } from "@/store/eligibilityApi";
 import { CountryComparisonMatrix } from "@/components/compare/CountryComparisonMatrix";
-import { Card, ProvenanceBadge, StatusPill } from "@/components/ui";
+import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert } from "@/components/ui";
 import { formatHsCode } from "@/lib/formatters";
 import {
   CountryComparisonResponse,
@@ -38,6 +38,7 @@ function CompareContent() {
   const [compareCountries, { isLoading }] = useCompareCountriesMutation();
   const [comparisonResult, setComparisonResult] =
     useState<CountryComparisonResponse | null>(null);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   const availableOptions = [
     { code: "US", name: "United States (MFN)", flag: "🇺🇸" },
@@ -49,6 +50,7 @@ function CompareContent() {
 
   const handleRunComparison = async (countriesToCompare = selectedCountries) => {
     try {
+      setErrorState(null);
       const res = await compareCountries({
         hs_code: hsCode,
         assessable_value: assessableVal,
@@ -59,8 +61,11 @@ function CompareContent() {
       }).unwrap();
 
       setComparisonResult(res);
-    } catch (err) {
-      alert("Failed to run country comparison matrix.");
+    } catch (err: any) {
+      setErrorState(
+        err?.data?.error ||
+          "Failed to compute concurrent country origin comparison matrix. External tariff gateway unreachable."
+      );
     }
   };
 
@@ -136,6 +141,15 @@ function CompareContent() {
           })}
         </div>
       </div>
+
+      {/* Error / Degraded State Alert (§3.5) */}
+      {errorState && (
+        <DegradedStateAlert
+          reason={errorState}
+          endpoint="POST /api/v1/compare"
+          onRetry={() => handleRunComparison()}
+        />
+      )}
 
       {/* Comparison Matrix View */}
       {isLoading && !comparisonResult ? (

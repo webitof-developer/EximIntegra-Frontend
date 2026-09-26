@@ -10,7 +10,13 @@ import {
   useCalculateLandedCostMutation,
   useGetLandedCostCalculationQuery,
 } from "@/store/landedCostApi";
-import { Card, StepBadge, StatusPill, ProvenanceBadge } from "@/components/ui";
+import {
+  Card,
+  StepBadge,
+  StatusPill,
+  ProvenanceBadge,
+  DegradedStateAlert,
+} from "@/components/ui";
 import { LandedCostForm } from "@/components/landed-cost/LandedCostForm";
 import { LandedCostResultsView } from "@/components/landed-cost/LandedCostResultsView";
 import { LandedCostRequest, LandedCostResponse } from "@/lib/types";
@@ -30,6 +36,7 @@ function LandedCostContent() {
     null
   );
   const [isSaved, setIsSaved] = useState<boolean>(false);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   // Active duty ID: preferentially from URL query, else contextSlice
   const activeDutyId =
@@ -37,6 +44,7 @@ function LandedCostContent() {
 
   const handleCalculate = async (req: LandedCostRequest) => {
     try {
+      setErrorState(null);
       const res = await calculateLandedCost(req).unwrap();
       setLandedResult(res);
       setIsSaved(false);
@@ -51,8 +59,11 @@ function LandedCostContent() {
           landedCostCalculationId: res.landed_cost_id,
         })
       );
-    } catch (err) {
-      alert("Failed to compute landed cost. Please verify inputs.");
+    } catch (err: any) {
+      setErrorState(
+        err?.data?.error ||
+          "Failed to compute landed cost. Port handling or freight schedule integration unreachable."
+      );
     }
   };
 
@@ -105,6 +116,15 @@ function LandedCostContent() {
           />
         </div>
       </div>
+
+      {/* Error / Degraded State Alert (§3.5) */}
+      {errorState && (
+        <DegradedStateAlert
+          reason={errorState}
+          endpoint="POST /api/v1/landed-cost/calculate"
+          onRetry={() => setErrorState(null)}
+        />
+      )}
 
       {/* Input Parameters Form Card */}
       <Card

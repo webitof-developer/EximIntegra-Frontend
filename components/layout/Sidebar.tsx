@@ -22,8 +22,11 @@ import {
   Layers,
   ChevronRight,
   ShieldAlert,
+  X,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { setMobileNavOpen } from "@/store/uiSlice";
 
 interface NavItem {
   id: string;
@@ -154,15 +157,25 @@ const navSections: NavSection[] = [
   },
 ];
 
-export function Sidebar() {
+function SidebarInner({
+  onClose,
+  isMobile = false,
+}: {
+  onClose?: () => void;
+  isMobile?: boolean;
+}) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-[250px] shrink-0 bg-navy h-screen flex flex-col justify-between select-none border-r border-[#1B2A4A] z-30 sticky top-0">
+    <div className="flex flex-col h-full justify-between select-none">
       {/* Brand Header */}
       <div className="flex flex-col">
         <div className="px-5 py-5 border-b border-[#1B2A4A] flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-3 group">
+          <Link
+            href="/dashboard"
+            onClick={onClose}
+            className="flex items-center gap-3 group"
+          >
             <div className="w-8 h-8 rounded-lg bg-blue flex items-center justify-center text-white font-mono font-bold text-sm tracking-wider shadow-sm group-hover:bg-blue-dark transition-colors">
               EI
             </div>
@@ -175,6 +188,17 @@ export function Sidebar() {
               </span>
             </div>
           </Link>
+
+          {isMobile && (
+            <button
+              type="button"
+              aria-label="Close navigation drawer"
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-[#8EA0C0] hover:text-white hover:bg-navy-hover transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation Sections */}
@@ -219,6 +243,7 @@ export function Sidebar() {
                     <Link
                       key={item.id}
                       href={item.href}
+                      onClick={onClose}
                       className={cn(
                         "flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition-all group relative",
                         isActive
@@ -286,6 +311,7 @@ export function Sidebar() {
           <div className="pt-1 flex items-center justify-between border-t border-[#1E2E4E]/80">
             <Link
               href="/reports"
+              onClick={onClose}
               className="text-[10px] text-blue hover:underline flex items-center gap-1"
             >
               Verify Provenance
@@ -295,6 +321,44 @@ export function Sidebar() {
           </div>
         </div>
       </div>
-    </aside>
+    </div>
   );
 }
+
+export function Sidebar() {
+  const dispatch = useAppDispatch();
+  const mobileNavOpen = useAppSelector((state) => state.ui.mobileNavOpen);
+
+  const handleClose = () => {
+    dispatch(setMobileNavOpen(false));
+  };
+
+  return (
+    <>
+      {/* Desktop Fixed Sidebar */}
+      <aside className="hidden lg:flex w-[250px] shrink-0 bg-navy h-screen flex-col justify-between select-none border-r border-[#1B2A4A] z-30 sticky top-0">
+        <SidebarInner />
+      </aside>
+
+      {/* Mobile Backdrop & Drawer */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 bg-navy/70 backdrop-blur-xs z-40 lg:hidden animate-in fade-in duration-200"
+          onClick={handleClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {mobileNavOpen && (
+        <aside
+          role="dialog"
+          aria-label="Mobile Navigation Drawer"
+          className="fixed inset-y-0 left-0 w-[270px] bg-navy h-screen z-50 lg:hidden shadow-2xl border-r border-[#1B2A4A] animate-in slide-in-from-left duration-200"
+        >
+          <SidebarInner onClose={handleClose} isMobile />
+        </aside>
+      )}
+    </>
+  );
+}
+

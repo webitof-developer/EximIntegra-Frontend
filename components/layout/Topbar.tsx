@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { logout } from "@/store/authSlice";
+import { setMobileNavOpen } from "@/store/uiSlice";
 import {
   Sparkles,
   Bell,
@@ -12,6 +13,7 @@ import {
   ChevronDown,
   User as UserIcon,
   Shield,
+  Menu,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
 import { ProvenanceBadge } from "../ui/ProvenanceBadge";
@@ -94,21 +96,33 @@ export function Topbar() {
     : "EI";
 
   return (
-    <header className="sticky top-0 z-20 bg-panel/95 backdrop-blur-md border-b border-line px-8 py-3.5 flex items-center justify-between">
-      {/* Title & One-line Description */}
-      <div className="space-y-0.5">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-ink tracking-tight">
-            {meta.title}
-          </h1>
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue border border-blue/20">
-            PHASE 1 ACTIVE
-          </span>
+    <header className="sticky top-0 z-20 bg-panel/95 backdrop-blur-md border-b border-line px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      {/* Title, Mobile Trigger & Description */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          aria-label="Open navigation menu"
+          onClick={() => dispatch(setMobileNavOpen(true))}
+          className="p-2 rounded-lg text-muted hover:text-ink lg:hidden border border-line bg-panel hover:bg-bg cursor-pointer transition-colors shadow-2xs"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-lg sm:text-xl font-bold text-ink tracking-tight">
+              {meta.title}
+            </h1>
+            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue border border-blue/20 font-semibold">
+              ENTERPRISE v2026.03
+            </span>
+          </div>
+          <p className="text-xs text-muted leading-relaxed max-w-2xl hidden md:block">
+            {meta.description}
+          </p>
         </div>
-        <p className="text-xs text-muted leading-relaxed max-w-2xl">
-          {meta.description}
-        </p>
       </div>
+
 
       {/* Right Action & Context Bar */}
       <div className="flex items-center gap-4">

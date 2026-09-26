@@ -12,6 +12,7 @@ import {
   StepBadge,
   StatusPill,
   ProvenanceBadge,
+  DegradedStateAlert,
 } from "@/components/ui";
 import { SingleClassificationForm } from "@/components/classification/SingleClassificationForm";
 import { ClassificationResultsView } from "@/components/classification/ClassificationResultsView";
@@ -30,6 +31,7 @@ export default function ClassifyPage() {
   const [activeTab, setActiveTab] = useState<"single" | "bulk">("single");
   const [classify, { isLoading }] = useClassifyMutation();
   const [result, setResult] = useState<ClassificationResponse | null>(null);
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   // Store last entered commercial details to enrich contextSlice
   const [lastCommercialParams, setLastCommercialParams] = useState<{
@@ -48,6 +50,7 @@ export default function ClassifyPage() {
     }
   ) => {
     try {
+      setErrorState(null);
       setLastCommercialParams({
         assessableValue: req.assessableValue,
         currency: req.currency,
@@ -79,8 +82,11 @@ export default function ClassifyPage() {
           })
         );
       }
-    } catch (err) {
-      alert("Classification query failed. Please verify network/API connectivity.");
+    } catch (err: any) {
+      setErrorState(
+        err?.data?.error ||
+          "Statutory GIR classification endpoint unreachable or returned an unmapped tariff item. Verification degraded."
+      );
     }
   };
 
@@ -160,6 +166,15 @@ export default function ClassifyPage() {
                 : "Batch Asynchronous Processor with Polling"}
             </span>
           </div>
+
+          {/* Error / Degraded State Alert (§3.5) */}
+          {errorState && (
+            <DegradedStateAlert
+              reason={errorState}
+              endpoint="POST /api/v1/classify"
+              onRetry={() => setErrorState(null)}
+            />
+          )}
 
           {/* Tab Content */}
           {activeTab === "single" ? (
