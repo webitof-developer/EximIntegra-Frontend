@@ -90,7 +90,7 @@ export function LandedCostForm({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <StatusPill label="PHASE 3 INHERITED" variant="primary" size="xs" />
+          <StatusPill label="DUTY LINKED" variant="primary" size="xs" />
           <ProvenanceBadge type="LIVE" source="Statutory Duty Model" compact />
         </div>
       </div>

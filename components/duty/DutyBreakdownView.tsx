@@ -295,20 +295,15 @@ export function DutyBreakdownView({
         </div>
       </Card>
 
-      {/* Critical Legal Liability Posture Notice (§3.2) */}
-      <div className="p-4 rounded-xl bg-amber-dim/50 border border-amber/30 text-xs text-amber leading-relaxed flex items-start gap-3">
-        <AlertTriangle className="w-5 h-5 text-amber shrink-0 mt-0.5" />
-        <div className="space-y-1">
-          <span className="font-bold uppercase tracking-wider block">
-            Legal Disclaimer & Provenance Liability Notice
+      {/* Statutory Advisory Notice */}
+      <div className="p-3.5 rounded-xl bg-amber-dim/40 border border-amber/20 text-xs text-amber leading-relaxed flex items-start gap-2.5">
+        <AlertTriangle className="w-4 h-4 text-amber shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <span className="font-semibold block">
+            Statutory Notice
           </span>
-          <p>
+          <p className="text-[11px] opacity-90">
             {calculation.liability_disclaimer}
-          </p>
-          <p className="text-[11px] opacity-90 pt-0.5">
-            <strong>Green Badges (LIVE):</strong> Statutory schedules verified against CBIC ICEGATE live feeds.
-            <br />
-            <strong>Amber Badges (ILLUSTRATIVE):</strong> Indicative trade remedy benchmarks. Actual anti-dumping orders must be validated with an official Bill of Entry.
           </p>
         </div>
       </div>
@@ -356,7 +351,7 @@ export function DutyBreakdownView({
             href={`/landed-cost?duty_id=${calculation.calculation_id}`}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue hover:bg-blue-dark text-white text-xs font-semibold shadow-xs transition-colors"
           >
-            <span>Proceed to Landed Cost Engine (Phase 4)</span>
+            <span>Proceed to Landed Cost Engine</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>

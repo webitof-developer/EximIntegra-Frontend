@@ -309,65 +309,36 @@ export function LandedCostResultsView({
         </div>
       </Card>
 
-      {/* End-to-End Pipeline Completion Card (§5 Acceptance Proof) */}
-      <div className="p-5 bg-panel border-2 border-green/30 rounded-xl shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-green text-white flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-ink">
-                End-to-End Pipeline Completed: Classify &rarr; Duty &rarr; Landed Cost
-              </h4>
-              <p className="text-xs text-muted">
-                Zero re-entry of HS code: all parameters flowed seamlessly through Redux contextSlice.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => onSaveToContext(result.landed_cost_id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer ${
-              isSaved
-                ? "bg-green text-white"
-                : "bg-blue hover:bg-blue-dark text-white"
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>
-              {isSaved ? "Saved to History & Context" : "Save Landed Cost Run"}
-            </span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-bg border border-line rounded-lg font-mono text-xs">
-          <div>
-            <span className="text-[10px] text-muted uppercase block">
-              1. Classification
-            </span>
-            <span className="font-bold text-ink">
-              HS {formatHsCode(result.hs_code)}
-            </span>
+      {/* Landed Cost Run Summary & Save Action */}
+      <div className="p-4 bg-panel border border-line rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-green-dim text-green flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-4 h-4" />
           </div>
           <div>
-            <span className="text-[10px] text-muted uppercase block">
-              2. Duty Calculation ID
-            </span>
-            <span className="font-bold text-blue">
-              {result.duty_calculation_id}
-            </span>
-          </div>
-          <div>
-            <span className="text-[10px] text-muted uppercase block">
-              3. Landed Cost ID
-            </span>
-            <span className="font-bold text-green">
-              {result.landed_cost_id}
+            <h4 className="text-xs font-bold text-ink">
+              Landed Cost Record Computed
+            </h4>
+            <span className="text-[11px] font-mono text-muted">
+              Record ID: {result.landed_cost_id} &bull; HS {formatHsCode(result.hs_code)}
             </span>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => onSaveToContext(result.landed_cost_id)}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer ${
+            isSaved
+              ? "bg-green text-white"
+              : "bg-blue hover:bg-blue-dark text-white"
+          }`}
+        >
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          <span>
+            {isSaved ? "Saved to History" : "Save Record"}
+          </span>
+        </button>
       </div>
     </div>
   );

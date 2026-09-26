@@ -122,9 +122,6 @@ export function ClassificationResultsView({
                   </>
                 )}
               </button>
-              <span className="text-[10px] text-muted font-mono">
-                Updates Redux contextSlice for Duty & Landed Cost
-              </span>
             </div>
           </div>
 

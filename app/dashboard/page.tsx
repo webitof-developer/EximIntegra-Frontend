@@ -46,9 +46,6 @@ export default function DashboardPage() {
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue text-white uppercase tracking-wider font-semibold">
                   {user?.tier || "ENTERPRISE"} TIER
                 </span>
-                <span className="text-[11px] text-[#8EA0C0] font-mono">
-                  Session Token: Active
-                </span>
               </div>
               <h2 className="text-xl font-bold tracking-tight">
                 Welcome, {user?.name || "Trade Officer"}
@@ -85,10 +82,10 @@ export default function DashboardPage() {
                   <span className="text-sm font-bold text-ink">
                     Active Commodity Context
                   </span>
-                  <ProvenanceBadge type="LIVE" source="ContextSlice" compact />
+                  <ProvenanceBadge type="LIVE" source="Active Session" compact />
                 </div>
               }
-              subtitle="Persisted in Redux contextSlice — shared across Classification, Duty, and Landed Cost."
+              subtitle="Synchronized across Classification, Duty Calculator, and Landed Cost engines."
               action={
                 <Link
                   href="/duty"
@@ -148,13 +145,12 @@ export default function DashboardPage() {
             </Card>
           )}
 
-          {/* Core Modules Grid (§1.1 Core Built Scope) */}
+          {/* Core Modules Grid */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted font-mono">
-                Core Trade Engine Modules
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
+                Trade Engine Modules
               </h3>
-              <StatusPill label="PHASE 1 READY" variant="success" dot />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -165,7 +161,7 @@ export default function DashboardPage() {
                 iconVariant="blue"
                 metric="Single & Bulk"
                 metricLabel="Classification Mode"
-                badge={<StatusPill label="PHASE 2" variant="primary" />}
+                badge={<StatusPill label="LIVE" variant="success" />}
                 href="/classify"
               />
 
@@ -176,7 +172,7 @@ export default function DashboardPage() {
                 iconVariant="green"
                 metric="FTA Engine"
                 metricLabel="Concession Matrix"
-                badge={<StatusPill label="PHASE 3" variant="neutral" />}
+                badge={<StatusPill label="LIVE" variant="success" />}
                 href="/duty"
               />
 
@@ -187,7 +183,7 @@ export default function DashboardPage() {
                 iconVariant="amber"
                 metric="Yield Matrix"
                 metricLabel="Smelter Valuation"
-                badge={<StatusPill label="PHASE 4" variant="neutral" />}
+                badge={<StatusPill label="LIVE" variant="success" />}
                 href="/landed-cost"
               />
 
@@ -198,7 +194,7 @@ export default function DashboardPage() {
                 iconVariant="navy"
                 metric="Rules of Origin"
                 metricLabel="Verification"
-                badge={<StatusPill label="PHASE 5" variant="neutral" />}
+                badge={<StatusPill label="LIVE" variant="success" />}
                 href="/eligibility"
               />
 
@@ -209,7 +205,7 @@ export default function DashboardPage() {
                 iconVariant="navy"
                 metric="Side-by-Side"
                 metricLabel="Arbitrage Engine"
-                badge={<StatusPill label="PHASE 5" variant="neutral" />}
+                badge={<StatusPill label="LIVE" variant="success" />}
                 href="/compare"
               />
 
@@ -220,17 +216,17 @@ export default function DashboardPage() {
                 iconVariant="blue"
                 metric="Grounded"
                 metricLabel="Transparency Log"
-                badge={<StatusPill label="PHASE 6" variant="primary" />}
+                badge={<StatusPill label="AI" variant="primary" />}
                 href="/akshara"
               />
             </div>
           </div>
 
-          {/* V2 Scope Modules (Disabled with SOON pills per §1.2) */}
+          {/* Upcoming Intelligence Modules */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted font-mono">
-                Advanced Intelligence Modules (v2 Scope)
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
+                Upcoming Modules
               </h3>
               <StatusPill label="ROADMAP" variant="muted" />
             </div>

@@ -111,7 +111,7 @@ function DutyCalculatorContent() {
           <StepBadge
             step={3}
             label="Landed Cost"
-            description="Phase 4 Pipeline"
+            description="Logistics & Smelter Yield"
             state="pending"
             isLast
           />

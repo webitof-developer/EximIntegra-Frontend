@@ -34,7 +34,7 @@ export default function AksharaPage() {
       id: "msg_welcome",
       role: "assistant",
       content:
-        "### Welcome to Akshara — Statutory Customs & Trade Copilot\n\nI am your deterministic cross-border advisory engine. Unlike generic conversational models, every response I generate is **grounded in live statutory data** from:\n\n- **CBIC Customs Tariff Act 2026** (Standard MFN, SWS, AIDC, and IGST schedules)\n- **WCO General Rules for Interpretation (GIR)** for verifiable HS classification\n- **DGFT Foreign Trade Policy 2023** (Import licensing and non-tariff measures)\n- **CEPA & FTA Concessional Rules of Origin** (India-UAE, ASEAN, Australia)\n\nEvery calculation or regulatory determination includes an expandable **'How I Got This'** transparency trail detailing exact tool calls, endpoints, and latency.\n\n*How can I assist your import or cross-border trade operations today?*",
+        "### Welcome to Akshara\n\nAsk me about HS classification, customs duties, preferential trade agreements, or import compliance.\n\nEvery calculation includes a verified tool-call audit trail. What commodity would you like to evaluate?",
       timestamp: new Date().toISOString(),
       tool_calls_made: [
         {
@@ -143,40 +143,7 @@ export default function AksharaPage() {
   return (
     <AuthGuard>
       <AppShell>
-        <div className="space-y-6 max-w-5xl mx-auto pb-16">
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-line pb-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-lg bg-blue flex items-center justify-center text-white shadow-xs">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <h1 className="text-xl font-bold font-mono text-ink tracking-tight">
-                  Akshara AI Copilot
-                </h1>
-                <span className="text-[10px] font-mono uppercase bg-green-dim text-green px-2 py-0.5 rounded font-bold border border-green/30">
-                  Grounded Statutory v2026.03
-                </span>
-              </div>
-              <p className="text-xs text-muted leading-relaxed">
-                Statutory cross-border trade advisor with deterministic tool-calling transparency, GIR classification, and FTAs.
-              </p>
-            </div>
-
-            {/* Action Controls & Clear Button */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleClearHistory}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line bg-panel hover:bg-bg text-xs font-medium text-muted hover:text-ink transition-colors cursor-pointer"
-                title="Reset active chat session"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Chat</span>
-              </button>
-            </div>
-          </div>
-
+        <div className="space-y-5 max-w-5xl mx-auto pb-16">
           {/* Active Shared Context Bar */}
           <div className="bg-panel border border-line rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-3">
@@ -186,7 +153,7 @@ export default function AksharaPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-mono font-bold text-ink">
-                    Active Shared Context:
+                    Active Context:
                   </span>
                   <span className="font-mono text-xs font-bold text-blue">
                     HS {currentContext.hsCode || "None"}
@@ -203,7 +170,7 @@ export default function AksharaPage() {
               </div>
             </div>
 
-            {/* Quick Jump Links with Context */}
+            {/* Quick Actions & Navigation */}
             <div className="flex items-center gap-2">
               <Link
                 href="/duty"
@@ -224,10 +191,20 @@ export default function AksharaPage() {
                 className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-bg hover:bg-line text-ink border border-line transition-colors"
               >
                 <Scale className="w-3 h-3 text-amber" />
-                <span>Origin Comparison</span>
+                <span>Compare</span>
               </Link>
+              <button
+                type="button"
+                onClick={handleClearHistory}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-bg hover:bg-line text-muted hover:text-ink border border-line transition-colors cursor-pointer"
+                title="Reset active chat session"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
+              </button>
             </div>
           </div>
+
 
           {/* Chat Messages Container */}
           <div className="bg-bg/40 border border-line rounded-2xl p-4 min-h-[460px] max-h-[640px] overflow-y-auto space-y-4 shadow-inner">
@@ -244,14 +221,11 @@ export default function AksharaPage() {
                 <div className="w-8 h-8 rounded-lg bg-blue text-white shrink-0 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 animate-pulse" />
                 </div>
-                <div className="bg-panel border border-line p-3.5 rounded-xl rounded-tl-none space-y-2 shadow-xs max-w-[70%]">
+                <div className="bg-panel border border-line px-3.5 py-2.5 rounded-xl rounded-tl-none shadow-xs">
                   <div className="flex items-center gap-2 text-xs font-mono text-blue font-semibold">
-                    <div className="w-2.5 h-2.5 rounded-full bg-blue animate-ping" />
-                    <span>Akshara is querying statutory endpoints & GIR engines...</span>
+                    <div className="w-2 h-2 rounded-full bg-blue animate-ping" />
+                    <span>Analyzing trade regulations & tariffs...</span>
                   </div>
-                  <p className="text-[11px] text-muted leading-relaxed">
-                    Evaluating WCO General Interpretation Rules, CBIC 2026 tariff schedules, and DGFT licensing restrictions.
-                  </p>
                 </div>
               </div>
             )}

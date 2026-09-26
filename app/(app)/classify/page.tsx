@@ -159,12 +159,6 @@ export default function ClassifyPage() {
                 },
               ]}
             />
-
-            <span className="text-xs text-muted hidden sm:inline-block">
-              {activeTab === "single"
-                ? "GIR 1 to 6 Sequential Legal Evaluation"
-                : "Batch Asynchronous Processor with Polling"}
-            </span>
           </div>
 
           {/* Error / Degraded State Alert (§3.5) */}

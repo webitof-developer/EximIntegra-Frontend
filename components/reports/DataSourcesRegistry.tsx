@@ -6,7 +6,6 @@ import { ProvenanceBadge } from "@/components/ui/ProvenanceBadge";
 import {
   Database,
   ExternalLink,
-  ShieldCheck,
   CheckCircle2,
   Calendar,
   Layers,
@@ -46,28 +45,6 @@ export function DataSourcesRegistry({
 
   return (
     <div className="space-y-5">
-      {/* Statutory Reproducibility Guarantee Banner */}
-      <div className="p-4 rounded-2xl bg-navy text-white border border-line shadow-xs">
-        <div className="flex items-start gap-3.5">
-          <div className="w-8 h-8 rounded-xl bg-blue flex items-center justify-center text-white shrink-0 mt-0.5 shadow-xs">
-            <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
-          </div>
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#93C5FD]">
-                Deterministic Statutory Reproducibility Standard
-              </span>
-              <span className="text-[10px] font-mono bg-green-dim text-green px-2 py-0.5 rounded font-bold border border-green/30">
-                ACTIVE REGISTRY v2026.03
-              </span>
-            </div>
-            <p className="text-xs text-white/80 leading-relaxed max-w-4xl">
-              Every tariff calculation, landed cost estimate, and CEPA origin comparison in EximIntegra permanently stamps the exact dataset versions active at calculation time. Even if customs tariffs change in future Union Budgets, historical calculations can be reproduced with zero drift.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {/* Provenance Filter Pills */}

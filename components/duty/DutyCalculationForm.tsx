@@ -83,22 +83,19 @@ export function DutyCalculationForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Shared Context Banner if HS is inherited */}
+      {/* Active Commodity Context Banner */}
       {initialHsCode && (
-        <div className="p-3 bg-blue-dim/60 border border-blue/20 rounded-lg flex items-center justify-between gap-3 text-xs text-blue">
+        <div className="p-2.5 bg-blue-dim/60 border border-blue/20 rounded-lg flex items-center justify-between gap-3 text-xs text-blue">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue" />
             <span>
-              Inherited from Shared Context:{" "}
+              Active Commodity:{" "}
               <strong className="font-mono font-bold text-ink">
                 {initialHsCode}
               </strong>{" "}
-              &bull; {initialDescription}
+              {initialDescription && `• ${initialDescription}`}
             </span>
           </div>
-          <span className="text-[10px] font-mono text-muted uppercase">
-            contextSlice
-          </span>
         </div>
       )}
 

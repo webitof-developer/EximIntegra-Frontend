@@ -103,19 +103,11 @@ function CompareContent() {
 
   return (
     <div className="space-y-6 pb-16">
-      {/* Header & Country Selector */}
-      <div className="p-5 bg-panel border border-line rounded-xl shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-blue" />
-            <h2 className="text-base font-bold text-ink">
-              Country-of-Origin Sourcing Arbitrage
-            </h2>
-            <StatusPill label="PHASE 5 READY" variant="success" size="xs" dot />
-          </div>
-          <p className="text-xs text-muted">
-            Re-runs duty tariffs and landed cost economics across multiple jurisdictions side by side.
-          </p>
+      {/* Country Selection Toolbar */}
+      <div className="p-4 bg-panel border border-line rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs font-mono font-bold text-muted uppercase">Select Origins to Compare:</span>
+          <StatusPill label="LIVE" variant="success" size="xs" dot />
         </div>
 
         {/* Multi-Country Toggle Buttons */}

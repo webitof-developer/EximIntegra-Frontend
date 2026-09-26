@@ -309,7 +309,7 @@ export function CalculationHistoryTable({
           </div>
           <div className="flex items-center gap-4 text-[11px]">
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green" /> 100% Deterministic Reproducibility
+              <span className="w-2 h-2 rounded-full bg-green" /> Verified Calculations
             </span>
           </div>
         </div>

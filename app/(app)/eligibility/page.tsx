@@ -32,22 +32,25 @@ export default function EligibilityPage() {
     <AuthGuard>
       <AppShell>
         <div className="space-y-6 pb-16">
-          {/* Header & HS Code Search Bar */}
-          <div className="p-5 bg-panel border border-line rounded-xl shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-blue" />
-                <h2 className="text-base font-bold text-ink">
-                  Statutory Scheme & FTA Eligibility Engine
-                </h2>
-                <StatusPill label="PHASE 5" variant="primary" size="xs" />
+          {/* Tariff Item Lookup & Filter Bar */}
+          <div className="p-4 bg-panel border border-line rounded-xl shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-dim text-blue flex items-center justify-center shrink-0">
+                <FileCheck className="w-4 h-4" />
               </div>
-              <p className="text-xs text-muted">
-                Assess preferential tariff rates under India&apos;s active trade agreements and export benefit schemes.
-              </p>
+              <div className="text-xs">
+                <div className="flex items-center gap-2 font-mono">
+                  <span className="text-muted uppercase text-[10px]">Tariff Item:</span>
+                  <strong className="text-ink font-bold">{formatHsCode(activeHs)}</strong>
+                  <StatusPill label="LIVE" variant="success" size="xs" />
+                </div>
+                <span className="text-muted text-[11px] truncate block max-w-sm">
+                  {currentContext.materialName || "Ferrous Waste & Scrap"}
+                </span>
+              </div>
             </div>
 
-            <form onSubmit={handleSearch} className="flex items-center gap-2 w-full md:w-auto">
+            <form onSubmit={handleSearch} className="flex items-center gap-2">
               <div className="relative flex-1 md:w-64">
                 <input
                   type="text"
@@ -59,23 +62,11 @@ export default function EligibilityPage() {
               </div>
               <button
                 type="submit"
-                className="px-3.5 py-2 bg-blue hover:bg-blue-dark text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+                className="px-3.5 py-2 bg-blue hover:bg-blue-dark text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
               >
                 Lookup
               </button>
             </form>
-          </div>
-
-          {/* Active Context Banner */}
-          <div className="p-3 bg-bg border border-line rounded-lg flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 font-mono">
-              <span className="text-muted">Target Tariff Item:</span>
-              <strong className="text-ink font-bold">{formatHsCode(activeHs)}</strong>
-              <span className="text-muted font-sans hidden sm:inline">
-                &bull; {currentContext.materialName || "Ferrous Waste & Scrap"}
-              </span>
-            </div>
-            <ProvenanceBadge type="LIVE" source="DGFT / CBIC Gazette" compact />
           </div>
 
           {/* Loading / Error / Data States */}

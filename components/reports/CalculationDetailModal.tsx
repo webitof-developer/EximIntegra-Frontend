@@ -158,7 +158,7 @@ export function CalculationDetailModal({
                 ${record.total_outlay_usd.toLocaleString("en-US", {
                   maximumFractionDigits: 2,
                 })}{" "}
-                USD equivalent @ official gazette exchange rate
+                USD
               </span>
             </div>
 
@@ -169,9 +169,6 @@ export function CalculationDetailModal({
               <div className="text-lg font-mono font-bold text-green mt-0.5">
                 {record.key_metric_value}
               </div>
-              <span className="text-[10px] font-mono text-white/70">
-                100% Reproducible
-              </span>
             </div>
           </div>
 
@@ -179,7 +176,7 @@ export function CalculationDetailModal({
           <div className="space-y-3">
             <h4 className="text-xs font-bold font-mono uppercase text-ink tracking-wider flex items-center gap-2">
               <FileText className="w-3.5 h-3.5 text-blue" />
-              <span>Statutory Breakdown & Reproducibility Audit</span>
+              <span>Statutory Breakdown</span>
             </h4>
 
             <div className="p-3.5 rounded-xl bg-bg border border-line space-y-2">

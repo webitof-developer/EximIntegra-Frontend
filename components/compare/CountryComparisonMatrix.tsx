@@ -133,7 +133,7 @@ export function CountryComparisonMatrix({
               {/* SECTION 1: STATUTORY DUTY TARIFFS */}
               <tr className="bg-bg/40 font-mono text-[10px] uppercase text-muted font-bold">
                 <td colSpan={data.comparisons.length + 1} className="py-2 px-5">
-                  1. Customs Duties & Surcharges (Phase 3 Engine)
+                  1. Customs Duties & Statutory Tariffs
                 </td>
               </tr>
 
@@ -176,7 +176,7 @@ export function CountryComparisonMatrix({
               {/* SECTION 2: LOGISTICS & PORT CHARGES */}
               <tr className="bg-bg/40 font-mono text-[10px] uppercase text-muted font-bold">
                 <td colSpan={data.comparisons.length + 1} className="py-2 px-5">
-                  2. Multimodal Transit & Port Logistics (Phase 4 Engine)
+                  2. Multimodal Transit & Port Logistics
                 </td>
               </tr>
 
