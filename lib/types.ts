@@ -380,3 +380,48 @@ export interface AksharaResponse {
   context_action?: ContextUpdateAction;
   is_unresolvable_warning?: boolean;
 }
+
+/* Phase 7: History & Data Provenance Types (§7) */
+export interface DatasetVersion {
+  id: string;
+  name: string;
+  authority: string;
+  reference_code: string;
+  version: string;
+  effective_date: string;
+  last_sync: string;
+  status: "ACTIVE" | "DEGRADED" | "UPDATING";
+  provenance: ProvenanceMetadata;
+  coverage_summary: string;
+  record_count?: number;
+  official_portal_url?: string;
+}
+
+export interface CalculationHistoryRecord {
+  id: string;
+  type: "DUTY" | "LANDED_COST";
+  timestamp: string;
+  hs_code: string;
+  hs_description: string;
+  commodity_name: string;
+  country_of_origin: string;
+  destination: string;
+  trade_agreement?: string;
+  quantity?: number;
+  unit?: string;
+  total_outlay_inr: number;
+  total_outlay_usd: number;
+  key_metric_label: string;
+  key_metric_value: string;
+  provenance_type: ProvenanceType;
+  tags: string[];
+  duty_details?: DutyCalculationResponse;
+  landed_cost_details?: LandedCostResponse;
+}
+
+export interface HistoryResponse {
+  records: CalculationHistoryRecord[];
+  total_count: number;
+  active_user: string;
+}
+
