@@ -22,6 +22,8 @@ export interface MaterialContext {
   currency?: string;
   unit?: string;
   quantity?: number;
+  dutyCalculationId?: string;
+  landedCostCalculationId?: string;
   lastUpdated?: string;
 }
 
@@ -125,4 +127,128 @@ export interface BulkJobStatus {
   completed_at?: string;
   download_url?: string;
   results?: BulkClassificationItem[];
+}
+
+/* Duty Calculator Types */
+export interface DutyCalculationRequest {
+  hs_code: string;
+  assessable_value: number;
+  currency: string;
+  exchange_rate?: number;
+  country_of_origin: string;
+  destination_country?: string;
+  trade_agreement?: string;
+  quantity?: number;
+  unit?: string;
+  freight_amount?: number;
+  insurance_amount?: number;
+}
+
+export interface DutyFieldDetail {
+  name: string;
+  statutory_rate: number;
+  concessional_rate?: number;
+  rate_applied: number;
+  amount_inr: number;
+  calculation_basis?: string;
+  status?: string;
+  provenance: ProvenanceMetadata;
+}
+
+export interface DutyCalculationResponse {
+  calculation_id: string;
+  timestamp: string;
+  hs_code: string;
+  hs_description: string;
+  country_of_origin: string;
+  destination_country: string;
+  trade_agreement: string;
+  exchange_rate: number;
+  cif_value_inr: number;
+  assessable_value_inr: number;
+  assessable_value_usd: number;
+  quantity?: number;
+  unit?: string;
+  duties: {
+    bcd: DutyFieldDetail;
+    sws: DutyFieldDetail;
+    aidc: DutyFieldDetail;
+    anti_dumping: DutyFieldDetail;
+    igst: DutyFieldDetail;
+  };
+  total_customs_duty_inr: number;
+  total_tax_inclusive_duty_inr: number;
+  total_landed_customs_inr: number;
+  effective_duty_percentage: number;
+  total_effective_tax_percentage: number;
+  liability_disclaimer: string;
+}
+
+/* Landed Cost Engine Types */
+export interface LandedCostRequest {
+  duty_calculation_id: string;
+  hs_code?: string;
+  quantity: number;
+  unit: string;
+  port_of_discharge: string;
+  thc_cfs_handling_inr?: number;
+  inland_transit_inr?: number;
+  cha_agency_inr?: number;
+  finance_insurance_inr?: number;
+  // Composition & recovery parameters (§2.3)
+  contained_metal?: string;
+  assay_purity_percent?: number;
+  smelter_recovery_yield_percent?: number;
+}
+
+export interface MetalRecoveryAnalysis {
+  contained_metal: string;
+  assay_purity_percent: number;
+  smelter_recovery_yield_percent: number;
+  effective_recovered_quantity_mt: number;
+  cost_per_contained_metal_mt_inr: number;
+  cost_per_contained_metal_mt_usd: number;
+  yield_multiplier: number;
+  assumption_provenance: ProvenanceMetadata;
+}
+
+export interface CostWaterfallItem {
+  id: string;
+  label: string;
+  amount_inr: number;
+  amount_usd: number;
+  percent_of_total: number;
+  category: "CIF" | "DUTY" | "PORT" | "LOGISTICS" | "FINANCE" | "TAX";
+  is_recoverable_itc?: boolean;
+}
+
+export interface LandedCostResponse {
+  landed_cost_id: string;
+  duty_calculation_id: string;
+  timestamp: string;
+  hs_code: string;
+  hs_description: string;
+  origin_country: string;
+  destination_port: string;
+  exchange_rate: number;
+  batch_quantity: number;
+  batch_unit: string;
+  
+  // Total costs
+  gross_landed_cost_inr: number;
+  gross_landed_cost_usd: number;
+  net_landed_cost_inr: number; // excluding recoverable IGST
+  net_landed_cost_usd: number;
+  
+  // Unit costs
+  landed_cost_per_mt_inr: number;
+  landed_cost_per_mt_usd: number;
+  landed_cost_per_kg_inr: number;
+  landed_cost_per_kg_usd: number;
+
+  // Waterfall breakdown
+  cost_waterfall: CostWaterfallItem[];
+
+  // Metal yield analysis (per §2.3)
+  metal_recovery?: MetalRecoveryAnalysis;
 }
