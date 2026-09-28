@@ -70,8 +70,12 @@ function LoginForm() {
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-navy text-white shadow-xs">
-            <div className="w-6 h-6 rounded bg-blue flex items-center justify-center font-mono font-bold text-xs text-white">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-navy text-white shadow-xs hover:bg-[#142342] hover:scale-[1.02] active:scale-[0.98] transition-all group cursor-pointer"
+            title="Return to EximIntegra Homepage"
+          >
+            <div className="w-6 h-6 rounded bg-blue group-hover:bg-blue-dark transition-colors flex items-center justify-center font-mono font-bold text-xs text-white">
               EI
             </div>
             <span className="font-bold tracking-tight text-sm">
@@ -80,7 +84,7 @@ function LoginForm() {
             <span className="text-[10px] font-mono text-[#8EA0C0] uppercase tracking-wider pl-1 border-l border-white/20">
               v1.0
             </span>
-          </div>
+          </Link>
 
           <h2 className="text-2xl font-bold text-ink tracking-tight mt-3">
             Sign in to Trade Advisory OS

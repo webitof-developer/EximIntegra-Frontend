@@ -5,6 +5,7 @@ import { InteractiveTariffDemo } from "@/components/landing/InteractiveTariffDem
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { SocialProofAndCompliance } from "@/components/landing/SocialProofAndCompliance";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { SmoothScrollProvider } from "@/components/landing/SmoothScrollProvider";
 
 export const metadata = {
   title: "EximIntegra — Deterministic Trade Intelligence & Landed Cost SaaS",
@@ -14,7 +15,8 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-bg text-ink flex flex-col font-sans selection:bg-blue selection:text-white">
+    <SmoothScrollProvider>
+      <div className="min-h-screen bg-bg text-ink flex flex-col font-sans selection:bg-blue selection:text-white">
       {/* Public SaaS Navigation Header */}
       <LandingNavbar />
 
@@ -36,5 +38,6 @@ export default function HomePage() {
       {/* Global SaaS Footer with Statutory Disclaimers */}
       <LandingFooter />
     </div>
+    </SmoothScrollProvider>
   );
 }

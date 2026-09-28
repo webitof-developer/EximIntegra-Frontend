@@ -10,6 +10,8 @@ interface TierBadgeProps {
   tier: TierType | string;
   size?: "xs" | "sm" | "md";
   showIcon?: boolean;
+  compact?: boolean;
+  variant?: "light" | "dark";
   className?: string;
 }
 
@@ -17,49 +19,82 @@ export function TierBadge({
   tier,
   size = "xs",
   showIcon = true,
+  compact = false,
+  variant = "light",
   className,
 }: TierBadgeProps) {
   const normalizedTier = tier.toUpperCase();
+  const isDark = variant === "dark";
+
+  const tierKey: TierType =
+    normalizedTier === "PRO" || normalizedTier === "PROFESSIONAL"
+      ? "PROFESSIONAL"
+      : normalizedTier === "ENT" || normalizedTier === "ENTERPRISE"
+      ? "ENTERPRISE"
+      : "STARTER";
 
   const config = {
     STARTER: {
-      label: "STARTER",
-      icon: <Shield className="w-2.5 h-2.5 text-muted" />,
-      classes: "bg-panel text-muted border-line",
+      label: compact ? "Start" : "Starter",
+      icon: (
+        <Shield
+          className={cn(
+            "w-2.5 h-2.5 shrink-0",
+            isDark ? "text-slate-400" : "text-slate-500"
+          )}
+        />
+      ),
+      classes: isDark
+        ? "bg-slate-800 text-slate-300 border-slate-700"
+        : "bg-slate-100 text-slate-700 border-slate-200/80",
     },
     PROFESSIONAL: {
-      label: "PRO",
-      icon: <Zap className="w-2.5 h-2.5 text-blue" />,
-      classes: "bg-blue/10 text-blue border-blue/20",
+      label: compact ? "Pro" : "Professional",
+      icon: (
+        <Zap
+          className={cn(
+            "w-2.5 h-2.5 shrink-0",
+            isDark ? "text-[#93C5FD]" : "text-blue-600"
+          )}
+        />
+      ),
+      classes: isDark
+        ? "bg-blue-950/70 text-[#93C5FD] border-blue-700/50"
+        : "bg-blue-50 text-blue-700 border-blue-200/80",
     },
     ENTERPRISE: {
-      label: "ENTERPRISE",
-      icon: <Crown className="w-2.5 h-2.5 text-amber" />,
-      classes: "bg-amber/10 text-amber border-amber/20 font-bold",
+      label: compact ? "Ent" : "Enterprise",
+      icon: (
+        <Crown
+          className={cn(
+            "w-2.5 h-2.5 shrink-0",
+            isDark ? "text-amber-300" : "text-amber-600"
+          )}
+        />
+      ),
+      classes: isDark
+        ? "bg-amber-500/20 text-amber-300 border-amber-400/40 font-bold"
+        : "bg-gradient-to-r from-amber-50 to-orange-50/70 text-amber-800 border-amber-300/70 shadow-2xs font-semibold",
     },
-  }[normalizedTier as TierType] || {
-    label: normalizedTier,
-    icon: <Sparkles className="w-2.5 h-2.5 text-blue" />,
-    classes: "bg-blue/10 text-blue border-blue/20",
-  };
+  }[tierKey];
 
   const sizeClasses = {
-    xs: "text-[9px] px-1.5 py-0.5 gap-1",
-    sm: "text-[10px] px-2 py-0.5 gap-1.5",
-    md: "text-xs px-2.5 py-1 gap-1.5",
+    xs: "text-[10px] px-1.5 py-0.5 gap-1 rounded-md",
+    sm: "text-[11px] px-2 py-0.5 gap-1.5 rounded-md",
+    md: "text-xs px-2.5 py-1 gap-1.5 rounded-lg",
   }[size];
 
   return (
     <span
       className={cn(
-        "inline-flex items-center font-mono uppercase tracking-wider rounded-md border shadow-xs transition-colors",
+        "inline-flex items-center font-sans tracking-normal border shadow-xs transition-colors shrink-0 select-none leading-none",
         config.classes,
         sizeClasses,
         className
       )}
     >
       {showIcon && config.icon}
-      <span>{config.label}</span>
+      <span className="leading-tight">{config.label}</span>
     </span>
   );
 }

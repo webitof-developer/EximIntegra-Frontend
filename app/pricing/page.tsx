@@ -5,6 +5,7 @@ import { PricingCards } from "@/components/pricing/PricingCards";
 import { FeatureComparisonTable } from "@/components/pricing/FeatureComparisonTable";
 import { PricingFaq } from "@/components/pricing/PricingFaq";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { SmoothScrollProvider } from "@/components/landing/SmoothScrollProvider";
 import { ShieldCheck, ArrowRight, MessageSquare } from "lucide-react";
 
 export const metadata = {
@@ -15,9 +16,10 @@ export const metadata = {
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-bg text-ink flex flex-col font-sans selection:bg-blue selection:text-white">
-      {/* Shared Public SaaS Navbar */}
-      <LandingNavbar />
+    <SmoothScrollProvider>
+      <div className="min-h-screen bg-bg text-ink flex flex-col font-sans selection:bg-blue selection:text-white">
+        {/* Shared Public SaaS Navbar */}
+        <LandingNavbar />
 
       {/* Main Pricing Content Area */}
       <main className="flex-1 py-14 md:py-20">
@@ -79,5 +81,6 @@ export default function PricingPage() {
       {/* Shared Public SaaS Footer */}
       <LandingFooter />
     </div>
+    </SmoothScrollProvider>
   );
 }

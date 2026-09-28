@@ -19,7 +19,6 @@ import {
   Settings,
   HelpCircle,
   ExternalLink,
-  Layers,
   ChevronRight,
   ShieldAlert,
   X,
@@ -142,14 +141,6 @@ const navSections: NavSection[] = [
         glyph: "HIST",
       },
       {
-        id: "dev-components",
-        title: "UI Design System",
-        href: "/dev/components",
-        icon: <Layers className="w-4 h-4 text-[#38BDF8]" />,
-        glyph: "DEV",
-        badge: "DEV",
-      },
-      {
         id: "settings",
         title: "API Keys & BYOK",
         href: "/settings",
@@ -259,10 +250,10 @@ function SidebarInner({
                         <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-blue rounded-r" />
                       )}
 
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <span
                           className={cn(
-                            "transition-colors",
+                            "transition-colors shrink-0",
                             isActive
                               ? "text-blue"
                               : "text-[#7B8DAF] group-hover:text-white"
@@ -270,11 +261,17 @@ function SidebarInner({
                         >
                           {item.icon}
                         </span>
-                        <span>{item.title}</span>
+                        <span className="whitespace-nowrap truncate">{item.title}</span>
                       </div>
 
                       {item.tierBadge ? (
-                        <TierBadge tier={item.tierBadge} size="xs" showIcon={false} />
+                        <TierBadge
+                          tier={item.tierBadge}
+                          size="xs"
+                          compact
+                          variant="dark"
+                          showIcon={true}
+                        />
                       ) : (
                         item.badge && (
                           <StatusPill

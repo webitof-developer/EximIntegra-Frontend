@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useAppSelector } from "@/store";
 import {
   ShieldCheck,
@@ -15,6 +16,10 @@ import {
 } from "lucide-react";
 
 export function LandingNavbar() {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const getSectionHref = (hash: string) => (isHome ? hash : `/${hash}`);
+
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -43,28 +48,38 @@ export function LandingNavbar() {
 
         {/* Desktop Nav Links */}
         <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-muted">
-          <a
-            href="#interactive-demo"
+          <Link
+            href={getSectionHref("#interactive-demo")}
             className="hover:text-ink transition-colors flex items-center gap-1"
           >
             <span>Live Calculator</span>
-          </a>
-          <a href="#features" className="hover:text-ink transition-colors">
-            Engines & Features
-          </a>
-          <a href="#statutory" className="hover:text-ink transition-colors">
-            Statutory Coverage
-          </a>
-          <Link href="/pricing" className="hover:text-ink transition-colors">
-            Pricing
           </Link>
-          <a
-            href="#security"
+          <Link
+            href={getSectionHref("#features")}
+            className="hover:text-ink transition-colors"
+          >
+            Engines & Features
+          </Link>
+          <Link
+            href={getSectionHref("#statutory")}
+            className="hover:text-ink transition-colors"
+          >
+            Statutory Coverage
+          </Link>
+          <Link
+            href={getSectionHref("#security")}
             className="hover:text-ink transition-colors flex items-center gap-1"
           >
-            <Lock className="w-3 h-3 text-green" />
             <span>Security & BYOK</span>
-          </a>
+          </Link>
+          <Link
+            href="/pricing"
+            className={`transition-colors ${
+              pathname === "/pricing" ? "text-blue font-bold" : "hover:text-ink"
+            }`}
+          >
+            Pricing
+          </Link>
         </nav>
 
         {/* Desktop CTA / Auth State */}
@@ -114,41 +129,43 @@ export function LandingNavbar() {
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-line bg-panel px-4 py-4 space-y-3 text-xs font-semibold text-ink">
-          <a
-            href="#interactive-demo"
+          <Link
+            href={getSectionHref("#interactive-demo")}
             onClick={() => setMobileMenuOpen(false)}
             className="block py-1 text-muted hover:text-ink"
           >
             Live Calculator
-          </a>
-          <a
-            href="#features"
+          </Link>
+          <Link
+            href={getSectionHref("#features")}
             onClick={() => setMobileMenuOpen(false)}
             className="block py-1 text-muted hover:text-ink"
           >
             Engines & Features
-          </a>
-          <a
-            href="#statutory"
+          </Link>
+          <Link
+            href={getSectionHref("#statutory")}
             onClick={() => setMobileMenuOpen(false)}
             className="block py-1 text-muted hover:text-ink"
           >
             Statutory Coverage
-          </a>
+          </Link>
           <Link
             href="/pricing"
             onClick={() => setMobileMenuOpen(false)}
-            className="block py-1 text-muted hover:text-ink"
+            className={`block py-1 ${
+              pathname === "/pricing" ? "text-blue font-bold" : "text-muted hover:text-ink"
+            }`}
           >
             Pricing & Plans
           </Link>
-          <a
-            href="#security"
+          <Link
+            href={getSectionHref("#security")}
             onClick={() => setMobileMenuOpen(false)}
             className="block py-1 text-muted hover:text-ink"
           >
             Security & BYOK
-          </a>
+          </Link>
 
           <div className="pt-3 border-t border-line flex flex-col gap-2">
             {isAuthenticated ? (

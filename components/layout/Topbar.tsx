@@ -18,8 +18,6 @@ import {
   Crown,
   Menu,
 } from "lucide-react";
-import { StatusPill } from "../ui/StatusPill";
-import { ProvenanceBadge } from "../ui/ProvenanceBadge";
 
 const pageMeta: Record<string, { title: string; description: string }> = {
   "/dashboard": {
@@ -69,7 +67,6 @@ export function Topbar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
 
-  const currentContext = useAppSelector((state) => state.context.current);
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -126,24 +123,8 @@ export function Topbar() {
         </div>
       </div>
 
-      {/* Right Action & Context Bar */}
+      {/* Right Action Bar */}
       <div className="flex items-center gap-3 shrink-0">
-        {/* Active Material Context Pill */}
-        {currentContext.hsCode && (
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg border border-line text-xs shrink-0">
-            <span className="text-[10px] font-mono uppercase text-muted tracking-wider">
-              Context:
-            </span>
-            <span className="font-mono font-bold text-ink">
-              {currentContext.hsCode}
-            </span>
-            <span className="text-muted max-w-[140px] truncate text-[11px]">
-              {currentContext.materialName || currentContext.hsDescription}
-            </span>
-            <ProvenanceBadge type="LIVE" compact />
-          </div>
-        )}
-
         {/* Akshara Quick Launcher */}
         <Link
           href="/akshara"
@@ -177,10 +158,10 @@ export function Topbar() {
               <div className="hidden md:flex flex-col">
                 <span className="text-xs font-semibold text-ink leading-tight flex items-center gap-1.5">
                   <span>{user.name}</span>
-                  <TierBadge tier={user.tier || "ENTERPRISE"} size="xs" showIcon={false} />
+                  <TierBadge tier={user.tier || "ENTERPRISE"} size="xs" />
                   <ChevronDown className="w-3 h-3 text-muted" />
                 </span>
-                <span className="text-[10px] text-muted font-mono leading-none truncate max-w-[130px]">
+                <span className="text-[11px] text-muted leading-tight truncate max-w-[155px]">
                   {user.company}
                 </span>
               </div>
@@ -188,35 +169,41 @@ export function Topbar() {
 
             {menuOpen && (
               <div className="absolute right-0 mt-2 w-72 rounded-xl bg-panel border border-line shadow-xl p-2 z-50 space-y-1">
-                <div className="p-3 border-b border-line bg-bg/50 rounded-lg space-y-2">
+                <div className="p-3 border-b border-line bg-bg/50 rounded-lg space-y-2.5">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-xs font-bold text-ink">{user.name}</div>
-                      <div className="text-[10px] text-muted truncate max-w-[160px]">{user.email}</div>
+                      <div className="text-[11px] text-muted truncate max-w-[160px]">{user.email}</div>
                     </div>
                     <TierBadge tier={user.tier || "ENTERPRISE"} size="sm" />
                   </div>
 
                   {/* Interactive Plan Sandbox Switcher */}
-                  <div className="pt-1.5 border-t border-line/60">
-                    <span className="text-[9px] font-mono text-muted uppercase block mb-1">
-                      Simulate Active Tier (Demo):
+                  <div className="pt-2 border-t border-line/70">
+                    <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
+                      Active Tier (Demo Switcher)
                     </span>
-                    <div className="grid grid-cols-3 gap-1">
+                    <div className="grid grid-cols-3 gap-1 p-1 bg-[#EEF2F6] rounded-xl border border-line">
                       {(["STARTER", "PROFESSIONAL", "ENTERPRISE"] as const).map((t) => {
                         const isCurrent = (user.tier || "ENTERPRISE") === t;
+                        const label =
+                          t === "PROFESSIONAL" ? "Pro" : t === "ENTERPRISE" ? "Enterprise" : "Starter";
                         return (
                           <button
                             key={t}
                             type="button"
                             onClick={() => dispatch(setUserTier(t))}
-                            className={`py-1 text-[10px] font-mono uppercase rounded transition-colors ${
+                            className={`py-1 text-[11px] font-medium rounded-lg transition-all text-center cursor-pointer select-none ${
                               isCurrent
-                                ? "bg-blue text-white font-bold"
-                                : "bg-panel hover:bg-bg text-muted hover:text-ink border border-line"
+                                ? t === "ENTERPRISE"
+                                  ? "bg-white text-amber-800 font-bold shadow-xs border border-amber-300/60"
+                                  : t === "PROFESSIONAL"
+                                  ? "bg-white text-blue font-bold shadow-xs border border-blue-200"
+                                  : "bg-white text-slate-800 font-bold shadow-xs border border-slate-200"
+                                : "text-muted hover:text-ink hover:bg-white/50"
                             }`}
                           >
-                            {t === "PROFESSIONAL" ? "PRO" : t === "ENTERPRISE" ? "ENT" : "START"}
+                            {label}
                           </button>
                         );
                       })}
@@ -233,14 +220,14 @@ export function Topbar() {
                   <span>Public Pricing & Plans</span>
                 </Link>
 
-                <Link
+                {/* <Link
                   href="/settings"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 text-xs text-ink hover:bg-bg rounded-lg transition-colors"
                 >
                   <CreditCard className="w-3.5 h-3.5 text-blue" />
                   <span>Subscription & Billing</span>
-                </Link>
+                </Link> */}
 
                 <Link
                   href="/settings"

@@ -37,7 +37,7 @@ export default function SettingsPage() {
     },
     {
       id: "gateways",
-      label: "Trade & Customs Gateways",
+      label: "Trade Gateways",
       icon: <Globe className="w-3.5 h-3.5 text-green" />,
       badge: "4",
     },
@@ -45,13 +45,13 @@ export default function SettingsPage() {
       id: "contracts",
       label: "Contract Rates & Yield",
       icon: <Ship className="w-3.5 h-3.5 text-amber" />,
-      badge: "ENTERPRISE",
+      badge: "ENT",
     },
     {
       id: "platform",
-      label: "Platform Keys & Webhooks",
+      label: "API Keys & Webhooks",
       icon: <Key className="w-3.5 h-3.5 text-ink" />,
-      badge: "ENTERPRISE",
+      badge: "ENT",
     },
     {
       id: "billing",
@@ -127,11 +127,12 @@ export default function SettingsPage() {
           </div>
 
           {/* Tab Navigation Switcher */}
-          <div className="flex items-center justify-between">
+          <div className="w-full overflow-x-auto pb-1 scrollbar-none">
             <Tabs
               tabs={tabsConfig}
               activeTab={activeTab}
               onChange={(tabId) => setActiveTab(tabId)}
+              className="w-full justify-between"
             />
           </div>
 
