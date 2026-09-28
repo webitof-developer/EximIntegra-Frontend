@@ -14,6 +14,7 @@ import {
   CountryComparisonResponse,
   CountryComparisonItem,
 } from "@/lib/types";
+import { FeatureGate } from "@/components/saas/FeatureGate";
 import { Scale, RefreshCw, Globe, Check } from "lucide-react";
 
 function CompareContent() {
@@ -163,15 +164,21 @@ export default function ComparePage() {
   return (
     <AuthGuard>
       <AppShell>
-        <React.Suspense
-          fallback={
-            <div className="p-12 text-center text-xs font-mono text-muted">
-              Loading Country Comparison Engine...
-            </div>
-          }
+        <FeatureGate
+          requiredTier="PROFESSIONAL"
+          featureName="Multilateral Origin Sourcing Arbitrage"
+          description="Compare landed duty structures across multiple bilateral jurisdictions (USA MFN, UAE CEPA, Australia ECTA, ASEAN) in real-time."
         >
-          <CompareContent />
-        </React.Suspense>
+          <React.Suspense
+            fallback={
+              <div className="p-12 text-center text-xs font-mono text-muted">
+                Loading Country Comparison Engine...
+              </div>
+            }
+          >
+            <CompareContent />
+          </React.Suspense>
+        </FeatureGate>
       </AppShell>
     </AuthGuard>
   );

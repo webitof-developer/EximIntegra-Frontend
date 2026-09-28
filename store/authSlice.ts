@@ -59,9 +59,17 @@ export const authSlice = createSlice({
       state.isInitialized = true;
       clearStoredAuth();
     },
+    setUserTier: (
+      state,
+      action: PayloadAction<"ENTERPRISE" | "PROFESSIONAL" | "STARTER">
+    ) => {
+      if (state.user) {
+        state.user.tier = action.payload;
+      }
+    },
   },
 });
 
-export const { initializeAuth, setCredentials, logout } = authSlice.actions;
+export const { initializeAuth, setCredentials, logout, setUserTier } = authSlice.actions;
 
 export default authSlice.reducer;

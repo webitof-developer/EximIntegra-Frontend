@@ -22,6 +22,7 @@ import {
   ClassificationResponse,
   ClassificationCandidate,
 } from "@/lib/types";
+import { FeatureGate } from "@/components/saas/FeatureGate";
 import { Search, FileSpreadsheet, ShieldAlert, Sparkles } from "lucide-react";
 
 export default function ClassifyPage() {
@@ -155,7 +156,7 @@ export default function ClassifyPage() {
                   id: "bulk",
                   label: "Bulk Batch Manifest (CSV)",
                   icon: <FileSpreadsheet className="w-3.5 h-3.5" />,
-                  badge: "CSV",
+                  badge: "PRO",
                 },
               ]}
             />
@@ -193,7 +194,13 @@ export default function ClassifyPage() {
               )}
             </div>
           ) : (
-            <BulkClassificationUploader />
+            <FeatureGate
+              requiredTier="PROFESSIONAL"
+              featureName="Bulk CSV Batch Manifest Engine"
+              description="Process and classify up to 500 line items simultaneously from customs declaration manifests with automated statutory GIR 1–6 sequencing."
+            >
+              <BulkClassificationUploader />
+            </FeatureGate>
           )}
         </div>
       </AppShell>

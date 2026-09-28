@@ -9,11 +9,16 @@ import { LlmProvidersSection } from "@/components/settings/LlmProvidersSection";
 import { CustomGatewaysSection } from "@/components/settings/CustomGatewaysSection";
 import { ContractRatesSection } from "@/components/settings/ContractRatesSection";
 import { PlatformKeysSection } from "@/components/settings/PlatformKeysSection";
+import { SubscriptionBillingSection } from "@/components/settings/SubscriptionBillingSection";
+import { TeamWorkspaceSection } from "@/components/settings/TeamWorkspaceSection";
+import { FeatureGate } from "@/components/saas/FeatureGate";
 import {
   Sparkles,
   Globe,
   Ship,
   Key,
+  CreditCard,
+  Users,
   Sliders,
   ShieldCheck,
   Cpu,
@@ -40,13 +45,25 @@ export default function SettingsPage() {
       id: "contracts",
       label: "Contract Rates & Yield",
       icon: <Ship className="w-3.5 h-3.5 text-amber" />,
-      badge: "BYOK",
+      badge: "ENTERPRISE",
     },
     {
       id: "platform",
       label: "Platform Keys & Webhooks",
       icon: <Key className="w-3.5 h-3.5 text-ink" />,
-      badge: "2 Keys",
+      badge: "ENTERPRISE",
+    },
+    {
+      id: "billing",
+      label: "Subscription & Billing",
+      icon: <CreditCard className="w-3.5 h-3.5 text-blue" />,
+      badge: "ACTIVE",
+    },
+    {
+      id: "team",
+      label: "Team & Organization",
+      icon: <Users className="w-3.5 h-3.5 text-green" />,
+      badge: "4 Seats",
     },
   ];
 
@@ -121,8 +138,26 @@ export default function SettingsPage() {
           {/* Active Tab Content Panel */}
           {activeTab === "llm" && <LlmProvidersSection />}
           {activeTab === "gateways" && <CustomGatewaysSection />}
-          {activeTab === "contracts" && <ContractRatesSection />}
-          {activeTab === "platform" && <PlatformKeysSection />}
+          {activeTab === "contracts" && (
+            <FeatureGate
+              requiredTier="ENTERPRISE"
+              featureName="Contract Rates & Smelter Yield BYOK"
+              description="Configure custom ocean carrier freight matrix, contracted destination terminal handling, and proprietary metallurgical recovery yields."
+            >
+              <ContractRatesSection />
+            </FeatureGate>
+          )}
+          {activeTab === "platform" && (
+            <FeatureGate
+              requiredTier="ENTERPRISE"
+              featureName="Platform API Keys & Enterprise Webhooks"
+              description="Provision production API secret keys for ERP integration (SAP, Oracle) and register real-time CBIC tariff webhooks."
+            >
+              <PlatformKeysSection />
+            </FeatureGate>
+          )}
+          {activeTab === "billing" && <SubscriptionBillingSection />}
+          {activeTab === "team" && <TeamWorkspaceSection />}
         </div>
       </AppShell>
     </AuthGuard>

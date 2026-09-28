@@ -25,6 +25,7 @@ import {
   X,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
+import { TierBadge } from "@/components/saas/TierBadge";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setMobileNavOpen } from "@/store/uiSlice";
 
@@ -35,6 +36,7 @@ interface NavItem {
   icon: React.ReactNode;
   glyph?: string;
   badge?: "SOON" | "LIVE" | "DEV" | "BETA";
+  tierBadge?: "PRO" | "ENTERPRISE";
   disabled?: boolean;
 }
 
@@ -88,6 +90,7 @@ const navSections: NavSection[] = [
         href: "/compare",
         icon: <Scale className="w-4 h-4" />,
         glyph: "VS",
+        tierBadge: "PRO",
       },
     ],
   },
@@ -100,7 +103,7 @@ const navSections: NavSection[] = [
         href: "/akshara",
         icon: <Sparkles className="w-4 h-4 text-[#93C5FD]" />,
         glyph: "AI",
-        badge: "BETA",
+        tierBadge: "ENTERPRISE",
       },
       {
         id: "market-intel",
@@ -270,19 +273,23 @@ function SidebarInner({
                         <span>{item.title}</span>
                       </div>
 
-                      {item.badge && (
-                        <StatusPill
-                          label={item.badge}
-                          variant={
-                            item.badge === "LIVE"
-                              ? "success"
-                              : item.badge === "DEV"
-                              ? "primary"
-                              : "warning"
-                          }
-                          size="xs"
-                          className="text-[9px] px-1.5 py-0"
-                        />
+                      {item.tierBadge ? (
+                        <TierBadge tier={item.tierBadge} size="xs" showIcon={false} />
+                      ) : (
+                        item.badge && (
+                          <StatusPill
+                            label={item.badge}
+                            variant={
+                              item.badge === "LIVE"
+                                ? "success"
+                                : item.badge === "DEV"
+                                ? "primary"
+                                : "warning"
+                            }
+                            size="xs"
+                            className="text-[9px] px-1.5 py-0"
+                          />
+                        )
                       )}
                     </Link>
                   );

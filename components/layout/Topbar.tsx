@@ -4,8 +4,9 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { logout } from "@/store/authSlice";
+import { logout, setUserTier } from "@/store/authSlice";
 import { setMobileNavOpen } from "@/store/uiSlice";
+import { TierBadge } from "@/components/saas/TierBadge";
 import {
   Sparkles,
   Bell,
@@ -13,6 +14,8 @@ import {
   ChevronDown,
   User as UserIcon,
   Shield,
+  CreditCard,
+  Crown,
   Menu,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
@@ -172,8 +175,9 @@ export function Topbar() {
                 {initials}
               </div>
               <div className="hidden md:flex flex-col">
-                <span className="text-xs font-semibold text-ink leading-tight flex items-center gap-1">
-                  {user.name}
+                <span className="text-xs font-semibold text-ink leading-tight flex items-center gap-1.5">
+                  <span>{user.name}</span>
+                  <TierBadge tier={user.tier || "ENTERPRISE"} size="xs" showIcon={false} />
                   <ChevronDown className="w-3 h-3 text-muted" />
                 </span>
                 <span className="text-[10px] text-muted font-mono leading-none truncate max-w-[130px]">
@@ -183,19 +187,60 @@ export function Topbar() {
             </button>
 
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-panel border border-line shadow-lg p-2 z-50 space-y-1">
-                <div className="p-3 border-b border-line bg-bg/50 rounded-lg">
-                  <div className="text-xs font-bold text-ink">{user.name}</div>
-                  <div className="text-[11px] text-muted truncate">{user.email}</div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-[10px] font-mono uppercase bg-blue-dim text-blue px-1.5 py-0.5 rounded font-semibold">
-                      {user.role}
+              <div className="absolute right-0 mt-2 w-72 rounded-xl bg-panel border border-line shadow-xl p-2 z-50 space-y-1">
+                <div className="p-3 border-b border-line bg-bg/50 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-ink">{user.name}</div>
+                      <div className="text-[10px] text-muted truncate max-w-[160px]">{user.email}</div>
+                    </div>
+                    <TierBadge tier={user.tier || "ENTERPRISE"} size="sm" />
+                  </div>
+
+                  {/* Interactive Plan Sandbox Switcher */}
+                  <div className="pt-1.5 border-t border-line/60">
+                    <span className="text-[9px] font-mono text-muted uppercase block mb-1">
+                      Simulate Active Tier (Demo):
                     </span>
-                    <span className="text-[10px] font-mono text-green font-semibold">
-                      {user.tier}
-                    </span>
+                    <div className="grid grid-cols-3 gap-1">
+                      {(["STARTER", "PROFESSIONAL", "ENTERPRISE"] as const).map((t) => {
+                        const isCurrent = (user.tier || "ENTERPRISE") === t;
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => dispatch(setUserTier(t))}
+                            className={`py-1 text-[10px] font-mono uppercase rounded transition-colors ${
+                              isCurrent
+                                ? "bg-blue text-white font-bold"
+                                : "bg-panel hover:bg-bg text-muted hover:text-ink border border-line"
+                            }`}
+                          >
+                            {t === "PROFESSIONAL" ? "PRO" : t === "ENTERPRISE" ? "ENT" : "START"}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
+
+                <Link
+                  href="/pricing"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-xs text-ink hover:bg-bg rounded-lg transition-colors"
+                >
+                  <Crown className="w-3.5 h-3.5 text-amber" />
+                  <span>Public Pricing & Plans</span>
+                </Link>
+
+                <Link
+                  href="/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-xs text-ink hover:bg-bg rounded-lg transition-colors"
+                >
+                  <CreditCard className="w-3.5 h-3.5 text-blue" />
+                  <span>Subscription & Billing</span>
+                </Link>
 
                 <Link
                   href="/settings"

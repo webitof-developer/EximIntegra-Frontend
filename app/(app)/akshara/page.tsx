@@ -22,6 +22,7 @@ import {
   Database,
   Info,
 } from "lucide-react";
+import { FeatureGate } from "@/components/saas/FeatureGate";
 
 export default function AksharaPage() {
   const dispatch = useAppDispatch();
@@ -206,40 +207,48 @@ export default function AksharaPage() {
           </div>
 
 
-          {/* Chat Messages Container */}
-          <div className="bg-bg/40 border border-line rounded-2xl p-4 min-h-[460px] max-h-[640px] overflow-y-auto space-y-4 shadow-inner">
-            {messages.map((msg) => (
-              <ChatMessageItem
-                key={msg.id}
-                message={msg}
-                onApplyContext={handleApplyContext}
-              />
-            ))}
+          {/* Chat Messages & Input Container */}
+          <FeatureGate
+            requiredTier="ENTERPRISE"
+            featureName="Akshara AI Copilot"
+            description="Access grounded trade intelligence with autonomous GIR classification, real-time customs gazette citations, and verified tool-call audit trails."
+          >
+            <div className="space-y-4">
+              <div className="bg-bg/40 border border-line rounded-2xl p-4 min-h-[460px] max-h-[640px] overflow-y-auto space-y-4 shadow-inner">
+                {messages.map((msg) => (
+                  <ChatMessageItem
+                    key={msg.id}
+                    message={msg}
+                    onApplyContext={handleApplyContext}
+                  />
+                ))}
 
-            {isLoading && (
-              <div className="flex items-start gap-3.5">
-                <div className="w-8 h-8 rounded-lg bg-blue text-white shrink-0 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 animate-pulse" />
-                </div>
-                <div className="bg-panel border border-line px-3.5 py-2.5 rounded-xl rounded-tl-none shadow-xs">
-                  <div className="flex items-center gap-2 text-xs font-mono text-blue font-semibold">
-                    <div className="w-2 h-2 rounded-full bg-blue animate-ping" />
-                    <span>Analyzing trade regulations & tariffs...</span>
+                {isLoading && (
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue text-white shrink-0 flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 animate-pulse" />
+                    </div>
+                    <div className="bg-panel border border-line px-3.5 py-2.5 rounded-xl rounded-tl-none shadow-xs">
+                      <div className="flex items-center gap-2 text-xs font-mono text-blue font-semibold">
+                        <div className="w-2 h-2 rounded-full bg-blue animate-ping" />
+                        <span>Analyzing trade regulations & tariffs...</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
-            )}
 
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input Section */}
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            isLoading={isLoading}
-            activeHs={currentContext.hsCode}
-            activeOrigin={currentContext.countryOfOrigin}
-          />
+              {/* Input Section */}
+              <ChatInput
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+                activeHs={currentContext.hsCode}
+                activeOrigin={currentContext.countryOfOrigin}
+              />
+            </div>
+          </FeatureGate>
         </div>
       </AppShell>
     </AuthGuard>
