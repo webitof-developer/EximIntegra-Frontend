@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { StatusPill } from "@/components/ui";
+import {
+  StatusPill,
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui";
 import {
   Users,
   UserPlus,
@@ -188,19 +197,19 @@ export function TeamWorkspaceSection() {
       </div>
 
       {/* 2. Team Members Table */}
-      <div className="overflow-x-auto bg-panel border border-line rounded-2xl shadow-xs">
-        <table className="w-full text-xs text-left">
-          <thead>
-            <tr className="bg-bg/60 border-b border-line text-[11px] font-mono text-muted uppercase">
-              <th className="py-3 px-4">Member</th>
-              <th className="py-3 px-4">Department</th>
-              <th className="py-3 px-4 text-center">Role / Access</th>
-              <th className="py-3 px-4 text-center">Security (2FA)</th>
-              <th className="py-3 px-4">Last Active</th>
-              <th className="py-3 px-4 text-center">Actions</th>
+      <TableContainer>
+        <Table>
+          <TableHeader>
+            <tr>
+              <TableHead>Member</TableHead>
+              <TableHead>Department</TableHead>
+              <TableHead align="center">Role / Access</TableHead>
+              <TableHead align="center">Security (2FA)</TableHead>
+              <TableHead>Last Active</TableHead>
+              <TableHead align="center">Actions</TableHead>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
+          </TableHeader>
+          <TableBody>
             {members.map((m) => {
               const initials = m.name
                 .split(" ")
@@ -212,9 +221,9 @@ export function TeamWorkspaceSection() {
               const role = roleDetails[m.role];
 
               return (
-                <tr key={m.id} className="hover:bg-bg/40 transition-colors">
+                <TableRow key={m.id}>
                   {/* Name & Avatar */}
-                  <td className="py-3.5 px-4">
+                  <TableCell>
                     <div className="flex items-center gap-3">
                       <div
                         className={`w-8 h-8 rounded-full ${m.avatarColor} font-mono font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs`}
@@ -228,24 +237,24 @@ export function TeamWorkspaceSection() {
                         </span>
                       </div>
                     </div>
-                  </td>
+                  </TableCell>
 
                   {/* Department */}
-                  <td className="py-3.5 px-4 text-muted">
+                  <TableCell className="text-muted">
                     {m.department}
-                  </td>
+                  </TableCell>
 
                   {/* Role Pill */}
-                  <td className="py-3.5 px-4 text-center">
+                  <TableCell align="center">
                     <StatusPill
                       label={role.label}
                       variant={role.badgeVariant}
                       size="xs"
                     />
-                  </td>
+                  </TableCell>
 
                   {/* 2FA Status */}
-                  <td className="py-3.5 px-4 text-center">
+                  <TableCell align="center">
                     {m.twoFactorEnabled ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-mono text-green font-semibold">
                         <ShieldCheck className="w-3 h-3" />
@@ -256,15 +265,15 @@ export function TeamWorkspaceSection() {
                         Not Enabled
                       </span>
                     )}
-                  </td>
+                  </TableCell>
 
                   {/* Last Active */}
-                  <td className="py-3.5 px-4 font-mono text-muted text-[11px]">
+                  <TableCell className="font-mono text-muted text-[11px]">
                     {m.lastActive}
-                  </td>
+                  </TableCell>
 
                   {/* Actions */}
-                  <td className="py-3.5 px-4 text-center">
+                  <TableCell align="center">
                     {m.role !== "ADMIN" && (
                       <button
                         type="button"
@@ -275,13 +284,13 @@ export function TeamWorkspaceSection() {
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {/* 3. Role-Based Access Control (RBAC) Matrix */}
       <div className="space-y-4 pt-2">

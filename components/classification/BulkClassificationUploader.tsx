@@ -5,7 +5,18 @@ import {
   useClassifyBulkMutation,
   useGetBulkJobStatusQuery,
 } from "@/store/classificationApi";
-import { Card, ProvenanceBadge, StatusPill } from "@/components/ui";
+import {
+  Card,
+  ProvenanceBadge,
+  StatusPill,
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui";
 import { formatHsCode, formatPercent } from "@/lib/formatters";
 import {
   UploadCloud,
@@ -213,21 +224,21 @@ export function BulkClassificationUploader() {
 
             {/* Results Table */}
             {jobStatus?.results && jobStatus.results.length > 0 && (
-              <div className="border border-line rounded-lg overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#FAFBFD] border-b border-line text-muted uppercase font-mono text-[10px]">
+              <TableContainer>
+                <Table>
+                  <TableHeader>
                     <tr>
-                      <th className="py-2.5 px-3">Item</th>
-                      <th className="py-2.5 px-3">Commercial Description</th>
-                      <th className="py-2.5 px-3">Matched HS Code</th>
-                      <th className="py-2.5 px-3">Statutory Description</th>
-                      <th className="py-2.5 px-3">Conf.</th>
-                      <th className="py-2.5 px-3">GIR Rule</th>
-                      <th className="py-2.5 px-3">BCD</th>
-                      <th className="py-2.5 px-3">Provenance</th>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Commercial Description</TableHead>
+                      <TableHead>Matched HS Code</TableHead>
+                      <TableHead>Statutory Description</TableHead>
+                      <TableHead>Conf.</TableHead>
+                      <TableHead>GIR Rule</TableHead>
+                      <TableHead>BCD</TableHead>
+                      <TableHead>Provenance</TableHead>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-line font-sans">
+                  </TableHeader>
+                  <TableBody>
                     {jobStatus.results.map((row) => (
                       <tr key={row.id} className="hover:bg-bg/60 transition-colors">
                         <td className="py-2.5 px-3 font-mono text-muted text-[11px]">
@@ -256,9 +267,9 @@ export function BulkClassificationUploader() {
                         </td>
                       </tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </TableBody>
+                </Table>
+              </TableContainer>
             )}
           </div>
         </Card>

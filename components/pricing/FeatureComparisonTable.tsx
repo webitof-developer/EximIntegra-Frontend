@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Check, Minus, ChevronDown, ChevronUp } from "lucide-react";
+import { TableContainer, Table } from "@/components/ui/Table";
 
 interface FeatureRow {
   name: string;
@@ -200,8 +201,8 @@ export function FeatureComparisonTable() {
         </p>
       </div>
 
-      <div className="overflow-x-auto bg-panel border border-line rounded-2xl shadow-xs">
-        <table className="w-full text-xs text-left">
+      <TableContainer>
+        <Table>
           <thead>
             <tr className="border-b border-line bg-bg/60">
               <th className="py-4 px-5 text-sm font-bold text-ink w-2/5">
@@ -258,8 +259,8 @@ export function FeatureComparisonTable() {
               </React.Fragment>
             ))}
           </tbody>
-        </table>
-      </div>
+        </Table>
+      </TableContainer>
     </div>
   );
 }

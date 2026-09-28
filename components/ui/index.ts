@@ -6,3 +6,4 @@ export * from "./ProvenanceBadge";
 export * from "./StepBadge";
 export * from "./WidgetTile";
 export * from "./DegradedStateAlert";
+export * from "./Table";

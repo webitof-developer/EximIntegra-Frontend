@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { StatusPill } from "@/components/ui";
+import {
+  StatusPill,
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui";
 import {
   Key,
   Copy,
@@ -276,25 +285,25 @@ export function PlatformKeysSection() {
         )}
 
         {/* Keys Table */}
-        <div className="overflow-x-auto bg-panel border border-line rounded-xl shadow-xs">
-          <table className="w-full text-xs text-left">
-            <thead>
-              <tr className="bg-bg/60 border-b border-line text-[11px] font-mono text-muted uppercase">
-                <th className="py-2.5 px-4">Name</th>
-                <th className="py-2.5 px-4">Key Token</th>
-                <th className="py-2.5 px-4">Created / Last Active</th>
-                <th className="py-2.5 px-4">Scopes</th>
-                <th className="py-2.5 px-4 text-center">Status</th>
-                <th className="py-2.5 px-4 text-center">Actions</th>
+        <TableContainer>
+          <Table>
+            <TableHeader>
+              <tr>
+                <TableHead>Name</TableHead>
+                <TableHead>Key Token</TableHead>
+                <TableHead>Created / Last Active</TableHead>
+                <TableHead>Scopes</TableHead>
+                <TableHead align="center">Status</TableHead>
+                <TableHead align="center">Actions</TableHead>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
+            </TableHeader>
+            <TableBody>
               {keys.map((k) => (
-                <tr key={k.id} className="hover:bg-bg/40 transition-colors">
-                  <td className="py-3 px-4 font-semibold text-ink">
+                <TableRow key={k.id}>
+                  <TableCell className="font-semibold text-ink">
                     {k.name}
-                  </td>
-                  <td className="py-3 px-4">
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-ink bg-bg px-2 py-0.5 rounded border border-line">
                         {k.prefix}
@@ -312,12 +321,12 @@ export function PlatformKeysSection() {
                         )}
                       </button>
                     </div>
-                  </td>
-                  <td className="py-3 px-4 text-muted font-mono text-[11px]">
+                  </TableCell>
+                  <TableCell className="text-muted font-mono text-[11px]">
                     <div>{k.createdAt}</div>
                     <div className="text-[10px] text-muted">{k.lastUsed}</div>
-                  </td>
-                  <td className="py-3 px-4">
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {k.scopes.map((s) => (
                         <span
@@ -328,15 +337,15 @@ export function PlatformKeysSection() {
                         </span>
                       ))}
                     </div>
-                  </td>
-                  <td className="py-3 px-4 text-center">
+                  </TableCell>
+                  <TableCell align="center">
                     <StatusPill
                       label={k.status}
                       variant={k.status === "ACTIVE" ? "success" : "muted"}
                       size="xs"
                     />
-                  </td>
-                  <td className="py-3 px-4 text-center">
+                  </TableCell>
+                  <TableCell align="center">
                     {k.status === "ACTIVE" && (
                       <button
                         type="button"
@@ -346,12 +355,12 @@ export function PlatformKeysSection() {
                         Revoke
                       </button>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
 
       {/* 2. Outgoing Event Webhooks */}

@@ -3,7 +3,14 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { CountryComparisonResponse, CountryComparisonItem } from "@/lib/types";
-import { Card, ProvenanceBadge, StatusPill } from "@/components/ui";
+import {
+  Card,
+  ProvenanceBadge,
+  StatusPill,
+  Table,
+  TableHeader,
+  TableBody,
+} from "@/components/ui";
 import { formatCurrency, formatHsCode, formatPercent } from "@/lib/formatters";
 import {
   Scale,
@@ -92,9 +99,9 @@ export function CountryComparisonMatrix({
         noPadding
       >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <Table>
             {/* Country Headers */}
-            <thead>
+            <TableHeader>
               <tr className="bg-[#FAFBFD] border-b border-line">
                 <th className="py-4 px-5 text-muted uppercase font-mono text-[10px] w-56">
                   Metric / Cost Element
@@ -127,7 +134,7 @@ export function CountryComparisonMatrix({
                   </th>
                 ))}
               </tr>
-            </thead>
+            </TableHeader>
 
             <tbody className="divide-y divide-line font-sans">
               {/* SECTION 1: STATUTORY DUTY TARIFFS */}
@@ -336,7 +343,7 @@ export function CountryComparisonMatrix({
                 ))}
               </tr>
             </tbody>
-          </table>
+          </Table>
         </div>
       </Card>
     </div>

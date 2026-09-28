@@ -1,7 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { ProvenanceBadge, StatusPill } from "@/components/ui";
+import {
+  ProvenanceBadge,
+  StatusPill,
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui";
 import {
   Ship,
   Building2,
@@ -279,41 +289,41 @@ export function ContractRatesSection() {
         )}
 
         {/* Table of Rates */}
-        <div className="overflow-x-auto bg-panel border border-line rounded-xl shadow-xs">
-          <table className="w-full text-xs text-left">
-            <thead>
-              <tr className="bg-bg/60 border-b border-line text-[11px] font-mono text-muted uppercase">
-                <th className="py-2.5 px-4">Route</th>
-                <th className="py-2.5 px-4">Carrier / Contract</th>
-                <th className="py-2.5 px-4 text-right">Contracted Rate</th>
-                <th className="py-2.5 px-4">Valid Until</th>
-                <th className="py-2.5 px-4 text-center">Action</th>
+        <TableContainer>
+          <Table>
+            <TableHeader>
+              <tr>
+                <TableHead>Route</TableHead>
+                <TableHead>Carrier / Contract</TableHead>
+                <TableHead align="right">Contracted Rate</TableHead>
+                <TableHead>Valid Until</TableHead>
+                <TableHead align="center">Action</TableHead>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
+            </TableHeader>
+            <TableBody>
               {freightList.map((f) => (
-                <tr key={f.id} className="hover:bg-bg/40 transition-colors">
-                  <td className="py-3 px-4">
+                <TableRow key={f.id}>
+                  <TableCell>
                     <div className="font-semibold text-ink">
                       {f.origin} &rarr; {f.destination}
                     </div>
-                  </td>
-                  <td className="py-3 px-4">
+                  </TableCell>
+                  <TableCell>
                     <span className="text-ink font-mono">{f.contractCode}</span>
                     <span className="text-[11px] text-muted block">{f.carrier}</span>
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <span className="font-mono font-bold text-ink text-sm">
+                  </TableCell>
+                  <TableCell align="right">
+                    <span className="font-mono font-bold text-ink text-sm tabular-nums">
                       ${f.rateUsd.toLocaleString()}
                     </span>
                     <span className="text-[10px] text-muted font-mono block">
                       per {f.unit}
                     </span>
-                  </td>
-                  <td className="py-3 px-4 text-muted font-mono">
+                  </TableCell>
+                  <TableCell className="text-muted font-mono">
                     {f.expiryDate}
-                  </td>
-                  <td className="py-3 px-4 text-center">
+                  </TableCell>
+                  <TableCell align="center">
                     <button
                       type="button"
                       onClick={() => handleDeleteFreight(f.id)}
@@ -322,12 +332,12 @@ export function ContractRatesSection() {
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
 
       {/* 2. Smelter Recovery Yield Profiles */}

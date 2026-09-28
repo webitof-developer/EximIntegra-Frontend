@@ -2,7 +2,16 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { StatusPill } from "@/components/ui";
+import {
+  StatusPill,
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui";
 import {
   CreditCard,
   CheckCircle2,
@@ -341,41 +350,41 @@ export function SubscriptionBillingSection() {
           </span>
         </div>
 
-        <div className="overflow-x-auto bg-panel border border-line rounded-2xl shadow-xs">
-          <table className="w-full text-xs text-left">
-            <thead>
-              <tr className="bg-bg/60 border-b border-line text-[11px] font-mono text-muted uppercase">
-                <th className="py-3 px-4">Invoice ID</th>
-                <th className="py-3 px-4">Billing Date</th>
-                <th className="py-3 px-4">Period</th>
-                <th className="py-3 px-4 text-right">Taxable Outlay</th>
-                <th className="py-3 px-4 text-right">Total (with GST)</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Receipt</th>
+        <TableContainer>
+          <Table>
+            <TableHeader>
+              <tr>
+                <TableHead>Invoice ID</TableHead>
+                <TableHead>Billing Date</TableHead>
+                <TableHead>Period</TableHead>
+                <TableHead align="right">Taxable Outlay</TableHead>
+                <TableHead align="right">Total (with GST)</TableHead>
+                <TableHead align="center">Status</TableHead>
+                <TableHead align="center">Receipt</TableHead>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-line">
+            </TableHeader>
+            <TableBody>
               {sampleInvoices.map((inv) => (
-                <tr key={inv.id} className="hover:bg-bg/40 transition-colors">
-                  <td className="py-3 px-4 font-mono font-bold text-ink">
+                <TableRow key={inv.id}>
+                  <TableCell className="font-mono font-bold text-ink">
                     {inv.invoiceNumber}
-                  </td>
-                  <td className="py-3 px-4 text-muted font-mono">
+                  </TableCell>
+                  <TableCell className="text-muted font-mono">
                     {inv.date}
-                  </td>
-                  <td className="py-3 px-4 text-ink">
+                  </TableCell>
+                  <TableCell className="text-ink">
                     {inv.period}
-                  </td>
-                  <td className="py-3 px-4 text-right font-mono text-muted">
+                  </TableCell>
+                  <TableCell align="right" className="font-mono text-muted tabular-nums">
                     ₹{inv.amountInr.toLocaleString("en-IN")}
-                  </td>
-                  <td className="py-3 px-4 text-right font-mono font-bold text-ink">
+                  </TableCell>
+                  <TableCell align="right" className="font-mono font-bold text-ink tabular-nums">
                     ₹{inv.totalInr.toLocaleString("en-IN")}
-                  </td>
-                  <td className="py-3 px-4 text-center">
+                  </TableCell>
+                  <TableCell align="center">
                     <StatusPill label={inv.status} variant="success" size="xs" />
-                  </td>
-                  <td className="py-3 px-4 text-center">
+                  </TableCell>
+                  <TableCell align="center">
                     <button
                       type="button"
                       onClick={() => handleDownloadInvoice(inv)}
@@ -385,12 +394,12 @@ export function SubscriptionBillingSection() {
                       <Download className="w-3.5 h-3.5" />
                       <span className="text-[11px]">PDF</span>
                     </button>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </div>
 
       {/* Change Plan Modal */}

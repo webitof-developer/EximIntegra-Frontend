@@ -3,7 +3,18 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { LandedCostResponse } from "@/lib/types";
-import { Card, ProvenanceBadge, StatusPill } from "@/components/ui";
+import {
+  Card,
+  ProvenanceBadge,
+  StatusPill,
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui";
 import { formatCurrency, formatHsCode, formatPercent } from "@/lib/formatters";
 import {
   Flame,
@@ -240,19 +251,19 @@ export function LandedCostResultsView({
         title="Comprehensive Landed Cost Waterfall"
         subtitle={`Port of Discharge: ${result.destination_port} &bull; Batch: ${result.batch_quantity} ${result.batch_unit}`}
       >
-        <div className="border border-line rounded-xl overflow-hidden">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#FAFBFD] border-b border-line text-muted uppercase font-mono text-[10px]">
+        <TableContainer>
+          <Table>
+            <TableHeader>
               <tr>
-                <th className="py-3 px-4">Cost Element</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4">Amount (INR)</th>
-                <th className="py-3 px-4">Amount (USD)</th>
-                <th className="py-3 px-4">% Share</th>
-                <th className="py-3 px-4">Visual Distribution</th>
+                <TableHead>Cost Element</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Amount (INR)</TableHead>
+                <TableHead>Amount (USD)</TableHead>
+                <TableHead>% Share</TableHead>
+                <TableHead>Visual Distribution</TableHead>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-line font-sans">
+            </TableHeader>
+            <TableBody>
               {result.cost_waterfall.map((item) => (
                 <tr
                   key={item.id}
@@ -304,9 +315,9 @@ export function LandedCostResultsView({
                   </td>
                 </tr>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Card>
 
       {/* Landed Cost Run Summary & Save Action */}

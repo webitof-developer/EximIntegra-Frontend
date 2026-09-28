@@ -3,7 +3,18 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { DutyCalculationResponse } from "@/lib/types";
-import { Card, ProvenanceBadge, StatusPill } from "@/components/ui";
+import {
+  Card,
+  ProvenanceBadge,
+  StatusPill,
+  TableContainer,
+  Table,
+  TableHeader,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui";
 import { formatCurrency, formatHsCode, formatPercent } from "@/lib/formatters";
 import {
   ShieldAlert,
@@ -134,18 +145,18 @@ export function DutyBreakdownView({
           </div>
         }
       >
-        <div className="border border-line rounded-xl overflow-hidden">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-[#FAFBFD] border-b border-line text-muted uppercase font-mono text-[10px]">
+        <TableContainer>
+          <Table>
+            <TableHeader>
               <tr>
-                <th className="py-3 px-4">Statutory Duty Component</th>
-                <th className="py-3 px-4">Statutory Rate</th>
-                <th className="py-3 px-4">Rate Applied</th>
-                <th className="py-3 px-4">Amount (INR)</th>
-                <th className="py-3 px-4">Data Provenance</th>
+                <TableHead>Statutory Duty Component</TableHead>
+                <TableHead>Statutory Rate</TableHead>
+                <TableHead>Rate Applied</TableHead>
+                <TableHead>Amount (INR)</TableHead>
+                <TableHead>Data Provenance</TableHead>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-line font-sans">
+            </TableHeader>
+            <TableBody>
               {/* 1. Basic Customs Duty */}
               <tr className="hover:bg-bg/50 transition-colors">
                 <td className="py-3.5 px-4">
@@ -290,9 +301,9 @@ export function DutyBreakdownView({
                   />
                 </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Card>
 
       {/* Statutory Advisory Notice */}
