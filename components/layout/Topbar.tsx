@@ -56,8 +56,8 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     description: "Isolated component library, design tokens, typography, and interactive state playground.",
   },
   "/settings": {
-    title: "Settings & BYOK Integration",
-    description: "Configure custom Bring-Your-Own-Key provider credentials, company defaults, and compliance profiles.",
+    title: "API Keys & BYOK",
+    description: "Configure LLM provider credentials, gateway tokens, contract rates, and webhooks.",
   },
 };
 
@@ -96,39 +96,38 @@ export function Topbar() {
     : "EI";
 
   return (
-    <header className="sticky top-0 z-20 bg-panel/95 backdrop-blur-md border-b border-line px-4 sm:px-8 py-3.5 flex items-center justify-between">
+    <header className="sticky top-0 z-20 bg-panel/95 backdrop-blur-md border-b border-line px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
       {/* Title, Mobile Trigger & Description */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
           aria-label="Open navigation menu"
           onClick={() => dispatch(setMobileNavOpen(true))}
-          className="p-2 rounded-lg text-muted hover:text-ink lg:hidden border border-line bg-panel hover:bg-bg cursor-pointer transition-colors shadow-2xs"
+          className="p-2 rounded-lg text-muted hover:text-ink lg:hidden border border-line bg-panel hover:bg-bg cursor-pointer transition-colors shadow-2xs shrink-0"
         >
           <Menu className="w-4 h-4" />
         </button>
 
-        <div className="space-y-0.5">
+        <div className="space-y-0.5 min-w-0">
           <div className="flex items-center gap-2.5">
-            <h1 className="text-lg sm:text-xl font-bold text-ink tracking-tight">
+            <h1 className="text-lg sm:text-xl font-bold text-ink tracking-tight truncate">
               {meta.title}
             </h1>
-            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue border border-blue/20 font-semibold">
+            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue border border-blue/20 font-semibold shrink-0">
               ENTERPRISE v2026.03
             </span>
           </div>
-          <p className="text-xs text-muted leading-relaxed max-w-2xl hidden md:block">
+          <p className="text-xs text-muted leading-relaxed max-w-xl truncate hidden md:block">
             {meta.description}
           </p>
         </div>
       </div>
 
-
       {/* Right Action & Context Bar */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 shrink-0">
         {/* Active Material Context Pill */}
         {currentContext.hsCode && (
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg border border-line text-xs">
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bg border border-line text-xs shrink-0">
             <span className="text-[10px] font-mono uppercase text-muted tracking-wider">
               Context:
             </span>
@@ -145,17 +144,17 @@ export function Topbar() {
         {/* Akshara Quick Launcher */}
         <Link
           href="/akshara"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue text-white text-xs font-semibold hover:bg-blue-dark transition-all shadow-xs"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue text-white text-xs font-semibold hover:bg-blue-dark transition-all shadow-xs shrink-0 whitespace-nowrap"
         >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Ask Akshara</span>
+          <Sparkles className="w-3.5 h-3.5 shrink-0" />
+          <span className="whitespace-nowrap">Ask Akshara</span>
         </Link>
 
         {/* Notification Bell */}
         <button
           type="button"
           aria-label="View notifications"
-          className="w-9 h-9 rounded-lg border border-line flex items-center justify-center text-muted hover:text-ink hover:bg-bg transition-colors relative cursor-pointer"
+          className="w-9 h-9 rounded-lg border border-line flex items-center justify-center text-muted hover:text-ink hover:bg-bg transition-colors relative cursor-pointer shrink-0"
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue ring-2 ring-white" />
