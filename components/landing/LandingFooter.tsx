@@ -115,7 +115,7 @@ export function LandingFooter() {
             <h5 className="font-bold text-ink uppercase tracking-wider text-[11px] font-mono">
               Statutory Datasets
             </h5>
-            <ul className="space-y-2 text-muted text-[11px] font-mono">
+            <ul className="space-y-2 text-muted text-[11px]">
               <li>CBIC ICEGATE 2.0</li>
               <li>Customs Tariff Act 2026</li>
               <li>DGFT Policy 2026</li>

@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ThreeTradeGlobe } from "./ThreeTradeGlobe";
+import { HeroBackgroundAnimation } from "./HeroBackgroundAnimation";
 import {
   ShieldCheck,
   ArrowRight,
@@ -20,11 +21,11 @@ import {
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden pt-12 pb-16 md:pt-16 md:pb-24 border-b border-line bg-gradient-to-b from-panel via-panel to-bg">
-      {/* Dynamic Ambient Background Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[420px] bg-gradient-to-tr from-blue-dim/60 via-indigo-100/40 to-sky-100/30 rounded-full blur-3xl pointer-events-none -z-10" />
+    <section className="relative overflow-hidden pt-12 pb-16 md:pt-16 md:pb-24 border-b border-line bg-bg/40">
+      {/* High-End Modern Animated Background (Interactive Grid, Flowing Packets & Fluid Glows) */}
+      <HeroBackgroundAnimation />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
         {/* Eyebrow Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-dim text-blue border border-blue/20 text-xs font-mono font-semibold shadow-2xs animate-in fade-in duration-500">
           <span className="w-2 h-2 rounded-full bg-blue animate-pulse" />

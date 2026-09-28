@@ -7,9 +7,9 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { logout, setUserTier } from "@/store/authSlice";
 import { setMobileNavOpen } from "@/store/uiSlice";
 import { TierBadge } from "@/components/saas/TierBadge";
+import { NotificationDropdown } from "./NotificationDropdown";
 import {
   Sparkles,
-  Bell,
   LogOut,
   ChevronDown,
   User as UserIcon,
@@ -134,15 +134,8 @@ export function Topbar() {
           <span className="whitespace-nowrap">Ask Akshara</span>
         </Link>
 
-        {/* Notification Bell */}
-        <button
-          type="button"
-          aria-label="View notifications"
-          className="w-9 h-9 rounded-lg border border-line flex items-center justify-center text-muted hover:text-ink hover:bg-bg transition-colors relative cursor-pointer shrink-0"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue ring-2 ring-white" />
-        </button>
+        {/* Notification Bell Dropdown */}
+        <NotificationDropdown />
 
         {/* User Profile / Auth State */}
         {isAuthenticated && user ? (
