@@ -99,16 +99,15 @@ export function InteractiveTariffDemo() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Section Header */}
         <div className="text-center space-y-2 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-dim text-green border border-green/20 text-xs font-mono font-bold">
-            <span className="w-2 h-2 rounded-full bg-green" />
-            <span>LIVE INTERACTIVE PREVIEW &bull; NO SIGNUP NEEDED</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-dim text-blue border border-blue/20 text-xs font-mono font-semibold">
+            <span className="w-2 h-2 rounded-full bg-blue" />
+            <span>TARIFF & LANDED COST SIMULATOR</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-ink tracking-tight">
-            Test the Statutory Tariff & Landed Cost Engine
+            Statutory Tariff &amp; Landed Cost Simulator
           </h2>
           <p className="text-xs sm:text-sm text-muted">
-            Select a commodity grade below and switch origins to see instant customs
-            arbitrage between MFN standard and CEPA preferential rates.
+            Instant customs duty calculations, multimodal logistics, and landed economics across origins.
           </p>
         </div>
 

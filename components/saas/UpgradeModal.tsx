@@ -172,7 +172,7 @@ export function UpgradeModal({
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Instant Demo Upgrade</span>
+            <span>Upgrade to {requiredTier === "ENTERPRISE" ? "Enterprise" : "Professional"}</span>
           </button>
 
           <Link

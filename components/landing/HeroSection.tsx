@@ -42,10 +42,8 @@ export function HeroSection() {
         </h1>
 
         {/* Hero Subtitle */}
-        <p className="text-xs sm:text-sm text-muted max-w-2xl mx-auto leading-relaxed">
-          Automate 8-digit HS commodity classification via sequential General Rules
-          of Interpretation (GIR), calculate exact statutory customs duties with CBIC
-          gazette rates, and model multimodal port logistics &amp; smelter recovery yields.
+        <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed">
+          Statutory customs tariffs, automated 8-digit HS classification, and multimodal landed cost modeling for international trade.
         </p>
 
         {/* Action CTAs */}
@@ -63,7 +61,7 @@ export function HeroSection() {
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-bg hover:bg-line border border-line text-ink text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Calculator className="w-4 h-4 text-blue" />
-            <span>Try Interactive Calculator</span>
+            <span>Interactive Calculator</span>
           </a>
 
           <Link
@@ -97,59 +95,47 @@ export function HeroSection() {
               <ThreeTradeGlobe className="w-full" />
 
               {/* Floating Stat Card 1: UAE CEPA Arbitrage (Top-Left) */}
-              <div className="absolute top-4 left-4 sm:top-8 sm:left-8 p-3 sm:p-3.5 rounded-xl bg-panel/95 border border-line shadow-lg backdrop-blur-md text-left max-w-[210px] hidden sm:block animate-in fade-in slide-in-from-left duration-700">
-                <div className="flex items-center gap-1.5 text-[10px] font-mono text-green font-bold uppercase tracking-wider mb-1">
+              <div className="absolute top-4 left-4 sm:top-8 sm:left-8 p-3 rounded-xl bg-panel/95 border border-line shadow-lg backdrop-blur-md text-left hidden sm:block animate-in fade-in slide-in-from-left duration-700">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-green font-bold uppercase tracking-wider mb-0.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-green" />
                   <span>CEPA Concession</span>
                 </div>
                 <div className="text-xs font-bold text-ink leading-tight">
                   UAE &rarr; India: 0% BCD
                 </div>
-                <p className="text-[10px] text-muted leading-tight mt-1">
-                  CBIC Notif 22/2022-Cus applied with verified PSR rules.
-                </p>
               </div>
 
               {/* Floating Stat Card 2: ICEGATE 2.0 Active Sync (Top-Right) */}
-              <div className="absolute top-4 right-4 sm:top-8 sm:right-8 p-3 sm:p-3.5 rounded-xl bg-panel/95 border border-line shadow-lg backdrop-blur-md text-left max-w-[210px] hidden sm:block animate-in fade-in slide-in-from-right duration-700">
-                <div className="flex items-center gap-1.5 text-[10px] font-mono text-blue font-bold uppercase tracking-wider mb-1">
+              <div className="absolute top-4 right-4 sm:top-8 sm:right-8 p-3 rounded-xl bg-panel/95 border border-line shadow-lg backdrop-blur-md text-left hidden sm:block animate-in fade-in slide-in-from-right duration-700">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-blue font-bold uppercase tracking-wider mb-0.5">
                   <Cpu className="w-3 h-3 text-blue" />
                   <span>ICEGATE 2.0 Live</span>
                 </div>
                 <div className="text-xs font-bold text-ink leading-tight">
                   Customs Act 2026
                 </div>
-                <p className="text-[10px] text-muted leading-tight mt-1">
-                  Latency: 18ms &bull; Zero-drift statutory verification.
-                </p>
               </div>
 
               {/* Floating Stat Card 3: GIR Classification Node (Bottom-Left) */}
-              <div className="absolute bottom-4 left-4 sm:bottom-8 sm:left-8 p-3 sm:p-3.5 rounded-xl bg-panel/95 border border-line shadow-lg backdrop-blur-md text-left max-w-[220px] hidden md:block animate-in fade-in slide-in-from-bottom duration-700">
-                <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-600 font-bold uppercase tracking-wider mb-1">
+              <div className="absolute bottom-4 left-4 sm:bottom-8 sm:left-8 p-3 rounded-xl bg-panel/95 border border-line shadow-lg backdrop-blur-md text-left hidden md:block animate-in fade-in slide-in-from-bottom duration-700">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-amber-600 font-bold uppercase tracking-wider mb-0.5">
                   <Layers className="w-3 h-3 text-amber-600" />
                   <span>GIR 1-6 Sequencing</span>
                 </div>
                 <div className="text-xs font-bold text-ink leading-tight font-mono">
                   HS 7204.49.00
                 </div>
-                <p className="text-[10px] text-muted leading-tight mt-1">
-                  Heavy Melting Steel Scrap &bull; SWS 10% verified.
-                </p>
               </div>
 
               {/* Floating Stat Card 4: Sourcing Hubs (Bottom-Right) */}
-              <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 p-3 sm:p-3.5 rounded-xl bg-panel/95 border border-line shadow-lg backdrop-blur-md text-left max-w-[200px] hidden md:block animate-in fade-in slide-in-from-bottom duration-700">
-                <div className="flex items-center gap-1.5 text-[10px] font-mono text-indigo-600 font-bold uppercase tracking-wider mb-1">
+              <div className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 p-3 rounded-xl bg-panel/95 border border-line shadow-lg backdrop-blur-md text-left hidden md:block animate-in fade-in slide-in-from-bottom duration-700">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono text-indigo-600 font-bold uppercase tracking-wider mb-0.5">
                   <Globe2 className="w-3 h-3 text-indigo-600" />
                   <span>Multimodal Lanes</span>
                 </div>
                 <div className="text-xs font-bold text-ink leading-tight">
                   8 Global Corridors
                 </div>
-                <p className="text-[10px] text-muted leading-tight mt-1">
-                  Active pulses reflect real-time maritime vessel routes.
-                </p>
               </div>
             </div>
 
@@ -157,9 +143,8 @@ export function HeroSection() {
             <div className="px-4 py-2.5 bg-panel/80 border-t border-line/60 flex items-center justify-between text-[11px] font-mono text-muted">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-blue" />
-                Live Shipments: Mumbai (JNPT) &bull; Dubai &bull; Rotterdam &bull; Singapore &bull; New York
+                Live Corridors: Mumbai (JNPT) &bull; Dubai &bull; Rotterdam &bull; Singapore &bull; New York
               </span>
-              <span className="text-green font-semibold hidden sm:inline">WebGL 60 FPS</span>
             </div>
           </div>
         </div>

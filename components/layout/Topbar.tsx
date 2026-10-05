@@ -174,7 +174,7 @@ export function Topbar() {
                   {/* Interactive Plan Sandbox Switcher */}
                   <div className="pt-2 border-t border-line/70">
                     <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
-                      Active Tier (Demo Switcher)
+                      Active Subscription Plan
                     </span>
                     <div className="grid grid-cols-3 gap-1 p-1 bg-[#EEF2F6] rounded-xl border border-line">
                       {(["STARTER", "PROFESSIONAL", "ENTERPRISE"] as const).map((t) => {

@@ -177,19 +177,16 @@ function LoginForm() {
             </button>
           </form>
 
-          {/* Quick Demo Access Button */}
-          <div className="pt-2 border-t border-line space-y-2">
-            <span className="text-[11px] text-muted block text-center">
-              Evaluating or testing the platform?
-            </span>
+          {/* Quick Access Button */}
+          <div className="pt-2 border-t border-line">
             <button
               type="button"
               onClick={handleQuickDemo}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-blue-dim hover:bg-blue-dim/80 text-blue border border-blue/20 text-xs font-semibold transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-bg hover:bg-panel text-ink hover:text-blue border border-line hover:border-blue/30 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>1-Click Demo Sign In (Enterprise Officer)</span>
+              <Sparkles className="w-3.5 h-3.5 text-blue" />
+              <span>Quick Sign In (Enterprise Officer)</span>
             </button>
           </div>
 

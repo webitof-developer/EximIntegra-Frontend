@@ -16,42 +16,7 @@ import {
 export function SocialProofAndCompliance() {
   return (
     <section id="security" className="py-20 bg-panel border-b border-line">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-        {/* Enterprise Testimonial Spotlight */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-navy text-white shadow-md relative overflow-hidden border border-[#1E2E50]">
-          <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-96 h-96 bg-blue/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="max-w-3xl space-y-5 relative z-10">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase bg-blue text-white px-2.5 py-0.5 rounded font-bold tracking-wider">
-                ENTERPRISE CASE STUDY
-              </span>
-              <span className="text-xs text-[#93C5FD] font-mono">
-                Ferrous & Non-Ferrous Smelting Works
-              </span>
-            </div>
-
-            <blockquote className="text-lg sm:text-2xl font-medium leading-relaxed tracking-tight text-white/95">
-              &ldquo;EximIntegra eliminated the ambiguity in our metal scrap imports.
-              The sequential GIR reasoning validated our 7204.49 classification with
-              customs brokers, and the CEPA arbitrage engine saved our smelter ₹18.4 Lakhs
-              on our very first 400 MT container vessel.&rdquo;
-            </blockquote>
-
-            <div className="pt-2 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue text-white font-bold flex items-center justify-center font-mono text-xs shadow-xs">
-                RM
-              </div>
-              <div>
-                <div className="text-sm font-bold text-white">Rajesh Mehta</div>
-                <div className="text-xs text-[#9EB1D0]">
-                  Vice President &bull; Supply Chain & Customs Compliance, Integra Metals Works
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Security & Statutory Governance Grid */}
         <div id="statutory" className="space-y-8">
           <div className="text-center space-y-2 max-w-2xl mx-auto">
@@ -62,8 +27,7 @@ export function SocialProofAndCompliance() {
               Enterprise Governance by Design
             </h3>
             <p className="text-xs sm:text-sm text-muted">
-              Built specifically for compliance officers, CFOs, and customs brokers who
-              require auditability, legal grounding, and zero drift.
+              Built for compliance officers, CFOs, and customs brokers who require auditability and zero drift.
             </p>
           </div>
 
@@ -73,11 +37,10 @@ export function SocialProofAndCompliance() {
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <h4 className="text-sm font-bold text-ink">
-                100% Deterministic Reproducibility
+                Deterministic Reproducibility
               </h4>
               <p className="text-xs text-muted leading-relaxed">
-                Calculations stamp the exact dataset versions active at runtime. Historical
-                runs can be reproduced with zero drift even across future Union Budgets.
+                Calculations stamp exact dataset versions at runtime for zero calculation drift across Union Budgets.
               </p>
             </div>
 
@@ -89,8 +52,7 @@ export function SocialProofAndCompliance() {
                 Zero-Knowledge BYOK Encryption
               </h4>
               <p className="text-xs text-muted leading-relaxed">
-                Custom LLM provider keys and trade gateway tokens are encrypted via AES-256
-                and injected via authenticated TLS headers. Never logged in plaintext.
+                API keys and trade tokens are encrypted via AES-256 and never logged or stored in plaintext.
               </p>
             </div>
 
@@ -102,8 +64,7 @@ export function SocialProofAndCompliance() {
                 Gazette Synchronized Feeds
               </h4>
               <p className="text-xs text-muted leading-relaxed">
-                Direct statutory mapping against CBIC ICEGATE 2.0 tariff schedules,
-                DGFT Foreign Trade Policy notices, and TAMP major port scale of rates.
+                Direct statutory mapping against CBIC ICEGATE tariff schedules, DGFT notices, and major port tariffs.
               </p>
             </div>
 
@@ -115,8 +76,7 @@ export function SocialProofAndCompliance() {
                 Enterprise Multi-Tenancy
               </h4>
               <p className="text-xs text-muted leading-relaxed">
-                Strict organization-level data segregation, role-based access control (RBAC),
-                and ERP webhook integrations with SAP S/4HANA and Oracle NetSuite.
+                Strict organization-level data segregation, role-based access control, and ERP webhook integrations.
               </p>
             </div>
           </div>

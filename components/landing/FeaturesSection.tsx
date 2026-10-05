@@ -36,14 +36,14 @@ const features: FeatureCardItem[] = [
     badge: "GIR 1 TO 6",
     title: "HS Classification Engine",
     description:
-      "Determine exact 6-to-8 digit customs tariff items using sequential General Rules of Interpretation (GIR), legal explanatory notes, and candidate confidence scores.",
+      "Statutory 6-to-8 digit tariff classification using sequential GIR 1–6 reasoning.",
     bullets: [
-      "Natural language commodity lookup with GIR logic trail",
-      "Bulk CSV batch manifest processor with asynchronous polling",
-      "Immediate candidate selection synced across all downstream engines",
+      "Natural language lookup with sequential GIR reasoning",
+      "Bulk CSV batch manifest processor",
+      "Automatic context sync across downstream engines",
     ],
     link: "/classify",
-    linkText: "Try Classification Engine",
+    linkText: "Classification Engine",
   },
   {
     icon: <Calculator className="w-5 h-5 text-green" />,
@@ -51,14 +51,14 @@ const features: FeatureCardItem[] = [
     badge: "CBIC 2026",
     title: "Statutory Duty & Tariff Calculator",
     description:
-      "Calculate assessable CIF value, Basic Customs Duty (BCD), Social Welfare Surcharge (SWS), IGST, and AIDC with per-duty legal provenance stamps.",
+      "Assessable CIF value, BCD, SWS, IGST, and AIDC with per-duty legal provenance.",
     bullets: [
-      "Fortnightly CBIC official gazette exchange rate synchronization",
-      "Preferential FTA rates automatically detected and applied",
-      "Anti-dumping duty and trade remedy benchmark flags",
+      "Official CBIC gazette exchange rate synchronization",
+      "Automatic detection of preferential FTA rates",
+      "Anti-dumping duty and trade remedy flags",
     ],
     link: "/duty",
-    linkText: "Calculate Customs Duties",
+    linkText: "Customs Duties",
   },
   {
     icon: <Ship className="w-5 h-5 text-amber" />,
@@ -66,14 +66,14 @@ const features: FeatureCardItem[] = [
     badge: "MULTIMODAL",
     title: "Landed Cost & Smelter Recovery Yield",
     description:
-      "Model total landed cost including ocean freight, Nhava Sheva (JNPT) & Mundra port CFS container charges, inland transport, and furnace metal recovery yields.",
+      "End-to-end landed economics including port handling, freight, and smelter recovery.",
     bullets: [
-      "Container handling (THC) and port scale of rates (TAMP)",
-      "Smelter molten metal recovery yield vs slag/dross loss economics",
-      "Effective cost per molten MT valuation for induction & arc furnaces",
+      "Port scale of rates (TAMP) and container handling",
+      "Smelter molten metal recovery yield modeling",
+      "Net cost per molten MT furnace valuation",
     ],
     link: "/landed-cost",
-    linkText: "Model Landed Economics",
+    linkText: "Landed Economics",
   },
   {
     icon: <Sparkles className="w-5 h-5 text-blue" />,
@@ -81,11 +81,11 @@ const features: FeatureCardItem[] = [
     badge: "AI COPILOT",
     title: "Akshara AI — Conversational Intelligence",
     description:
-      "Grounded conversational trade advisory backed by transparent tool-execution logs. Resolves complex customs inquiries with official gazette citations.",
+      "Grounded conversational trade advisory backed by transparent statutory citations.",
     bullets: [
-      "Transparent tool-call logs with execution latency metrics",
-      "Active session context awareness: updates shared Redux state dynamically",
-      "Strict grounding: flags unresolvable claims and hazardous material rules",
+      "Verifiable tool-execution logs with latency metrics",
+      "Context-aware shared Redux state updates",
+      "Strict legal grounding in CBIC and DGFT schedules",
     ],
     link: "/akshara",
     linkText: "Consult Akshara AI",
@@ -96,14 +96,14 @@ const features: FeatureCardItem[] = [
     badge: "ARBITRAGE",
     title: "Country-of-Origin Sourcing Arbitrage",
     description:
-      "Run concurrent side-by-side tariff and landed cost simulations across alternative jurisdictions (USA, UAE, Australia, Vietnam, China) to optimize supply chain costs.",
+      "Concurrent tariff and landed cost simulations across alternative supply jurisdictions.",
     bullets: [
-      "Side-by-side matrix comparing landed cost and statutory duties",
-      "Automatic detection of CEPA 0% and ECTA 0% preferential concessions",
-      "One-click application of winning origin into active session context",
+      "Side-by-side landed cost & duty comparison",
+      "Automatic CEPA and ECTA concession detection",
+      "Instant sourcing origin transfer into active session",
     ],
     link: "/compare",
-    linkText: "Compare Country Sourcing",
+    linkText: "Country Sourcing",
   },
   {
     icon: <Key className="w-5 h-5 text-blue" />,
@@ -111,14 +111,14 @@ const features: FeatureCardItem[] = [
     badge: "BYOK & ERP",
     title: "BYOK Integrations & Audit Trails",
     description:
-      "Bring your own API keys for LLMs (OpenAI, Claude, Gemini), connect live customs gateways (ICEGATE, DGFT), configure private carrier rates, and trigger ERP webhooks.",
+      "Bring your own API keys, connect customs gateways, and sync with ERP systems.",
     bullets: [
-      "Client-side AES-256 BYOK encryption for custom LLM providers",
-      "Negotiated ocean freight and smelter yield rate overrides",
-      "Deterministic calculation history with permanent reproducibility stamps",
+      "AES-256 client-side BYOK encryption",
+      "Private carrier freight & smelter yield overrides",
+      "Deterministic calculation history with audit stamps",
     ],
     link: "/settings",
-    linkText: "Explore BYOK Integrations",
+    linkText: "BYOK Integrations",
   },
 ];
 
@@ -135,8 +135,7 @@ export function FeaturesSection() {
             Six Specialized Engines in One Unified Platform
           </h2>
           <p className="text-sm text-muted leading-relaxed">
-            Eliminate fragmented spreadsheets, manual tariff gazettes, and customs
-            disputes with deterministic calculations synchronized across every workflow.
+            Deterministic statutory calculations and landed cost modeling synchronized across every workflow.
           </p>
         </div>
 

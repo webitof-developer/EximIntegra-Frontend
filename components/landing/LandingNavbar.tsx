@@ -52,7 +52,7 @@ export function LandingNavbar() {
             href={getSectionHref("#interactive-demo")}
             className="hover:text-ink transition-colors flex items-center gap-1"
           >
-            <span>Live Calculator</span>
+            <span>Tariff Calculator</span>
           </Link>
           <Link
             href={getSectionHref("#features")}
@@ -134,7 +134,7 @@ export function LandingNavbar() {
             onClick={() => setMobileMenuOpen(false)}
             className="block py-1 text-muted hover:text-ink"
           >
-            Live Calculator
+            Tariff Calculator
           </Link>
           <Link
             href={getSectionHref("#features")}

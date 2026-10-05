@@ -19,9 +19,6 @@ import {
   FileCheck,
   Scale,
   Sparkles,
-  TrendingUp,
-  Building2,
-  FileText,
   Clock,
   ArrowRight,
   ShieldCheck,
@@ -51,8 +48,7 @@ export default function DashboardPage() {
                 Welcome, {user?.name || "Trade Officer"}
               </h2>
               <p className="text-xs text-[#9EB1D0] max-w-2xl leading-relaxed">
-                {user?.company || "Integra Metals Corp"} — Customs Tariff Act
-                2026, DGFT notifications, and duty engine online.
+                {user?.company || "Integra Metals Corp"} &bull; Customs Tariff Act 2026, DGFT notifications, and duty engine online.
               </p>
             </div>
 
@@ -156,7 +152,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               <WidgetTile
                 title="HS Classification Engine"
-                description="Determine statutory 8-digit tariff items with confidence, GIR reasoning, and bulk CSV processing."
+                description="Determine statutory 8-digit tariff items with confidence and GIR reasoning."
                 glyph="HS"
                 iconVariant="blue"
                 metric="Single & Bulk"
@@ -167,7 +163,7 @@ export default function DashboardPage() {
 
               <WidgetTile
                 title="Statutory Duty Calculator"
-                description="Assessable value, Basic Customs Duty (BCD), SWS, IGST, and AIDC with per-duty provenance."
+                description="Assessable value, BCD, SWS, IGST, and AIDC with per-duty provenance."
                 glyph="%"
                 iconVariant="green"
                 metric="FTA Engine"
@@ -178,7 +174,7 @@ export default function DashboardPage() {
 
               <WidgetTile
                 title="Landed Cost & Metal Recovery"
-                description="End-to-end landed cost modeling with ocean freight, inland transit, and recoverable yield."
+                description="End-to-end landed cost modeling with port handling and recoverable yield."
                 glyph="$"
                 iconVariant="amber"
                 metric="Yield Matrix"
@@ -189,7 +185,7 @@ export default function DashboardPage() {
 
               <WidgetTile
                 title="Scheme & FTA Eligibility"
-                description="Check preferential rates under CEPA, ECTA, and export benefit schemes like RoDTEP."
+                description="Check preferential rates under CEPA, ECTA, and export benefit schemes."
                 glyph="FTA"
                 iconVariant="navy"
                 metric="Rules of Origin"
@@ -211,58 +207,13 @@ export default function DashboardPage() {
 
               <WidgetTile
                 title="Akshara AI Copilot"
-                description="Conversational advisory with transparent tool-call logs and grounded statutory citations."
+                description="Conversational advisory with transparent statutory citations."
                 icon={<Sparkles className="w-5 h-5 text-blue" />}
                 iconVariant="blue"
                 metric="Grounded"
                 metricLabel="Transparency Log"
                 badge={<StatusPill label="AI" variant="primary" />}
                 href="/akshara"
-              />
-            </div>
-          </div>
-
-          {/* Upcoming Intelligence Modules */}
-          <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
-                Upcoming Modules
-              </h3>
-              <StatusPill label="ROADMAP" variant="muted" />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <WidgetTile
-                title="Shipment Flows & Bills of Lading"
-                description="Global trade transaction data and port manifest records."
-                icon={<TrendingUp className="w-5 h-5" />}
-                iconVariant="neutral"
-                disabled
-                badge={<StatusPill label="SOON" variant="muted" />}
-                metric="Pending License"
-                metricLabel="Data Layer"
-              />
-
-              <WidgetTile
-                title="Supplier & Counterparty Profiler"
-                description="Risk assessment, credit history, and sanction screening for overseas suppliers."
-                icon={<Building2 className="w-5 h-5" />}
-                iconVariant="neutral"
-                disabled
-                badge={<StatusPill label="SOON" variant="muted" />}
-                metric="Pending License"
-                metricLabel="Data Layer"
-              />
-
-              <WidgetTile
-                title="Judicial Precedents & CESTAT Rulings"
-                description="Full-text case law and advance rulings database for classification disputes."
-                icon={<FileText className="w-5 h-5" />}
-                iconVariant="neutral"
-                disabled
-                badge={<StatusPill label="SOON" variant="muted" />}
-                metric="Pending License"
-                metricLabel="Data Layer"
               />
             </div>
           </div>
