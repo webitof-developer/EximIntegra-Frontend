@@ -10,6 +10,8 @@ export interface ProvenanceMetadata {
   effectiveDate?: string;
   confidenceScore?: number;
   notes?: string;
+  dataset_version?: string;
+  dataset_version_id?: string;
 }
 
 export interface MaterialContext {
@@ -18,6 +20,7 @@ export interface MaterialContext {
   materialName?: string;
   countryOfOrigin?: string;
   destinationCountry?: string;
+  tradeAgreement?: string;
   assessableValue?: number;
   currency?: string;
   unit?: string;
@@ -284,7 +287,7 @@ export interface EligibilityResponse {
   hs_description: string;
   effective_as_of_date: string;
   prominent_disclaimer: string;
-  statutory_policy_status: "Free" | "Restricted" | "Prohibited";
+  statutory_policy_status: "Free" | "Restricted" | "Prohibited" | "STE";
   schemes: SchemeDetail[];
   regulatory_measures: RegulatoryMeasure[];
   last_updated: string;

@@ -35,10 +35,6 @@ export const authSlice = createSlice({
       if (token) {
         state.token = token;
         state.isAuthenticated = true;
-        // If user not set, use demo user or will be refreshed via getProfile
-        if (!state.user) {
-          state.user = defaultDemoUser;
-        }
       }
       state.isInitialized = true;
     },
