@@ -50,6 +50,8 @@ export function LandedCostForm({
   const [assayPurity, setAssayPurity] = useState<number>(92.5);
   const [recoveryYield, setRecoveryYield] = useState<number>(91.0);
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   useEffect(() => {
     if (initialDutyId) setDutyId(initialDutyId);
     if (initialHsCode) setHsCode(initialHsCode);
@@ -58,6 +60,13 @@ export function LandedCostForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!dutyId || dutyId.trim() === "") {
+      setValidationError(
+        "A linked Duty Calculation ID is required. Please calculate customs duty first before computing landed cost."
+      );
+      return;
+    }
+    setValidationError(null);
     onSubmit({
       duty_calculation_id: dutyId,
       hs_code: hsCode,
@@ -94,6 +103,12 @@ export function LandedCostForm({
           <ProvenanceBadge type="LIVE" source="Statutory Duty Model" compact />
         </div>
       </div>
+
+      {validationError && (
+        <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-600 rounded-lg text-xs font-medium">
+          {validationError}
+        </div>
+      )}
 
       {/* Port & Logistics Configuration */}
       <div className="space-y-4">
