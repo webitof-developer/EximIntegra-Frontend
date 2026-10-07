@@ -8,6 +8,7 @@ import { useAppDispatch } from "@/store";
 import { setCredentials } from "@/store/authSlice";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { ProvenanceBadge } from "@/components/ui/ProvenanceBadge";
+import { getApiErrorMessage } from "@/lib/utils";
 import {
   ShieldCheck,
   Lock,
@@ -27,7 +28,7 @@ function LoginForm() {
   const [login, { isLoading }] = useLoginMutation();
 
   const [email, setEmail] = useState("trade.officer@integra-metals.com");
-  const [password, setPassword] = useState("••••••••••••");
+  const [password, setPassword] = useState("demo_password");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,11 +44,14 @@ function LoginForm() {
       );
       router.push(returnUrl);
     } catch (err: any) {
-      setErrorMsg(err?.data?.error || "Invalid credentials. Please verify your email and password.");
+      setErrorMsg(
+        getApiErrorMessage(err, "Invalid credentials. Please verify your email and password.")
+      );
     }
   };
 
   const handleQuickDemo = async () => {
+    setErrorMsg(null);
     try {
       const response = await login({
         email: "trade.officer@integra-metals.com",
@@ -61,7 +65,7 @@ function LoginForm() {
       );
       router.push(returnUrl);
     } catch (err: any) {
-      setErrorMsg("Demo login failed. Please retry.");
+      setErrorMsg(getApiErrorMessage(err, "Demo login failed. Please retry."));
     }
   };
 

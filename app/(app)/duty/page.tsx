@@ -20,6 +20,7 @@ import {
 import { DutyCalculationForm } from "@/components/duty/DutyCalculationForm";
 import { DutyBreakdownView } from "@/components/duty/DutyBreakdownView";
 import { DutyCalculationRequest, DutyCalculationResponse } from "@/lib/types";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Calculator, Search, History, ArrowRight } from "lucide-react";
 
 function DutyCalculatorContent() {
@@ -71,8 +72,10 @@ function DutyCalculatorContent() {
       );
     } catch (err: any) {
       setErrorState(
-        err?.data?.error ||
+        getApiErrorMessage(
+          err,
           "Failed to compute statutory duties from CBIC ICEGATE live engine. Valuation parameters may be invalid or tariff gazette endpoint degraded."
+        )
       );
     }
   };

@@ -18,6 +18,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { UserProfile } from "@/lib/types";
+import { getApiErrorMessage } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function RegisterPage() {
       router.push("/dashboard");
     } catch (err: any) {
       setErrorMsg(
-        err?.data?.error || "Registration failed. Please check inputs and retry."
+        getApiErrorMessage(err, "Registration failed. Please check inputs and retry.")
       );
     }
   };

@@ -23,6 +23,7 @@ import {
   ClassificationCandidate,
 } from "@/lib/types";
 import { FeatureGate } from "@/components/saas/FeatureGate";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Search, FileSpreadsheet, ShieldAlert, Sparkles } from "lucide-react";
 
 export default function ClassifyPage() {
@@ -85,8 +86,10 @@ export default function ClassifyPage() {
       }
     } catch (err: any) {
       setErrorState(
-        err?.data?.error ||
+        getApiErrorMessage(
+          err,
           "Statutory GIR classification endpoint unreachable or returned an unmapped tariff item. Verification degraded."
+        )
       );
     }
   };

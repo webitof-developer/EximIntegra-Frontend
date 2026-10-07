@@ -20,6 +20,7 @@ import {
 import { LandedCostForm } from "@/components/landed-cost/LandedCostForm";
 import { LandedCostResultsView } from "@/components/landed-cost/LandedCostResultsView";
 import { LandedCostRequest, LandedCostResponse } from "@/lib/types";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Ship, Anchor, ArrowRight, Sparkles } from "lucide-react";
 
 function LandedCostContent() {
@@ -61,8 +62,10 @@ function LandedCostContent() {
       );
     } catch (err: any) {
       setErrorState(
-        err?.data?.error ||
+        getApiErrorMessage(
+          err,
           "Failed to compute landed cost. Port handling or freight schedule integration unreachable."
+        )
       );
     }
   };

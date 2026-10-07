@@ -15,6 +15,7 @@ import {
   CountryComparisonItem,
 } from "@/lib/types";
 import { FeatureGate } from "@/components/saas/FeatureGate";
+import { getApiErrorMessage } from "@/lib/utils";
 import { Scale, RefreshCw, Globe, Check } from "lucide-react";
 
 function CompareContent() {
@@ -64,8 +65,10 @@ function CompareContent() {
       setComparisonResult(res);
     } catch (err: any) {
       setErrorState(
-        err?.data?.error ||
+        getApiErrorMessage(
+          err,
           "Failed to compute concurrent country origin comparison matrix. External tariff gateway unreachable."
+        )
       );
     }
   };
