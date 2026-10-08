@@ -9,15 +9,6 @@ interface AuthState {
   isInitialized: boolean;
 }
 
-const defaultDemoUser: UserProfile = {
-  id: "usr_ent_8849",
-  email: "trade.officer@integra-metals.com",
-  name: "Arjun Verma",
-  company: "Integra Metals & Global Resources Corp",
-  role: "TRADE_ADVISOR",
-  tier: "ENTERPRISE",
-  createdAt: "2026-01-15T09:00:00Z",
-};
 
 const initialState: AuthState = {
   token: null,

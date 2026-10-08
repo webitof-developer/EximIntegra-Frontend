@@ -9,6 +9,7 @@ export interface ProvenanceBadgeProps
   source?: string;
   effectiveDate?: string;
   confidenceScore?: number;
+  dataset_version?: string;
   compact?: boolean;
   showTooltip?: boolean;
 }
@@ -63,6 +64,7 @@ export function ProvenanceBadge({
   source,
   effectiveDate,
   confidenceScore,
+  dataset_version,
   compact = false,
   showTooltip = true,
   className,
@@ -74,6 +76,7 @@ export function ProvenanceBadge({
   const tooltipText = [
     `${current.label} PROVENANCE: ${current.defaultDescription}`,
     source ? `Source: ${source}` : null,
+    dataset_version ? `Version: ${dataset_version}` : null,
     effectiveDate ? `Effective: ${effectiveDate}` : null,
     confidenceScore !== undefined ? `Confidence: ${(confidenceScore * 100).toFixed(0)}%` : null,
   ]
@@ -100,6 +103,11 @@ export function ProvenanceBadge({
       {source && !compact && (
         <span className="opacity-75 text-[11px] font-sans font-normal border-l border-current/20 pl-1.5">
           {source}
+        </span>
+      )}
+      {dataset_version && !compact && !source && (
+        <span className="opacity-75 text-[10px] font-mono border-l border-current/20 pl-1.5">
+          {dataset_version}
         </span>
       )}
       {confidenceScore !== undefined && !compact && (
