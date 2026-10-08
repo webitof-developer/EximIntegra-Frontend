@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useAppSelector } from "@/store";
 import {
   StatusPill,
   TableContainer,
@@ -39,41 +40,11 @@ interface InvoiceItem {
   status: "PAID" | "PENDING";
 }
 
-const sampleInvoices: InvoiceItem[] = [
-  {
-    id: "inv_1",
-    invoiceNumber: "INV-2026-0901",
-    date: "2026-09-01",
-    period: "Sep 01, 2026 – Oct 01, 2026",
-    amountInr: 59999,
-    taxInr: 10799,
-    totalInr: 70798,
-    status: "PAID",
-  },
-  {
-    id: "inv_2",
-    invoiceNumber: "INV-2026-0801",
-    date: "2026-08-01",
-    period: "Aug 01, 2026 – Sep 01, 2026",
-    amountInr: 59999,
-    taxInr: 10799,
-    totalInr: 70798,
-    status: "PAID",
-  },
-  {
-    id: "inv_3",
-    invoiceNumber: "INV-2026-0701",
-    date: "2026-07-01",
-    period: "Jul 01, 2026 – Aug 01, 2026",
-    amountInr: 59999,
-    taxInr: 10799,
-    totalInr: 70798,
-    status: "PAID",
-  },
-];
+const sampleInvoices: InvoiceItem[] = [];
 
 export function SubscriptionBillingSection() {
-  const [currentPlan, setCurrentPlan] = useState<"ENTERPRISE" | "PROFESSIONAL" | "STARTER">("ENTERPRISE");
+  const { user } = useAppSelector((state) => state.auth);
+  const [currentPlan, setCurrentPlan] = useState<"ENTERPRISE" | "PROFESSIONAL" | "STARTER">(user?.tier || "PROFESSIONAL");
   const [isAnnual, setIsAnnual] = useState(true);
   const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -322,15 +293,15 @@ export function SubscriptionBillingSection() {
           <div className="p-4 bg-bg rounded-xl border border-line text-xs font-mono space-y-1">
             <div className="flex justify-between">
               <span className="text-muted">Entity:</span>
-              <strong className="text-ink font-bold">Integra Metals Corp Pvt Ltd</strong>
+              <strong className="text-ink font-bold">{user?.company || "Organization Entity"}</strong>
             </div>
             <div className="flex justify-between">
               <span className="text-muted">GSTIN:</span>
-              <strong className="text-blue font-bold">27AABCI1234F1Z5 (MH)</strong>
+              <strong className="text-blue font-bold">Not Configured</strong>
             </div>
             <div className="flex justify-between">
               <span className="text-muted">Billing Email:</span>
-              <span className="text-ink">billing@integra-metals.com</span>
+              <span className="text-ink">{user?.email || "billing@organization.com"}</span>
             </div>
           </div>
         </div>
@@ -364,11 +335,18 @@ export function SubscriptionBillingSection() {
               </tr>
             </TableHeader>
             <TableBody>
-              {sampleInvoices.map((inv) => (
-                <TableRow key={inv.id}>
-                  <TableCell className="font-mono font-bold text-ink">
-                    {inv.invoiceNumber}
+              {sampleInvoices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" className="py-8 text-muted">
+                    No invoices generated yet. Invoices will appear here once billing cycles complete.
                   </TableCell>
+                </TableRow>
+              ) :
+                sampleInvoices.map((inv) => (
+                  <TableRow key={inv.id}>
+                    <TableCell className="font-mono font-bold text-ink">
+                      {inv.invoiceNumber}
+                    </TableCell>
                   <TableCell className="text-muted font-mono">
                     {inv.date}
                   </TableCell>

@@ -25,11 +25,11 @@ export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const [register, { isLoading }] = useRegisterMutation();
 
-  const [name, setName] = useState("Vikram Sengupta");
-  const [company, setCompany] = useState("Sengupta Global Logistics & Trade Ltd");
-  const [email, setEmail] = useState("vikram.s@sengupta-logistics.com");
-  const [password, setPassword] = useState("SecurePass2026!");
-  const [role, setRole] = useState<UserProfile["role"]>("CUSTOMS_BROKER");
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<UserProfile["role"]>("IMPORTER");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {

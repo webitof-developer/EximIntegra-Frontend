@@ -27,8 +27,8 @@ function LoginForm() {
   const dispatch = useAppDispatch();
   const [login, { isLoading }] = useLoginMutation();
 
-  const [email, setEmail] = useState("trade.officer@integra-metals.com");
-  const [password, setPassword] = useState("demo_password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,25 +47,6 @@ function LoginForm() {
       setErrorMsg(
         getApiErrorMessage(err, "Invalid credentials. Please verify your email and password.")
       );
-    }
-  };
-
-  const handleQuickDemo = async () => {
-    setErrorMsg(null);
-    try {
-      const response = await login({
-        email: "trade.officer@integra-metals.com",
-        password: "demo_password",
-      }).unwrap();
-      dispatch(
-        setCredentials({
-          token: response.access_token,
-          user: response.user,
-        })
-      );
-      router.push(returnUrl);
-    } catch (err: any) {
-      setErrorMsg(getApiErrorMessage(err, "Demo login failed. Please retry."));
     }
   };
 
@@ -181,18 +162,6 @@ function LoginForm() {
             </button>
           </form>
 
-          {/* Quick Access Button */}
-          <div className="pt-2 border-t border-line">
-            <button
-              type="button"
-              onClick={handleQuickDemo}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-bg hover:bg-panel text-ink hover:text-blue border border-line hover:border-blue/30 text-xs font-semibold transition-all cursor-pointer shadow-2xs"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-blue" />
-              <span>Quick Sign In (Enterprise Officer)</span>
-            </button>
-          </div>
 
           <div className="text-center pt-2">
             <span className="text-xs text-muted">

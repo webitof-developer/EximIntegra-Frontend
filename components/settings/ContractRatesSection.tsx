@@ -44,65 +44,9 @@ interface SmelterYieldOverride {
   facility: string;
 }
 
-const initialFreight: FreightContract[] = [
-  {
-    id: "fc_1",
-    origin: "Los Angeles (USLAX)",
-    destination: "Nhava Sheva (INNSA)",
-    carrier: "Maersk Line (Contract Tier A)",
-    contractCode: "MSK-NA-IN-2026-Q3",
-    rateUsd: 1850,
-    unit: "20ft TEU",
-    expiryDate: "2026-12-31",
-  },
-  {
-    id: "fc_2",
-    origin: "Rotterdam (NLRTM)",
-    destination: "Mundra Port (INMUN)",
-    carrier: "MSC Mediterranean Shipping",
-    contractCode: "MSC-EUR-MUM-99",
-    rateUsd: 1420,
-    unit: "20ft TEU",
-    expiryDate: "2026-11-30",
-  },
-  {
-    id: "fc_3",
-    origin: "Jebel Ali (AEJEA)",
-    destination: "Nhava Sheva (INNSA)",
-    carrier: "Hapag-Lloyd Regional",
-    contractCode: "HL-GULF-EXP-04",
-    rateUsd: 680,
-    unit: "20ft TEU",
-    expiryDate: "2027-03-31",
-  },
-];
+const initialFreight: FreightContract[] = [];
 
-const initialYields: SmelterYieldOverride[] = [
-  {
-    id: "y_1",
-    materialGrade: "HMS 1/2 Steel Scrap (7204.49.00)",
-    baseYieldPct: 91.5,
-    smelterLossPct: 8.5,
-    furnaceType: "Electric Arc Furnace (EAF)",
-    facility: "Raigad Smelter Plant 1",
-  },
-  {
-    id: "y_2",
-    materialGrade: "Shredded Steel Scrap 211 (7204.49.00)",
-    baseYieldPct: 93.8,
-    smelterLossPct: 6.2,
-    furnaceType: "Induction Furnace (IF)",
-    facility: "Hazira Works Unit 2",
-  },
-  {
-    id: "y_3",
-    materialGrade: "Copper Birch/Cliff Scrap (7404.00.12)",
-    baseYieldPct: 97.4,
-    smelterLossPct: 2.6,
-    furnaceType: "Reverberatory Furnace",
-    facility: "Dahej Smelting Complex",
-  },
-];
+const initialYields: SmelterYieldOverride[] = [];
 
 export function ContractRatesSection() {
   const [freightList, setFreightList] = useState<FreightContract[]>(initialFreight);
@@ -301,40 +245,48 @@ export function ContractRatesSection() {
               </tr>
             </TableHeader>
             <TableBody>
-              {freightList.map((f) => (
-                <TableRow key={f.id}>
-                  <TableCell>
-                    <div className="font-semibold text-ink">
-                      {f.origin} &rarr; {f.destination}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-ink font-mono">{f.contractCode}</span>
-                    <span className="text-[11px] text-muted block">{f.carrier}</span>
-                  </TableCell>
-                  <TableCell align="right">
-                    <span className="font-mono font-bold text-ink text-sm tabular-nums">
-                      ${f.rateUsd.toLocaleString()}
-                    </span>
-                    <span className="text-[10px] text-muted font-mono block">
-                      per {f.unit}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-muted font-mono">
-                    {f.expiryDate}
-                  </TableCell>
-                  <TableCell align="center">
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteFreight(f.id)}
-                      className="p-1 text-muted hover:text-red transition-colors cursor-pointer"
-                      title="Remove Contract Rate"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+              {freightList.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" className="py-8 text-muted">
+                    No contracted freight rates configured. Click &quot;Add Rate&quot; to configure negotiated carrier contracts.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                freightList.map((f) => (
+                  <TableRow key={f.id}>
+                    <TableCell>
+                      <div className="font-semibold text-ink">
+                        {f.origin} &rarr; {f.destination}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-ink font-mono">{f.contractCode}</span>
+                      <span className="text-[11px] text-muted block">{f.carrier}</span>
+                    </TableCell>
+                    <TableCell align="right">
+                      <span className="font-mono font-bold text-ink text-sm tabular-nums">
+                        ${f.rateUsd.toLocaleString()}
+                      </span>
+                      <span className="text-[10px] text-muted font-mono block">
+                        per {f.unit}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted font-mono">
+                      {f.expiryDate}
+                    </TableCell>
+                    <TableCell align="center">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteFreight(f.id)}
+                        className="p-1 text-muted hover:text-red transition-colors cursor-pointer"
+                        title="Remove Contract Rate"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -355,54 +307,60 @@ export function ContractRatesSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {yieldList.map((y) => (
-            <div
-              key={y.id}
-              className="p-4 bg-panel border border-line rounded-xl shadow-xs space-y-3"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h4 className="text-xs font-bold text-ink">
-                    {y.materialGrade}
-                  </h4>
-                  <span className="text-[10px] text-muted font-mono block mt-0.5">
-                    {y.facility}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteYield(y.id)}
-                  className="p-1 text-muted hover:text-red transition-colors cursor-pointer shrink-0"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 p-2.5 bg-bg rounded-lg border border-line text-xs font-mono">
-                <div>
-                  <span className="text-[10px] text-muted block font-sans">
-                    Molten Yield
-                  </span>
-                  <span className="font-bold text-green text-sm">
-                    {y.baseYieldPct}%
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-muted block font-sans">
-                    Slag / Dross Loss
-                  </span>
-                  <span className="font-bold text-amber text-sm">
-                    {y.smelterLossPct}%
-                  </span>
-                </div>
-              </div>
-
-              <div className="text-[11px] text-muted flex items-center justify-between">
-                <span>Furnace:</span>
-                <span className="text-ink font-medium">{y.furnaceType}</span>
-              </div>
+          {yieldList.length === 0 ? (
+            <div className="col-span-full py-8 text-center text-xs text-muted border border-dashed border-line rounded-xl">
+              No custom smelter yield profiles configured. Default statutory and engineering recovery models will be applied.
             </div>
-          ))}
+          ) : (
+            yieldList.map((y) => (
+              <div
+                key={y.id}
+                className="p-4 bg-panel border border-line rounded-xl shadow-xs space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs font-bold text-ink">
+                      {y.materialGrade}
+                    </h4>
+                    <span className="text-[10px] text-muted font-mono block mt-0.5">
+                      {y.facility}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteYield(y.id)}
+                    className="p-1 text-muted hover:text-red transition-colors cursor-pointer shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 p-2.5 bg-bg rounded-lg border border-line text-xs font-mono">
+                  <div>
+                    <span className="text-[10px] text-muted block font-sans">
+                      Molten Yield
+                    </span>
+                    <span className="font-bold text-green text-sm">
+                      {y.baseYieldPct}%
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-muted block font-sans">
+                      Slag / Dross Loss
+                    </span>
+                    <span className="font-bold text-amber text-sm">
+                      {y.smelterLossPct}%
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-muted flex items-center justify-between">
+                  <span>Furnace:</span>
+                  <span className="text-ink font-medium">{y.furnaceType}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

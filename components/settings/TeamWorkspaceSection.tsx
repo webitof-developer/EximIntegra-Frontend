@@ -39,48 +39,7 @@ interface TeamMember {
   avatarColor: string;
 }
 
-const initialMembers: TeamMember[] = [
-  {
-    id: "mem_1",
-    name: "Arjun Verma",
-    email: "arjun.verma@integra-metals.com",
-    department: "Executive & Global Trade",
-    role: "ADMIN",
-    twoFactorEnabled: true,
-    lastActive: "Active Now",
-    avatarColor: "bg-navy text-[#93C5FD]",
-  },
-  {
-    id: "mem_2",
-    name: "Pooja Sharma",
-    email: "pooja.sharma@integra-metals.com",
-    department: "Customs Compliance & DGFT",
-    role: "TRADE_OFFICER",
-    twoFactorEnabled: true,
-    lastActive: "25 minutes ago",
-    avatarColor: "bg-blue text-white",
-  },
-  {
-    id: "mem_3",
-    name: "Vikas Kulkarni",
-    email: "vikas.kulkarni@mumbaicustoms-partner.in",
-    department: "External Customs Broker (CHA)",
-    role: "CUSTOMS_BROKER",
-    twoFactorEnabled: false,
-    lastActive: "Yesterday",
-    avatarColor: "bg-amber text-white",
-  },
-  {
-    id: "mem_4",
-    name: "Sunita Deshmukh",
-    email: "sunita.d@integra-metals.com",
-    department: "Internal Audit & Finance",
-    role: "AUDITOR",
-    twoFactorEnabled: true,
-    lastActive: "3 days ago",
-    avatarColor: "bg-green text-white",
-  },
-];
+const initialMembers: TeamMember[] = [];
 
 const roleDetails: Record<
   RoleType,
@@ -210,13 +169,20 @@ export function TeamWorkspaceSection() {
             </tr>
           </TableHeader>
           <TableBody>
-            {members.map((m) => {
-              const initials = m.name
-                .split(" ")
-                .map((n) => n[0])
-                .slice(0, 2)
-                .join("")
-                .toUpperCase();
+            {members.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align="center" className="py-8 text-muted">
+                  No team members invited yet. Click &quot;Invite Member&quot; to add team colleagues to your workspace.
+                </TableCell>
+              </TableRow>
+            ) :
+              members.map((m) => {
+                const initials = m.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase();
 
               const role = roleDetails[m.role];
 

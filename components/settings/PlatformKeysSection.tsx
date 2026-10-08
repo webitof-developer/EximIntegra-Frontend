@@ -48,40 +48,9 @@ interface WebhookEndpoint {
   testResult?: string;
 }
 
-const initialKeys: ApiKeyItem[] = [
-  {
-    id: "key_1",
-    name: "SAP S/4HANA ERP Connector",
-    prefix: "exim_live_8f92a...",
-    fullKey: "exim_live_8f92a019b8834ac88e9102934",
-    createdAt: "2026-08-15",
-    lastUsed: "12 minutes ago",
-    scopes: ["classify:read", "duty:calculate", "landed_cost:read"],
-    status: "ACTIVE",
-  },
-  {
-    id: "key_2",
-    name: "Internal BI Dashboard Syncer",
-    prefix: "exim_live_1c44e...",
-    fullKey: "exim_live_1c44e09881ab7742de8810239",
-    createdAt: "2026-09-02",
-    lastUsed: "2 hours ago",
-    scopes: ["reports:read", "tariffs:read"],
-    status: "ACTIVE",
-  },
-];
+const initialKeys: ApiKeyItem[] = [];
 
-const initialWebhooks: WebhookEndpoint[] = [
-  {
-    id: "wh_1",
-    url: "https://erp.integra-metals.com/api/v1/exim/duty-notifications",
-    description: "Informs ERP warehouse inventory upon customs calculation completion",
-    secret: "whsec_994af801...2b8c",
-    events: ["duty.calculated", "landed_cost.completed"],
-    status: "ACTIVE",
-    lastDelivery: "2026-09-28 11:20 IST (200 OK)",
-  },
-];
+const initialWebhooks: WebhookEndpoint[] = [];
 
 export function PlatformKeysSection() {
   const [keys, setKeys] = useState<ApiKeyItem[]>(initialKeys);
@@ -298,11 +267,18 @@ export function PlatformKeysSection() {
               </tr>
             </TableHeader>
             <TableBody>
-              {keys.map((k) => (
-                <TableRow key={k.id}>
-                  <TableCell className="font-semibold text-ink">
-                    {k.name}
+              {keys.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" className="py-8 text-muted">
+                    No API keys created yet. Click &quot;Generate New Key&quot; to provision machine-to-machine access.
                   </TableCell>
+                </TableRow>
+              ) :
+                keys.map((k) => (
+                  <TableRow key={k.id}>
+                    <TableCell className="font-semibold text-ink">
+                      {k.name}
+                    </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-ink bg-bg px-2 py-0.5 rounded border border-line">
@@ -438,7 +414,12 @@ export function PlatformKeysSection() {
 
         {/* Webhook Cards List */}
         <div className="space-y-3">
-          {webhooks.map((w) => (
+          {webhooks.length === 0 ? (
+            <div className="py-8 text-center text-xs text-muted border border-dashed border-line rounded-xl">
+              No outbound webhooks configured. Click &quot;Add Webhook&quot; to receive real-time events.
+            </div>
+          ) : (
+            webhooks.map((w) => (
             <div
               key={w.id}
               className="p-4 bg-panel border border-line rounded-xl shadow-xs space-y-3 text-xs"
@@ -493,7 +474,7 @@ export function PlatformKeysSection() {
                 </div>
               </div>
             </div>
-          ))}
+          )))}
         </div>
       </div>
     </div>

@@ -102,8 +102,8 @@ function DutyCalculatorContent() {
           <StepBadge
             step={1}
             label="HS Classification"
-            description={currentContext.hsCode || "7204.49"}
-            state="completed"
+            description={currentContext.hsCode || "Pending Selection"}
+            state={currentContext.hsCode ? "completed" : "pending"}
           />
           <StepBadge
             step={2}

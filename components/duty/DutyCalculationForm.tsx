@@ -27,12 +27,12 @@ interface DutyCalculationFormProps {
 }
 
 export function DutyCalculationForm({
-  initialHsCode = "7204.49.00",
-  initialDescription = "Other waste and scrap of iron or steel",
+  initialHsCode = "",
+  initialDescription = "",
   initialOrigin = "US",
-  initialValue = 42000,
+  initialValue = 0,
   initialCurrency = "USD",
-  initialQuantity = 100,
+  initialQuantity = 1,
   initialUnit = "MT",
   onSubmit,
   isLoading,
@@ -43,8 +43,8 @@ export function DutyCalculationForm({
   const [exchangeRate, setExchangeRate] = useState<number>(86.5);
   const [countryOfOrigin, setCountryOfOrigin] = useState(initialOrigin);
   const [tradeAgreement, setTradeAgreement] = useState("STANDARD_MFN");
-  const [freightAmount, setFreightAmount] = useState<number>(3200);
-  const [insuranceAmount, setInsuranceAmount] = useState<number>(450);
+  const [freightAmount, setFreightAmount] = useState<number>(0);
+  const [insuranceAmount, setInsuranceAmount] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(initialQuantity);
   const [unit, setUnit] = useState(initialUnit);
 

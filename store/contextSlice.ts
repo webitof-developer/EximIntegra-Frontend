@@ -7,18 +7,7 @@ interface ContextState {
 }
 
 const initialState: ContextState = {
-  current: {
-    hsCode: "7204.49.00",
-    hsDescription: "Other waste and scrap of iron or steel",
-    materialName: "Heavy Melting Steel Scrap (HMS 1/2)",
-    countryOfOrigin: "US",
-    destinationCountry: "IN",
-    assessableValue: 42000,
-    currency: "USD",
-    unit: "MT",
-    quantity: 100,
-    lastUpdated: new Date().toISOString(),
-  },
+  current: {},
   history: [],
 };
 

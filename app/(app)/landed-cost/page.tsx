@@ -41,7 +41,7 @@ function LandedCostContent() {
 
   // Active duty ID: preferentially from URL query, else contextSlice
   const activeDutyId =
-    queryDutyId || currentContext.dutyCalculationId || "calc_062751";
+    queryDutyId || currentContext.dutyCalculationId || "";
 
   const handleCalculate = async (req: LandedCostRequest) => {
     try {

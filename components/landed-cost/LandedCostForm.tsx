@@ -26,9 +26,9 @@ interface LandedCostFormProps {
 }
 
 export function LandedCostForm({
-  initialDutyId = "calc_062751",
-  initialHsCode = "7204.49.00",
-  initialQuantity = 100,
+  initialDutyId = "",
+  initialHsCode = "",
+  initialQuantity = 1,
   initialUnit = "MT",
   onSubmit,
   isLoading,
@@ -40,15 +40,15 @@ export function LandedCostForm({
   const [port, setPort] = useState("Nhava Sheva (JNPT), Mumbai");
 
   // Port and Logistics Incurred Costs (INR)
-  const [thcAmount, setThcAmount] = useState<number>(85000);
-  const [chaAmount, setChaAmount] = useState<number>(22500);
-  const [inlandAmount, setInlandAmount] = useState<number>(120000);
-  const [financeAmount, setFinanceAmount] = useState<number>(48000);
+  const [thcAmount, setThcAmount] = useState<number>(0);
+  const [chaAmount, setChaAmount] = useState<number>(0);
+  const [inlandAmount, setInlandAmount] = useState<number>(0);
+  const [financeAmount, setFinanceAmount] = useState<number>(0);
 
   // Metal Composition and Recovery Inputs (§2.3)
-  const [containedMetal, setContainedMetal] = useState("Iron (Fe)");
-  const [assayPurity, setAssayPurity] = useState<number>(92.5);
-  const [recoveryYield, setRecoveryYield] = useState<number>(91.0);
+  const [containedMetal, setContainedMetal] = useState("");
+  const [assayPurity, setAssayPurity] = useState<number>(0);
+  const [recoveryYield, setRecoveryYield] = useState<number>(0);
 
   const [validationError, setValidationError] = useState<string | null>(null);
 

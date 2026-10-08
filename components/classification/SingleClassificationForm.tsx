@@ -56,12 +56,12 @@ export function SingleClassificationForm({
   onSubmit,
   isLoading,
 }: SingleClassificationFormProps) {
-  const [description, setDescription] = useState(presets[0].description);
-  const [materialType, setMaterialType] = useState(presets[0].category);
-  const [countryOfOrigin, setCountryOfOrigin] = useState(presets[0].origin);
-  const [assessableValue, setAssessableValue] = useState<number>(presets[0].value);
+  const [description, setDescription] = useState("");
+  const [materialType, setMaterialType] = useState("");
+  const [countryOfOrigin, setCountryOfOrigin] = useState("US");
+  const [assessableValue, setAssessableValue] = useState<number>(0);
   const [currency, setCurrency] = useState("USD");
-  const [quantity, setQuantity] = useState<number>(100);
+  const [quantity, setQuantity] = useState<number>(1);
   const [unit, setUnit] = useState("MT");
 
   const handleSubmit = (e: React.FormEvent) => {

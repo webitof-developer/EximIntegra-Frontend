@@ -48,7 +48,7 @@ export default function DashboardPage() {
                 Welcome, {user?.name || "Trade Officer"}
               </h2>
               <p className="text-xs text-[#9EB1D0] max-w-2xl leading-relaxed">
-                {user?.company || "Integra Metals Corp"} &bull; Customs Tariff Act 2026, DGFT notifications, and duty engine online.
+                {user?.company || "EximIntegra Enterprise"} &bull; Customs Tariff Act 2026, DGFT notifications, and duty engine online.
               </p>
             </div>
 
