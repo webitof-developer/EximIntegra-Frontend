@@ -1,6 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { UserProfile } from "@/lib/types";
-import { getStoredToken, setStoredToken, clearStoredAuth } from "@/lib/auth";
+import {
+  getStoredToken,
+  getStoredUser,
+  setStoredUser,
+  setStoredAuth,
+  clearStoredAuth,
+} from "@/lib/auth";
 
 interface AuthState {
   token: string | null;
@@ -8,7 +14,6 @@ interface AuthState {
   isAuthenticated: boolean;
   isInitialized: boolean;
 }
-
 
 const initialState: AuthState = {
   token: null,
@@ -23,9 +28,15 @@ export const authSlice = createSlice({
   reducers: {
     initializeAuth: (state) => {
       const token = getStoredToken();
+      const user = getStoredUser();
       if (token) {
         state.token = token;
+        state.user = user;
         state.isAuthenticated = true;
+      } else {
+        state.token = null;
+        state.user = null;
+        state.isAuthenticated = false;
       }
       state.isInitialized = true;
     },
@@ -37,7 +48,11 @@ export const authSlice = createSlice({
       state.user = action.payload.user;
       state.isAuthenticated = true;
       state.isInitialized = true;
-      setStoredToken(action.payload.token);
+      setStoredAuth(action.payload.token, action.payload.user);
+    },
+    updateUser: (state, action: PayloadAction<UserProfile>) => {
+      state.user = action.payload;
+      setStoredUser(action.payload);
     },
     logout: (state) => {
       state.token = null;
@@ -52,11 +67,13 @@ export const authSlice = createSlice({
     ) => {
       if (state.user) {
         state.user.tier = action.payload;
+        setStoredUser(state.user);
       }
     },
   },
 });
 
-export const { initializeAuth, setCredentials, logout, setUserTier } = authSlice.actions;
+export const { initializeAuth, setCredentials, updateUser, logout, setUserTier } =
+  authSlice.actions;
 
 export default authSlice.reducer;

@@ -42,6 +42,7 @@ export default function RegisterPage() {
         email,
         password,
         role,
+        tier: "STARTER",
       }).unwrap();
 
       dispatch(

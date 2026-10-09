@@ -63,6 +63,7 @@ export interface RegisterRequest {
   name: string;
   company: string;
   role?: UserProfile["role"];
+  tier?: UserProfile["tier"];
 }
 
 export interface AuthResponse {

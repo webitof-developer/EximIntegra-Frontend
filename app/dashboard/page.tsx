@@ -41,7 +41,7 @@ export default function DashboardPage() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue text-white uppercase tracking-wider font-semibold">
-                  {user?.tier || "ENTERPRISE"} TIER
+                  {user?.tier || "STARTER"} TIER
                 </span>
               </div>
               <h2 className="text-xl font-bold tracking-tight">

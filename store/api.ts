@@ -5,6 +5,7 @@ import {
   FetchArgs,
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
+import { getStoredToken, setStoredToken, clearStoredAuth } from "@/lib/auth";
 
 /**
  * Base HTTP query with credentials (cookies) and Bearer token injection
@@ -13,11 +14,9 @@ const rawBaseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_API_URL || "/api/v1",
   credentials: "include",
   prepareHeaders: (headers) => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("exim_token");
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
+    const token = getStoredToken();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
     }
     return headers;
   },
@@ -50,15 +49,13 @@ const baseQueryWithReauth: BaseQueryFn<
 
     if (refreshResult.data) {
       const data = refreshResult.data as { access_token: string };
-      if (typeof window !== "undefined" && data.access_token) {
-        localStorage.setItem("exim_token", data.access_token);
+      if (data.access_token) {
+        setStoredToken(data.access_token);
       }
       // Retry original request with newly acquired token
       result = await rawBaseQuery(args, apiInstance, extraOptions);
     } else {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("exim_token");
-      }
+      clearStoredAuth();
     }
   }
 

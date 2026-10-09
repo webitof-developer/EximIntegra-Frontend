@@ -44,7 +44,7 @@ const sampleInvoices: InvoiceItem[] = [];
 
 export function SubscriptionBillingSection() {
   const { user } = useAppSelector((state) => state.auth);
-  const [currentPlan, setCurrentPlan] = useState<"ENTERPRISE" | "PROFESSIONAL" | "STARTER">(user?.tier || "PROFESSIONAL");
+  const [currentPlan, setCurrentPlan] = useState<"ENTERPRISE" | "PROFESSIONAL" | "STARTER">(user?.tier || "STARTER");
   const [isAnnual, setIsAnnual] = useState(true);
   const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);

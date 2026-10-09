@@ -1,6 +1,4 @@
-/**
- * Client authentication token storage utilities
- */
+import { UserProfile } from "./types";
 
 const TOKEN_KEY = "exim_token";
 const USER_KEY = "exim_user";
@@ -25,6 +23,31 @@ export function setStoredToken(token: string): void {
   }
 }
 
+export function getStoredUser(): UserProfile | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as UserProfile;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user: UserProfile): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  } catch {
+    // Ignore storage errors in restricted contexts
+  }
+}
+
+export function setStoredAuth(token: string, user: UserProfile): void {
+  setStoredToken(token);
+  setStoredUser(user);
+}
+
 export function clearStoredAuth(): void {
   if (typeof window === "undefined") return;
   try {
@@ -35,3 +58,4 @@ export function clearStoredAuth(): void {
     // Ignore
   }
 }
+

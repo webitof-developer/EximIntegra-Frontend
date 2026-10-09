@@ -151,7 +151,7 @@ export function Topbar() {
               <div className="hidden md:flex flex-col">
                 <span className="text-xs font-semibold text-ink leading-tight flex items-center gap-1.5">
                   <span>{user.name}</span>
-                  <TierBadge tier={user.tier || "ENTERPRISE"} size="xs" />
+                  <TierBadge tier={user.tier || "STARTER"} size="xs" />
                   <ChevronDown className="w-3 h-3 text-muted" />
                 </span>
                 <span className="text-[11px] text-muted leading-tight truncate max-w-[155px]">
@@ -168,7 +168,7 @@ export function Topbar() {
                       <div className="text-xs font-bold text-ink">{user.name}</div>
                       <div className="text-[11px] text-muted truncate max-w-[160px]">{user.email}</div>
                     </div>
-                    <TierBadge tier={user.tier || "ENTERPRISE"} size="sm" />
+                    <TierBadge tier={user.tier || "STARTER"} size="sm" />
                   </div>
 
                   {/* Interactive Plan Sandbox Switcher */}
@@ -178,7 +178,7 @@ export function Topbar() {
                     </span>
                     <div className="grid grid-cols-3 gap-1 p-1 bg-[#EEF2F6] rounded-xl border border-line">
                       {(["STARTER", "PROFESSIONAL", "ENTERPRISE"] as const).map((t) => {
-                        const isCurrent = (user.tier || "ENTERPRISE") === t;
+                        const isCurrent = (user.tier || "STARTER") === t;
                         const label =
                           t === "PROFESSIONAL" ? "Pro" : t === "ENTERPRISE" ? "Enterprise" : "Starter";
                         return (
