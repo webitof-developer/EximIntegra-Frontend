@@ -159,6 +159,28 @@ function SidebarInner({
   isMobile?: boolean;
 }) {
   const pathname = usePathname();
+  const user = useAppSelector((state) => state.auth.user);
+
+  const activeSections: NavSection[] = [
+    ...navSections,
+    ...(user?.role === "ADMIN"
+      ? [
+          {
+            title: "SUPER ADMIN",
+            items: [
+              {
+                id: "admin-panel",
+                title: "Admin Command Center",
+                href: "/admin",
+                icon: <ShieldAlert className="w-4 h-4 text-purple-400" />,
+                glyph: "ADM",
+                badge: "LIVE" as const,
+              },
+            ],
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="flex flex-col h-full justify-between select-none">
@@ -197,7 +219,7 @@ function SidebarInner({
 
         {/* Navigation Sections */}
         <div className="px-3 py-4 space-y-6 overflow-y-auto max-h-[calc(100vh-210px)]">
-          {navSections.map((section) => (
+          {activeSections.map((section) => (
             <div key={section.title} className="space-y-1">
               <h5 className="px-3 text-[10px] font-mono uppercase tracking-widest text-[#6B7E9F] font-semibold">
                 {section.title}

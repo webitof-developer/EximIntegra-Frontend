@@ -429,3 +429,41 @@ export interface HistoryResponse {
   active_user: string;
 }
 
+/* Super Admin & Dynamic Pricing Types */
+export interface PricingPlan {
+  id: string;
+  name: string;
+  badge?: string;
+  isPopular?: boolean;
+  tagline: string;
+  priceMonthlyInr: number;
+  priceAnnualInr: number;
+  priceMonthlyUsd: number;
+  priceAnnualUsd: number;
+  features: string[];
+  ctaLabel: string;
+  ctaHref: string;
+  updatedAt?: string;
+}
+
+export interface AdminUserItem {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  role: UserProfile["role"];
+  tier: UserProfile["tier"];
+  orgId: string;
+  createdAt: string;
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalOrganizations: number;
+  tierBreakdown: Record<string, number>;
+  roleBreakdown: Record<string, number>;
+  systemStatus: string;
+  statutoryDatasetVersion: string;
+}
+
+

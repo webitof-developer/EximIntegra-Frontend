@@ -76,6 +76,9 @@ export const api = createApi({
     "Akshara",
     "Auth",
     "Reports",
+    "Admin",
+    "AdminUsers",
+    "Pricing",
   ],
   endpoints: () => ({}),
 });

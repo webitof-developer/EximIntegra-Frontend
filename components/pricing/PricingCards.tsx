@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { Check, ArrowRight, Sparkles, ShieldCheck, Zap } from "lucide-react";
+import { useGetPricingPlansQuery } from "@/store/adminApi";
 
 export type BillingCycle = "monthly" | "annual";
 export type CurrencyMode = "INR" | "USD";
@@ -95,6 +96,9 @@ const plans: PricingPlan[] = [
 export function PricingCards() {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("annual");
   const [currency, setCurrency] = useState<CurrencyMode>("INR");
+  const { data: pricingData } = useGetPricingPlansQuery();
+  const displayPlans =
+    pricingData?.plans && pricingData.plans.length > 0 ? pricingData.plans : plans;
 
   return (
     <div className="space-y-10">
@@ -158,7 +162,7 @@ export function PricingCards() {
 
       {/* 3 Pricing Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-        {plans.map((p) => {
+        {displayPlans.map((p) => {
           const isAnnual = billingCycle === "annual";
           const price =
             currency === "INR"

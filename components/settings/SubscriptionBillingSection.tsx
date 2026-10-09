@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useAppSelector } from "@/store";
+import { useGetPricingPlansQuery } from "@/store/adminApi";
 import {
   StatusPill,
   TableContainer,
@@ -49,6 +50,22 @@ export function SubscriptionBillingSection() {
   const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const { data: pricingData } = useGetPricingPlansQuery();
+  const starterPlan = pricingData?.plans?.find((p) => p.id.toLowerCase() === "starter");
+  const proPlan = pricingData?.plans?.find((p) => p.id.toLowerCase() === "professional");
+  const entPlan = pricingData?.plans?.find((p) => p.id.toLowerCase() === "enterprise");
+
+  const starterPrice = isAnnual ? (starterPlan?.priceAnnualInr ?? 6399) : (starterPlan?.priceMonthlyInr ?? 7999);
+  const proPrice = isAnnual ? (proPlan?.priceAnnualInr ?? 19999) : (proPlan?.priceMonthlyInr ?? 24999);
+  const entPrice = isAnnual ? (entPlan?.priceAnnualInr ?? 59999) : (entPlan?.priceMonthlyInr ?? 74999);
+
+  const displayedPrice =
+    currentPlan === "ENTERPRISE"
+      ? entPrice
+      : currentPlan === "PROFESSIONAL"
+      ? proPrice
+      : starterPrice;
 
   // Card state
   const [cardLast4, setCardLast4] = useState("4242");
@@ -136,11 +153,7 @@ export function SubscriptionBillingSection() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="text-right sm:pr-2">
               <div className="text-xl font-bold font-data text-ink">
-                {currentPlan === "ENTERPRISE"
-                  ? isAnnual ? "₹59,999" : "₹74,999"
-                  : currentPlan === "PROFESSIONAL"
-                  ? isAnnual ? "₹19,999" : "₹24,999"
-                  : isAnnual ? "₹6,399" : "₹7,999"}
+                ₹{displayedPrice.toLocaleString("en-IN")}
                 <span className="text-xs text-muted font-normal"> / mo</span>
               </div>
               <span className="text-[10px] font-mono text-muted block">
@@ -409,7 +422,9 @@ export function SubscriptionBillingSection() {
                 }`}
               >
                 <span className="font-bold text-ink block">Starter</span>
-                <span className="text-xs text-muted block mt-0.5">₹7,999 / mo</span>
+                <span className="text-xs text-muted block mt-0.5">
+                  ₹{(starterPlan?.priceMonthlyInr ?? 7999).toLocaleString("en-IN")} / mo
+                </span>
                 <span className="text-[11px] text-muted block mt-2">100 HS lookups &bull; 1 Seat</span>
               </div>
 
@@ -423,7 +438,9 @@ export function SubscriptionBillingSection() {
                 }`}
               >
                 <span className="font-bold text-blue block">Professional</span>
-                <span className="text-xs text-muted block mt-0.5">₹24,999 / mo</span>
+                <span className="text-xs text-muted block mt-0.5">
+                  ₹{(proPlan?.priceMonthlyInr ?? 24999).toLocaleString("en-IN")} / mo
+                </span>
                 <span className="text-[11px] text-muted block mt-2">Bulk CSV &bull; Landed Cost &bull; 5 Seats</span>
               </div>
 
@@ -437,7 +454,9 @@ export function SubscriptionBillingSection() {
                 }`}
               >
                 <span className="font-bold text-ink block">Enterprise</span>
-                <span className="text-xs text-muted block mt-0.5">₹59,999 / mo</span>
+                <span className="text-xs text-muted block mt-0.5">
+                  ₹{(entPlan?.priceMonthlyInr ?? 74999).toLocaleString("en-IN")} / mo
+                </span>
                 <span className="text-[11px] text-muted block mt-2">Akshara AI &bull; BYOK &bull; Unlimited</span>
               </div>
             </div>

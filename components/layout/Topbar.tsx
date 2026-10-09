@@ -14,12 +14,17 @@ import {
   ChevronDown,
   User as UserIcon,
   Shield,
+  ShieldAlert,
   CreditCard,
   Crown,
   Menu,
 } from "lucide-react";
 
 const pageMeta: Record<string, { title: string; description: string }> = {
+  "/admin": {
+    title: "Super Admin Command Center",
+    description: "Global user directory, subscription quotas, and dynamic SaaS pricing.",
+  },
   "/dashboard": {
     title: "Trade Advisory Cockpit",
     description: "Multi-jurisdiction trade compliance, tariff estimation, and AI intelligence overview.",
@@ -125,6 +130,17 @@ export function Topbar() {
 
       {/* Right Action Bar */}
       <div className="flex items-center gap-3 shrink-0">
+        {/* Super Admin Quick Badge & Link */}
+        {isAuthenticated && user?.role === "ADMIN" && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-800 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+          >
+            <ShieldAlert className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Admin Cockpit</span>
+          </Link>
+        )}
+
         {/* Akshara Quick Launcher */}
         <Link
           href="/akshara"
@@ -203,6 +219,17 @@ export function Topbar() {
                     </div>
                   </div>
                 </div>
+
+                {user.role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Super Admin Console</span>
+                  </Link>
+                )}
 
                 <Link
                   href="/pricing"
