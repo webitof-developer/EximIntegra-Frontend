@@ -7,6 +7,14 @@ export const metadata: Metadata = {
   title: "EximIntegra — Trade Intelligence & Cross-Border Advisory",
   description:
     "Enterprise cross-border trade compliance, HS classification, landed cost, and duty intelligence platform.",
+  icons: {
+    icon: [
+      { url: "/eximintegra-logo-mark.png", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    shortcut: "/eximintegra-logo-mark.png",
+    apple: "/eximintegra-logo-mark.png",
+  },
 };
 
 export default function RootLayout({

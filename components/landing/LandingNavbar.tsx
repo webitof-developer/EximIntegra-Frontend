@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAppSelector } from "@/store";
 import {
@@ -27,23 +28,22 @@ export function LandingNavbar() {
     <header className="sticky top-0 z-50 bg-panel/90 backdrop-blur-md border-b border-line">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group select-none">
-          <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center text-white shadow-xs group-hover:bg-blue transition-colors">
-            <span className="font-mono font-bold text-xs tracking-tight">EI</span>
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-sm text-ink tracking-tight">
-                EximIntegra
-              </span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-blue-dim text-blue border border-blue/20 font-bold uppercase">
-                SaaS
-              </span>
-            </div>
-            <span className="text-[10px] text-muted font-mono leading-none">
-              Trade Intelligence & Landed Cost
-            </span>
-          </div>
+        <Link
+          href="/"
+          className="flex items-center gap-2 group select-none"
+          title="EximIntegra — Trade Intelligence & Landed Cost"
+        >
+          <Image
+            src="/eximintegra-logo-without-bg-name.png"
+            alt="EximIntegra — Trade Intelligence & Landed Cost"
+            width={180}
+            height={60}
+            className="h-9 w-auto object-contain group-hover:opacity-90 transition-opacity"
+            priority
+          />
+          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-blue-dim text-blue border border-blue/20 font-bold uppercase shrink-0">
+            SaaS
+          </span>
         </Link>
 
         {/* Desktop Nav Links */}

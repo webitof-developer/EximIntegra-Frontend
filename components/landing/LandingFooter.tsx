@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ShieldCheck, Scale, Globe, Lock } from "lucide-react";
 
 export function LandingFooter() {
@@ -11,18 +12,18 @@ export function LandingFooter() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand Info */}
           <div className="col-span-2 space-y-3.5">
-            <Link href="/" className="flex items-center gap-2.5 select-none">
-              <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center text-white shadow-xs">
-                <span className="font-mono font-bold text-xs tracking-tight">EI</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-sm text-ink tracking-tight">
-                  EximIntegra
-                </span>
-                <span className="text-[10px] text-muted font-mono leading-none">
-                  Trade Intelligence & Landed Cost
-                </span>
-              </div>
+            <Link
+              href="/"
+              className="inline-block select-none group"
+              title="EximIntegra — Trade Intelligence & Landed Cost"
+            >
+              <Image
+                src="/eximintegra-logo-without-bg-name.png"
+                alt="EximIntegra — Trade Intelligence & Landed Cost"
+                width={180}
+                height={60}
+                className="h-9 w-auto object-contain group-hover:opacity-90 transition-opacity"
+              />
             </Link>
 
             <p className="text-muted leading-relaxed max-w-sm text-xs">

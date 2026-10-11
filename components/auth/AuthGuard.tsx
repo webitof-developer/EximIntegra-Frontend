@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector } from "@/store";
 import { Lock, ShieldAlert } from "lucide-react";
@@ -43,8 +44,15 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-navy flex items-center justify-center text-white font-mono font-bold text-xs animate-pulse">
-            EI
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-line bg-panel flex items-center justify-center animate-pulse">
+            <Image
+              src="/eximintegra-logo-mark.png"
+              alt="EximIntegra"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
           </div>
           <span className="text-xs text-muted font-mono">
             Verifying Session...

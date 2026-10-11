@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -211,8 +212,15 @@ function SidebarInner({
             className="flex items-center gap-3 group"
             title="EXIMINTEGRA — Trade Advisory OS"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue flex items-center justify-center text-white font-mono font-bold text-sm tracking-wider shadow-sm group-hover:bg-blue-dark transition-colors shrink-0">
-              EI
+            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 shadow-sm border border-white/10 group-hover:border-blue/50 transition-colors bg-[#0D1B2A] flex items-center justify-center">
+              <Image
+                src="/eximintegra-logo-mark.png"
+                alt="EximIntegra"
+                width={32}
+                height={32}
+                className="w-full h-full object-cover"
+                priority
+              />
             </div>
             {!isCollapsed && (
               <div className="flex flex-col animate-in fade-in duration-200">
