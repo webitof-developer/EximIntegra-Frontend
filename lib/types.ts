@@ -49,6 +49,7 @@ export interface UserProfile {
   company: string;
   role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR" | "ADMIN";
   tier: "ENTERPRISE" | "PROFESSIONAL" | "STARTER";
+  permissions?: Record<string, boolean>;
   createdAt: string;
 }
 
@@ -454,6 +455,7 @@ export interface AdminUserItem {
   role: UserProfile["role"];
   tier: UserProfile["tier"];
   orgId: string;
+  permissions?: Record<string, boolean>;
   createdAt: string;
 }
 
@@ -464,6 +466,28 @@ export interface AdminStats {
   roleBreakdown: Record<string, number>;
   systemStatus: string;
   statutoryDatasetVersion: string;
+}
+
+export interface RBACModule {
+  id: string;
+  name: string;
+  type: "page" | "tab";
+  category: string;
+  href?: string;
+  parent?: string;
+}
+
+export interface RolePermissionItem {
+  role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR";
+  roleName: string;
+  description: string;
+  permissions: Record<string, boolean>;
+  updatedAt?: string;
+}
+
+export interface RBACMatrixResponse {
+  roles: RolePermissionItem[];
+  modules: RBACModule[];
 }
 
 

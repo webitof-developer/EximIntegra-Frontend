@@ -79,6 +79,7 @@ export const api = createApi({
     "Admin",
     "AdminUsers",
     "Pricing",
+    "RBAC",
   ],
   endpoints: () => ({}),
 });

@@ -21,6 +21,7 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldAlert,
+  Lock,
   X,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
@@ -251,6 +252,31 @@ function SidebarInner({
                             className="text-[9px] px-1.5 py-0 border-[#2A3955] text-[#7084A5]"
                           />
                         )}
+                      </div>
+                    );
+                  }
+
+                  const isPermitted =
+                    user?.role === "ADMIN" ||
+                    user?.permissions?.[item.id] !== false;
+
+                  if (!isPermitted) {
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between px-3 py-2 rounded-md text-xs text-[#52637F] cursor-not-allowed opacity-55 select-none group"
+                        title={`Access restricted for ${user?.role || "your role"} by Admin RBAC policy`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="text-[#52637F] shrink-0">{item.icon}</span>
+                          <span className="whitespace-nowrap truncate line-through decoration-[#52637F]/60">
+                            {item.title}
+                          </span>
+                        </div>
+                        <span className="flex items-center gap-1 text-[9px] font-mono uppercase text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                          <Lock className="w-2.5 h-2.5" />
+                          Restricted
+                        </span>
                       </div>
                     );
                   }

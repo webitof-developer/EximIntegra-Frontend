@@ -1,5 +1,11 @@
 import { api } from "./api";
-import { AdminStats, AdminUserItem, PricingPlan } from "@/lib/types";
+import {
+  AdminStats,
+  AdminUserItem,
+  PricingPlan,
+  RBACMatrixResponse,
+  RolePermissionItem,
+} from "@/lib/types";
 
 export interface UpdateAdminUserRequest {
   id: string;
@@ -52,6 +58,21 @@ export const adminApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Pricing"],
     }),
+    getRBACMatrix: builder.query<RBACMatrixResponse, void>({
+      query: () => "/admin/rbac",
+      providesTags: ["RBAC"],
+    }),
+    updateRBACMatrix: builder.mutation<
+      { matrix: RBACMatrixResponse; message: string },
+      { roles: RolePermissionItem[] }
+    >({
+      query: (body) => ({
+        url: "/admin/rbac",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["RBAC", "Auth"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -63,4 +84,6 @@ export const {
   useDeleteAdminUserMutation,
   useGetPricingPlansQuery,
   useUpdatePricingPlansMutation,
+  useGetRBACMatrixQuery,
+  useUpdateRBACMatrixMutation,
 } = adminApi;
