@@ -490,4 +490,26 @@ export interface RBACMatrixResponse {
   modules: RBACModule[];
 }
 
+export interface NotificationItem {
+  id: string;
+  orgId?: string | null;
+  userId?: string | null;
+  module: "statutory" | "duty" | "classification" | "bulk" | "compare" | "landed_cost" | "settings" | "security" | "system";
+  type: "statutory" | "arbitrage" | "batch" | "security" | "calculation" | "info" | "warning" | "success";
+  title: string;
+  message: string;
+  time: string;
+  createdAt: string;
+  read: boolean;
+  link?: string | null;
+  linkText?: string | null;
+  extraData?: Record<string, any>;
+}
+
+export interface NotificationListResponse {
+  notifications: NotificationItem[];
+  unread_count: number;
+  total: number;
+}
+
 

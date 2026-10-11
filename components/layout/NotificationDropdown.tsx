@@ -14,75 +14,36 @@ import {
   ShieldAlert,
   Clock,
   Sparkles,
-  X,
+  Calculator,
+  Ship,
+  Search,
+  FileCheck,
+  RefreshCw,
 } from "lucide-react";
-
-export interface NotificationItem {
-  id: string;
-  type: "statutory" | "arbitrage" | "batch" | "security";
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  link?: string;
-  linkText?: string;
-}
-
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "notif-1",
-    type: "statutory",
-    title: "CBIC Gazette Notif 22/2026 Issued",
-    message:
-      "Concessional BCD duty rates updated for HS 7204.49 scrap metals under India-UAE CEPA.",
-    time: "10m ago",
-    read: false,
-    link: "/duty",
-    linkText: "View Tariff Impact",
-  },
-  {
-    id: "notif-2",
-    type: "arbitrage",
-    title: "Sourcing Arbitrage Alert",
-    message:
-      "Vietnam origin offers 2.50% landed cost savings over standard MFN corridor for Lithium Cells.",
-    time: "1h ago",
-    read: false,
-    link: "/compare",
-    linkText: "Compare Origins",
-  },
-  {
-    id: "notif-3",
-    type: "batch",
-    title: "Bulk HS Classification Complete",
-    message:
-      "Batch job #job_9021 (45 line items) processed with 98.2% GIR sequential confidence.",
-    time: "3h ago",
-    read: false,
-    link: "/reports",
-    linkText: "Inspect Audit Log",
-  },
-  {
-    id: "notif-4",
-    type: "security",
-    title: "Production API Key Expiry Warning",
-    message:
-      "Gateway Token 'GW_Live_Prod_902' key rotation is recommended within 7 days.",
-    time: "Yesterday",
-    read: true,
-    link: "/settings",
-    linkText: "Manage BYOK Keys",
-  },
-];
+import { NotificationItem } from "@/lib/types";
+import {
+  useGetNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
+  useDeleteNotificationMutation,
+} from "@/store/notificationsApi";
 
 export function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(
-    INITIAL_NOTIFICATIONS
-  );
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // RTK Query hooks
+  const { data, isLoading, isFetching } = useGetNotificationsQuery(
+    { limit: 20 },
+    { pollingInterval: 30000 } // Auto-poll every 30s for live alerts
+  );
+
+  const [markRead] = useMarkNotificationReadMutation();
+  const [markAllRead, { isLoading: isMarkingAll }] = useMarkAllNotificationsReadMutation();
+  const [deleteNotif] = useDeleteNotificationMutation();
+
+  const notifications = data?.notifications || [];
+  const unreadCount = data?.unread_count ?? notifications.filter((n) => !n.read).length;
 
   // Handle outside click to close
   useEffect(() => {
@@ -103,45 +64,69 @@ export function NotificationDropdown() {
     };
   }, [isOpen]);
 
-  const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  const handleMarkAllAsRead = async () => {
+    try {
+      await markAllRead().unwrap();
+    } catch (e) {
+      console.error("Failed to mark all notifications read", e);
+    }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
+  const handleItemClick = async (notif: NotificationItem) => {
+    if (!notif.read) {
+      try {
+        await markRead(notif.id).unwrap();
+      } catch (e) {
+        console.error("Failed to mark notification read", e);
+      }
+    }
   };
 
-  const deleteNotification = (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  const getIcon = (type: NotificationItem["type"]) => {
-    switch (type) {
-      case "statutory":
-        return <Scale className="w-4 h-4 text-blue" />;
-      case "arbitrage":
-        return <TrendingDown className="w-4 h-4 text-green" />;
-      case "batch":
-        return <CheckCircle2 className="w-4 h-4 text-indigo-500" />;
-      case "security":
-        return <ShieldAlert className="w-4 h-4 text-amber" />;
+    try {
+      await deleteNotif(id).unwrap();
+    } catch (e) {
+      console.error("Failed to delete notification", e);
     }
   };
 
-  const getIconBg = (type: NotificationItem["type"]) => {
-    switch (type) {
-      case "statutory":
-        return "bg-blue-dim border-blue/20";
-      case "arbitrage":
-        return "bg-green-dim border-green/20";
-      case "batch":
-        return "bg-indigo-50 border-indigo-200/60";
-      case "security":
-        return "bg-amber-dim border-amber/20";
+  const getIcon = (item: NotificationItem) => {
+    if (item.module === "duty" || item.type === "calculation") {
+      return <Calculator className="w-4 h-4 text-blue" />;
     }
+    if (item.module === "landed_cost") {
+      return <Ship className="w-4 h-4 text-blue" />;
+    }
+    if (item.module === "compare" || item.type === "arbitrage") {
+      return <TrendingDown className="w-4 h-4 text-green" />;
+    }
+    if (item.module === "bulk" || item.type === "batch") {
+      return <CheckCircle2 className="w-4 h-4 text-indigo-500" />;
+    }
+    if (item.module === "classification") {
+      return <Search className="w-4 h-4 text-sky-500" />;
+    }
+    if (item.module === "security" || item.module === "settings" || item.type === "security") {
+      return <ShieldAlert className="w-4 h-4 text-amber" />;
+    }
+    if (item.module === "statutory" || item.type === "statutory") {
+      return <Scale className="w-4 h-4 text-blue" />;
+    }
+    return <Sparkles className="w-4 h-4 text-blue" />;
+  };
+
+  const getIconBg = (item: NotificationItem) => {
+    if (item.module === "compare" || item.type === "arbitrage") {
+      return "bg-green-dim border-green/20";
+    }
+    if (item.module === "bulk" || item.type === "batch") {
+      return "bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200/60 dark:border-indigo-800/40";
+    }
+    if (item.module === "security" || item.module === "settings" || item.type === "security") {
+      return "bg-amber-dim border-amber/20";
+    }
+    return "bg-blue-dim border-blue/20";
   };
 
   return (
@@ -159,7 +144,9 @@ export function NotificationDropdown() {
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue ring-2 ring-white animate-pulse" />
+          <span className="absolute -top-1 -right-1 px-1.5 py-0.2 min-w-4.5 h-4.5 rounded-full bg-blue text-white text-[10px] font-bold font-mono flex items-center justify-center ring-2 ring-panel shadow-sm animate-pulse">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
         )}
       </button>
 
@@ -181,23 +168,43 @@ export function NotificationDropdown() {
                   All caught up
                 </span>
               )}
+              {isFetching && (
+                <RefreshCw className="w-3 h-3 text-muted animate-spin" />
+              )}
             </div>
 
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllAsRead}
-                className="text-[11px] font-medium text-blue hover:text-blue-dark flex items-center gap-1 cursor-pointer transition-colors"
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  disabled={isMarkingAll}
+                  onClick={handleMarkAllAsRead}
+                  className="text-[11px] font-medium text-blue hover:text-blue-dark flex items-center gap-1 cursor-pointer transition-colors disabled:opacity-50"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  <span>Mark all read</span>
+                </button>
+              )}
+              <Link
+                href="/notifications"
+                onClick={() => setIsOpen(false)}
+                className="text-[11px] font-semibold text-muted hover:text-blue transition-colors"
               >
-                <CheckCheck className="w-3.5 h-3.5" />
-                <span>Mark all read</span>
-              </button>
-            )}
+                Open page
+              </Link>
+            </div>
           </div>
 
           {/* Notifications List */}
           <div className="overflow-y-auto max-h-[380px] divide-y divide-line/60">
-            {notifications.length === 0 ? (
+            {isLoading && notifications.length === 0 ? (
+              <div className="py-12 px-6 text-center text-muted space-y-2">
+                <div className="w-6 h-6 border-2 border-blue border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="text-xs font-semibold text-ink">
+                  Syncing notifications...
+                </div>
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="py-12 px-6 text-center text-muted space-y-2">
                 <div className="w-10 h-10 rounded-2xl bg-bg border border-line flex items-center justify-center mx-auto text-muted">
                   <Bell className="w-5 h-5 opacity-40" />
@@ -213,7 +220,7 @@ export function NotificationDropdown() {
               notifications.map((n) => (
                 <div
                   key={n.id}
-                  onClick={() => markAsRead(n.id)}
+                  onClick={() => handleItemClick(n)}
                   className={`p-3.5 px-4 flex items-start gap-3 transition-colors cursor-pointer group ${
                     n.read
                       ? "hover:bg-bg/40 opacity-80"
@@ -223,10 +230,10 @@ export function NotificationDropdown() {
                   {/* Icon Tile */}
                   <div
                     className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 ${getIconBg(
-                      n.type
+                      n
                     )}`}
                   >
-                    {getIcon(n.type)}
+                    {getIcon(n)}
                   </div>
 
                   {/* Body */}
@@ -258,7 +265,10 @@ export function NotificationDropdown() {
                       {n.link ? (
                         <Link
                           href={n.link}
-                          onClick={() => setIsOpen(false)}
+                          onClick={() => {
+                            handleItemClick(n);
+                            setIsOpen(false);
+                          }}
                           className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue hover:text-blue-dark transition-colors"
                         >
                           <span>{n.linkText || "View Details"}</span>
@@ -270,7 +280,7 @@ export function NotificationDropdown() {
 
                       <button
                         type="button"
-                        onClick={(e) => deleteNotification(n.id, e)}
+                        onClick={(e) => handleDelete(n.id, e)}
                         className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-red transition-all cursor-pointer rounded"
                         title="Dismiss notification"
                       >
@@ -290,11 +300,12 @@ export function NotificationDropdown() {
               <span>Live Statutory Sync</span>
             </span>
             <Link
-              href="/reports"
+              href="/notifications"
               onClick={() => setIsOpen(false)}
-              className="font-medium text-blue hover:underline"
+              className="font-medium text-blue hover:underline flex items-center gap-1"
             >
-              Calculation Audit Trail &rarr;
+              <span>View All Notifications</span>
+              <span>&rarr;</span>
             </Link>
           </div>
         </div>

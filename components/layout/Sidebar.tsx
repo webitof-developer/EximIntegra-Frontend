@@ -22,6 +22,7 @@ import {
   ChevronRight,
   ShieldAlert,
   Lock,
+  Bell,
   X,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
@@ -140,6 +141,13 @@ const navSections: NavSection[] = [
         href: "/reports",
         icon: <Clock className="w-4 h-4" />,
         glyph: "HIST",
+      },
+      {
+        id: "notifications",
+        title: "Notifications & Alerts",
+        href: "/notifications",
+        icon: <Bell className="w-4 h-4" />,
+        glyph: "NOTIF",
       },
       {
         id: "settings",

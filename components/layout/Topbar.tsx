@@ -65,6 +65,10 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     title: "API Keys & BYOK",
     description: "Configure LLM provider credentials, gateway tokens, contract rates, and webhooks.",
   },
+  "/notifications": {
+    title: "Statutory Alerts & Notifications",
+    description: "Live gazette updates, calculation notifications, sourcing arbitrage opportunities, and security notices.",
+  },
 };
 
 export function Topbar() {
