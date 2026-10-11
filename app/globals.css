@@ -70,6 +70,26 @@ body {
   background: #94A3B8;
 }
 
+/* Sidebar sleek dark scrollbar */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: #24355A;
+  border-radius: 4px;
+}
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #3B5382;
+}
+.sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #24355A transparent;
+}
+
+
 /* Lenis Smooth Scroll rules */
 html.lenis, html.lenis body {
   height: auto;

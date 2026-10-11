@@ -163,9 +163,11 @@ const navSections: NavSection[] = [
 function SidebarInner({
   onClose,
   isMobile = false,
+  isCollapsed = false,
 }: {
   onClose?: () => void;
   isMobile?: boolean;
+  isCollapsed?: boolean;
 }) {
   const pathname = usePathname();
   const user = useAppSelector((state) => state.auth.user);
@@ -193,28 +195,38 @@ function SidebarInner({
 
   return (
     <div className="flex flex-col h-full justify-between select-none">
-      {/* Brand Header */}
-      <div className="flex flex-col">
-        <div className="px-5 py-5 border-b border-[#1B2A4A] flex items-center justify-between">
+      {/* Brand Header & Navigation Area */}
+      <div className="flex flex-col flex-1 min-h-0">
+        <div
+          className={cn(
+            "border-b border-[#1B2A4A] flex items-center shrink-0 transition-all",
+            isCollapsed
+              ? "p-3 justify-center"
+              : "px-5 py-5 justify-between"
+          )}
+        >
           <Link
             href="/dashboard"
             onClick={onClose}
             className="flex items-center gap-3 group"
+            title="EXIMINTEGRA — Trade Advisory OS"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue flex items-center justify-center text-white font-mono font-bold text-sm tracking-wider shadow-sm group-hover:bg-blue-dark transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-blue flex items-center justify-center text-white font-mono font-bold text-sm tracking-wider shadow-sm group-hover:bg-blue-dark transition-colors shrink-0">
               EI
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-white text-sm tracking-tight leading-tight flex items-center gap-1.5">
-                EXIMINTEGRA
-              </span>
-              <span className="text-[10px] text-[#8EA0C0] font-mono tracking-widest uppercase">
-                Trade Advisory OS
-              </span>
-            </div>
+            {!isCollapsed && (
+              <div className="flex flex-col animate-in fade-in duration-200">
+                <span className="font-bold text-white text-sm tracking-tight leading-tight flex items-center gap-1.5">
+                  EXIMINTEGRA
+                </span>
+                <span className="text-[10px] text-[#8EA0C0] font-mono tracking-widest uppercase">
+                  Trade Advisory OS
+                </span>
+              </div>
+            )}
           </Link>
 
-          {isMobile && (
+          {isMobile && !isCollapsed && (
             <button
               type="button"
               aria-label="Close navigation drawer"
@@ -227,12 +239,21 @@ function SidebarInner({
         </div>
 
         {/* Navigation Sections */}
-        <div className="px-3 py-4 space-y-6 overflow-y-auto max-h-[calc(100vh-210px)]">
+        <div
+          className={cn(
+            "overflow-y-auto flex-1 min-h-0 sidebar-scrollbar transition-all",
+            isCollapsed ? "px-2 py-3 space-y-4" : "px-3 py-4 space-y-6"
+          )}
+        >
           {activeSections.map((section) => (
             <div key={section.title} className="space-y-1">
-              <h5 className="px-3 text-[10px] font-mono uppercase tracking-widest text-[#6B7E9F] font-semibold">
-                {section.title}
-              </h5>
+              {isCollapsed ? (
+                <div className="my-2 border-t border-[#1B2A4A]/60" />
+              ) : (
+                <h5 className="px-3 text-[10px] font-mono uppercase tracking-widest text-[#6B7E9F] font-semibold animate-in fade-in duration-150">
+                  {section.title}
+                </h5>
+              )}
               <div className="mt-1 space-y-0.5">
                 {section.items.map((item) => {
                   const isActive =
@@ -245,20 +266,29 @@ function SidebarInner({
                     return (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between px-3 py-2 rounded-md text-xs text-[#52637F] cursor-not-allowed opacity-60"
-                        title="Module coming in v2 scope"
+                        className={cn(
+                          "flex items-center rounded-md text-xs text-[#52637F] cursor-not-allowed opacity-60",
+                          isCollapsed
+                            ? "justify-center p-2.5"
+                            : "justify-between px-3 py-2"
+                        )}
+                        title={`${item.title} (Coming Soon)`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-[#52637F]">{item.icon}</span>
-                          <span className="font-medium">{item.title}</span>
-                        </div>
-                        {item.badge && (
-                          <StatusPill
-                            label={item.badge}
-                            variant="muted"
-                            size="xs"
-                            className="text-[9px] px-1.5 py-0 border-[#2A3955] text-[#7084A5]"
-                          />
+                        <span className="text-[#52637F] shrink-0">{item.icon}</span>
+                        {!isCollapsed && (
+                          <>
+                            <span className="font-medium whitespace-nowrap truncate ml-2.5 flex-1">
+                              {item.title}
+                            </span>
+                            {item.badge && (
+                              <StatusPill
+                                label={item.badge}
+                                variant="muted"
+                                size="xs"
+                                className="text-[9px] px-1.5 py-0 border-[#2A3955] text-[#7084A5]"
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                     );
@@ -272,19 +302,26 @@ function SidebarInner({
                     return (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between px-3 py-2 rounded-md text-xs text-[#52637F] cursor-not-allowed opacity-55 select-none group"
-                        title={`Access restricted for ${user?.role || "your role"} by Admin RBAC policy`}
+                        className={cn(
+                          "flex items-center rounded-md text-xs text-[#52637F] cursor-not-allowed opacity-55 select-none group",
+                          isCollapsed
+                            ? "justify-center p-2.5"
+                            : "justify-between px-3 py-2"
+                        )}
+                        title={`Access restricted: ${item.title}`}
                       >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <span className="text-[#52637F] shrink-0">{item.icon}</span>
-                          <span className="whitespace-nowrap truncate line-through decoration-[#52637F]/60">
-                            {item.title}
-                          </span>
-                        </div>
-                        <span className="flex items-center gap-1 text-[9px] font-mono uppercase text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                          <Lock className="w-2.5 h-2.5" />
-                          Restricted
-                        </span>
+                        <span className="text-[#52637F] shrink-0">{item.icon}</span>
+                        {!isCollapsed && (
+                          <>
+                            <span className="whitespace-nowrap truncate line-through decoration-[#52637F]/60 ml-2.5 flex-1">
+                              {item.title}
+                            </span>
+                            <span className="flex items-center gap-1 text-[9px] font-mono uppercase text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                              <Lock className="w-2.5 h-2.5" />
+                              Restricted
+                            </span>
+                          </>
+                        )}
                       </div>
                     );
                   }
@@ -294,11 +331,15 @@ function SidebarInner({
                       key={item.id}
                       href={item.href}
                       onClick={onClose}
+                      title={item.title}
                       className={cn(
-                        "flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition-all group relative",
+                        "flex items-center rounded-md text-xs font-medium transition-all group relative",
+                        isCollapsed
+                          ? "justify-center p-2.5 hover:bg-navy-hover"
+                          : "justify-between px-3 py-2 hover:bg-navy-hover",
                         isActive
                           ? "bg-navy-active text-white font-semibold shadow-xs"
-                          : "text-[#9EB1D0] hover:text-white hover:bg-navy-hover"
+                          : "text-[#9EB1D0] hover:text-white"
                       )}
                     >
                       {/* Active indicator bar */}
@@ -306,43 +347,47 @@ function SidebarInner({
                         <div className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-blue rounded-r" />
                       )}
 
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span
-                          className={cn(
-                            "transition-colors shrink-0",
-                            isActive
-                              ? "text-blue"
-                              : "text-[#7B8DAF] group-hover:text-white"
-                          )}
-                        >
-                          {item.icon}
-                        </span>
-                        <span className="whitespace-nowrap truncate">{item.title}</span>
-                      </div>
+                      <span
+                        className={cn(
+                          "transition-colors shrink-0",
+                          isActive
+                            ? "text-blue"
+                            : "text-[#7B8DAF] group-hover:text-white"
+                        )}
+                      >
+                        {item.icon}
+                      </span>
 
-                      {item.tierBadge ? (
-                        <TierBadge
-                          tier={item.tierBadge}
-                          size="xs"
-                          compact
-                          variant="dark"
-                          showIcon={true}
-                        />
-                      ) : (
-                        item.badge && (
-                          <StatusPill
-                            label={item.badge}
-                            variant={
-                              item.badge === "LIVE"
-                                ? "success"
-                                : item.badge === "DEV"
-                                ? "primary"
-                                : "warning"
-                            }
-                            size="xs"
-                            className="text-[9px] px-1.5 py-0"
-                          />
-                        )
+                      {!isCollapsed && (
+                        <>
+                          <span className="whitespace-nowrap truncate ml-2.5 flex-1 text-left animate-in fade-in duration-150">
+                            {item.title}
+                          </span>
+                          {item.tierBadge ? (
+                            <TierBadge
+                              tier={item.tierBadge}
+                              size="xs"
+                              compact
+                              variant="dark"
+                              showIcon={true}
+                            />
+                          ) : (
+                            item.badge && (
+                              <StatusPill
+                                label={item.badge}
+                                variant={
+                                  item.badge === "LIVE"
+                                    ? "success"
+                                    : item.badge === "DEV"
+                                    ? "primary"
+                                    : "warning"
+                                }
+                                size="xs"
+                                className="text-[9px] px-1.5 py-0"
+                              />
+                            )
+                          )}
+                        </>
                       )}
                     </Link>
                   );
@@ -354,32 +399,47 @@ function SidebarInner({
       </div>
 
       {/* Pinned Bottom Panel: Verified Datasets / Reliability State */}
-      <div className="p-3 border-t border-[#1B2A4A] bg-[#0B1426]">
-        <div className="p-3 rounded-lg bg-[#142038] border border-[#1E2E4E] space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-white flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green animate-pulse" />
-              CBIC Gateway
-            </span>
-            <span className="text-[9px] font-mono text-[#8EA0C0] bg-[#1C2C4C] px-1.5 py-0.5 rounded">
-              v2026.3
-            </span>
+      <div
+        className={cn(
+          "border-t border-[#1B2A4A] bg-[#0B1426] transition-all",
+          isCollapsed ? "p-2 flex flex-col items-center justify-center" : "p-3"
+        )}
+      >
+        {isCollapsed ? (
+          <div
+            className="p-2 rounded-lg bg-[#142038] border border-[#1E2E4E] flex flex-col items-center gap-1 cursor-pointer hover:bg-[#182644] transition-colors"
+            title="CBIC Gateway v2026.3 Live Sync"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-green animate-pulse" />
+            <span className="text-[9px] font-mono text-green font-bold">LIVE</span>
           </div>
-          <p className="text-[10px] text-[#8EA0C0] leading-tight">
-            Tariffs synchronized with Customs Tariff Act 2026 & DGFT notices.
-          </p>
-          <div className="pt-1 flex items-center justify-between border-t border-[#1E2E4E]/80">
-            <Link
-              href="/reports"
-              onClick={onClose}
-              className="text-[10px] text-blue hover:underline flex items-center gap-1"
-            >
-              Verify Provenance
-              <ChevronRight className="w-2.5 h-2.5" />
-            </Link>
-            <span className="text-[10px] font-mono text-green">LIVE</span>
+        ) : (
+          <div className="p-3 rounded-lg bg-[#142038] border border-[#1E2E4E] space-y-2 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-white flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green animate-pulse" />
+                CBIC Gateway
+              </span>
+              <span className="text-[9px] font-mono text-[#8EA0C0] bg-[#1C2C4C] px-1.5 py-0.5 rounded">
+                v2026.3
+              </span>
+            </div>
+            <p className="text-[10px] text-[#8EA0C0] leading-tight">
+              Tariffs synchronized with Customs Tariff Act 2026 & DGFT notices.
+            </p>
+            <div className="pt-1 flex items-center justify-between border-t border-[#1E2E4E]/80">
+              <Link
+                href="/reports"
+                onClick={onClose}
+                className="text-[10px] text-blue hover:underline flex items-center gap-1"
+              >
+                Verify Provenance
+                <ChevronRight className="w-2.5 h-2.5" />
+              </Link>
+              <span className="text-[10px] font-mono text-green">LIVE</span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -388,6 +448,7 @@ function SidebarInner({
 export function Sidebar() {
   const dispatch = useAppDispatch();
   const mobileNavOpen = useAppSelector((state) => state.ui.mobileNavOpen);
+  const sidebarCollapsed = useAppSelector((state) => state.ui.sidebarCollapsed);
 
   const handleClose = () => {
     dispatch(setMobileNavOpen(false));
@@ -395,9 +456,14 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Desktop Fixed Sidebar */}
-      <aside className="hidden lg:flex w-[250px] shrink-0 bg-navy h-screen flex-col justify-between select-none border-r border-[#1B2A4A] z-30 sticky top-0">
-        <SidebarInner />
+      {/* Desktop Fixed Sidebar (Collapsible) */}
+      <aside
+        className={cn(
+          "hidden lg:flex shrink-0 bg-navy h-screen flex-col justify-between select-none border-r border-[#1B2A4A] z-30 sticky top-0 transition-all duration-300 ease-in-out",
+          sidebarCollapsed ? "w-[68px]" : "w-[250px]"
+        )}
+      >
+        <SidebarInner isCollapsed={sidebarCollapsed} />
       </aside>
 
       {/* Mobile Backdrop & Drawer */}
@@ -415,7 +481,7 @@ export function Sidebar() {
           aria-label="Mobile Navigation Drawer"
           className="fixed inset-y-0 left-0 w-[270px] bg-navy h-screen z-50 lg:hidden shadow-2xl border-r border-[#1B2A4A] animate-in slide-in-from-left duration-200"
         >
-          <SidebarInner onClose={handleClose} isMobile />
+          <SidebarInner onClose={handleClose} isMobile isCollapsed={false} />
         </aside>
       )}
     </>

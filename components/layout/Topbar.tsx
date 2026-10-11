@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { logout, setUserTier } from "@/store/authSlice";
-import { setMobileNavOpen } from "@/store/uiSlice";
+import { setMobileNavOpen, toggleSidebar } from "@/store/uiSlice";
 import { TierBadge } from "@/components/saas/TierBadge";
 import { NotificationDropdown } from "./NotificationDropdown";
 import {
@@ -18,6 +18,7 @@ import {
   CreditCard,
   Crown,
   Menu,
+  PanelLeft,
 } from "lucide-react";
 
 const pageMeta: Record<string, { title: string; description: string }> = {
@@ -77,6 +78,7 @@ export function Topbar() {
   const dispatch = useAppDispatch();
 
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
+  const sidebarCollapsed = useAppSelector((state) => state.ui.sidebarCollapsed);
 
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -106,15 +108,26 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-20 bg-panel/95 backdrop-blur-md border-b border-line px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4">
-      {/* Title, Mobile Trigger & Description */}
+      {/* Title, Menu/Sidebar Trigger & Description */}
       <div className="flex items-center gap-3 min-w-0">
         <button
+          id="sidebar-toggle-btn"
           type="button"
-          aria-label="Open navigation menu"
-          onClick={() => dispatch(setMobileNavOpen(true))}
-          className="p-2 rounded-lg text-muted hover:text-ink lg:hidden border border-line bg-panel hover:bg-bg cursor-pointer transition-colors shadow-2xs shrink-0"
+          aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          onClick={() => {
+            dispatch(toggleSidebar());
+            if (typeof window !== "undefined" && window.innerWidth < 1024) {
+              dispatch(setMobileNavOpen(true));
+            }
+          }}
+          className="w-9 h-9 rounded-lg text-muted hover:text-ink border border-line bg-panel hover:bg-bg cursor-pointer transition-colors shadow-2xs shrink-0 flex items-center justify-center hover:border-blue/30"
         >
-          <Menu className="w-4 h-4" />
+          {sidebarCollapsed ? (
+            <PanelLeft className="w-4 h-4 text-ink" />
+          ) : (
+            <Menu className="w-4 h-4 text-ink" />
+          )}
         </button>
 
         <div className="space-y-0.5 min-w-0">
