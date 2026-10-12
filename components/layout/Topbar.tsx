@@ -135,9 +135,9 @@ export function Topbar() {
             <h1 className="text-lg sm:text-xl font-bold text-ink tracking-tight truncate">
               {meta.title}
             </h1>
-            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue border border-blue/20 font-semibold shrink-0">
+            {/* <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue border border-blue/20 font-semibold shrink-0">
               ENTERPRISE v2026.03
-            </span>
+            </span> */}
           </div>
           <p className="text-xs text-muted leading-relaxed max-w-xl truncate hidden md:block">
             {meta.description}
@@ -202,38 +202,6 @@ export function Topbar() {
                       <div className="text-[11px] text-muted truncate max-w-[160px]">{user.email}</div>
                     </div>
                     <TierBadge tier={user.tier || "STARTER"} size="sm" />
-                  </div>
-
-                  {/* Interactive Plan Sandbox Switcher */}
-                  <div className="pt-2 border-t border-line/70">
-                    <span className="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1.5">
-                      Active Subscription Plan
-                    </span>
-                    <div className="grid grid-cols-3 gap-1 p-1 bg-[#EEF2F6] rounded-xl border border-line">
-                      {(["STARTER", "PROFESSIONAL", "ENTERPRISE"] as const).map((t) => {
-                        const isCurrent = (user.tier || "STARTER") === t;
-                        const label =
-                          t === "PROFESSIONAL" ? "Pro" : t === "ENTERPRISE" ? "Enterprise" : "Starter";
-                        return (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => dispatch(setUserTier(t))}
-                            className={`py-1 text-[11px] font-medium rounded-lg transition-all text-center cursor-pointer select-none ${
-                              isCurrent
-                                ? t === "ENTERPRISE"
-                                  ? "bg-white text-amber-800 font-bold shadow-xs border border-amber-300/60"
-                                  : t === "PROFESSIONAL"
-                                  ? "bg-white text-blue font-bold shadow-xs border border-blue-200"
-                                  : "bg-white text-slate-800 font-bold shadow-xs border border-slate-200"
-                                : "text-muted hover:text-ink hover:bg-white/50"
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })}
-                    </div>
                   </div>
                 </div>
 

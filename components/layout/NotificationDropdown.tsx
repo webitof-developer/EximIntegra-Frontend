@@ -185,13 +185,13 @@ export function NotificationDropdown() {
                   <span>Mark all read</span>
                 </button>
               )}
-              <Link
+              {/* <Link
                 href="/notifications"
                 onClick={() => setIsOpen(false)}
                 className="text-[11px] font-semibold text-muted hover:text-blue transition-colors"
               >
                 Open page
-              </Link>
+              </Link> */}
             </div>
           </div>
 
