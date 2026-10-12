@@ -23,9 +23,24 @@ export const authApi = api.injectEndpoints({
       query: () => "/auth/me",
       providesTags: ["Auth"],
     }),
+    updateProfile: builder.mutation<
+      UserProfile,
+      { name?: string; company?: string; email?: string }
+    >({
+      query: (data) => ({
+        url: "/auth/me",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Auth"],
+    }),
   }),
   overrideExisting: false,
 });
 
-export const { useLoginMutation, useRegisterMutation, useGetProfileQuery } =
-  authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useGetProfileQuery,
+  useUpdateProfileMutation,
+} = authApi;

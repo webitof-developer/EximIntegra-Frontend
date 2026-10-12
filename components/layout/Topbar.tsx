@@ -8,6 +8,7 @@ import { logout, setUserTier } from "@/store/authSlice";
 import { setMobileNavOpen, toggleSidebar } from "@/store/uiSlice";
 import { TierBadge } from "@/components/saas/TierBadge";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { UserProfileModal } from "./UserProfileModal";
 import {
   Sparkles,
   LogOut,
@@ -81,6 +82,7 @@ export function Topbar() {
   const sidebarCollapsed = useAppSelector((state) => state.ui.sidebarCollapsed);
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   const matchedPath =
     Object.keys(pageMeta).find((path) => pathname === path || pathname.startsWith(path + "/")) ||
@@ -199,11 +201,43 @@ export function Topbar() {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-xs font-bold text-ink">{user.name}</div>
-                      <div className="text-[11px] text-muted truncate max-w-[160px]">{user.email}</div>
+                      <div className="text-[11px] text-muted truncate max-w-[155px]">{user.email}</div>
                     </div>
-                    <TierBadge tier={user.tier || "STARTER"} size="sm" />
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <TierBadge tier={user.tier || "STARTER"} size="sm" />
+                      <button
+                        type="button"
+                        title="Update Profile Details"
+                        aria-label="Update Profile Details"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setProfileModalOpen(true);
+                        }}
+                        className="p-1 rounded-md text-muted hover:text-blue hover:bg-panel border border-transparent hover:border-line transition-colors cursor-pointer"
+                      >
+                        <UserIcon className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {/* Profile Edit Action Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setProfileModalOpen(true);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-ink hover:bg-bg rounded-lg transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="w-3.5 h-3.5 text-blue group-hover:scale-110 transition-transform" />
+                    <span>My Profile</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-muted bg-panel border border-line px-1.5 py-0.5 rounded group-hover:text-ink">
+                    Edit
+                  </span>
+                </button>
 
                 {user.role === "ADMIN" && (
                   <Link
@@ -224,15 +258,6 @@ export function Topbar() {
                   <Crown className="w-3.5 h-3.5 text-amber" />
                   <span>Public Pricing & Plans</span>
                 </Link>
-
-                {/* <Link
-                  href="/settings"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2 text-xs text-ink hover:bg-bg rounded-lg transition-colors"
-                >
-                  <CreditCard className="w-3.5 h-3.5 text-blue" />
-                  <span>Subscription & Billing</span>
-                </Link> */}
 
                 <Link
                   href="/settings"
@@ -264,6 +289,14 @@ export function Topbar() {
           </Link>
         )}
       </div>
+
+      {/* User Profile Update Modal */}
+      {isAuthenticated && user && (
+        <UserProfileModal
+          isOpen={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+        />
+      )}
     </header>
   );
 }
