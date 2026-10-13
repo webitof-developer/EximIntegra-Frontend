@@ -280,7 +280,7 @@ export function RolePermissionsTab({
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                 rbacCategoryFilter === filterOpt.id
                   ? "bg-purple-600 text-white shadow-xs"
-                  : "bg-bg text-muted hover:text-ink hover:bg-navy-hover border border-line"
+                  : "bg-bg text-muted hover:text-ink border border-line"
               }`}
             >
               {filterOpt.label}

@@ -7,19 +7,23 @@ import { useRouter } from "next/navigation";
 import { useRegisterMutation } from "@/store/authApi";
 import { useAppDispatch } from "@/store";
 import { setCredentials } from "@/store/authSlice";
-import { ProvenanceBadge } from "@/components/ui/ProvenanceBadge";
+import { getApiErrorMessage } from "@/lib/utils";
+import { ThreeBackground } from "@/components/auth/ThreeBackground";
 import {
-  ShieldCheck,
   Lock,
   Mail,
   User,
-  Building2,
-  ArrowRight,
-  AlertCircle,
+  Building,
   Briefcase,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  ShieldCheck,
+  CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import { UserProfile } from "@/lib/types";
-import { getApiErrorMessage } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -30,6 +34,7 @@ export default function RegisterPage() {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserProfile["role"]>("IMPORTER");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -61,162 +66,216 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8 font-sans">
-      <div className="w-full max-w-lg space-y-6">
-        {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer mb-1"
-            title="Return to EximIntegra Homepage"
-          >
-            <Image
-              src="/eximintegra-logo-without-bg-name.png"
-              alt="EximIntegra"
-              width={220}
-              height={73}
-              className="h-11 w-auto object-contain"
-              priority
-            />
-          </Link>
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-[#F2F7FF] via-[#E9F2FE] to-[#DCEBFC] font-sans overflow-x-hidden selection:bg-blue-600 selection:text-white py-10 sm:py-14 px-4 sm:px-6">
+      {/* Three.js Live Interactive Background (Undulating 3D Wave & Trade Constellation) */}
+      <ThreeBackground theme="register" />
 
-          <h2 className="text-2xl font-bold text-ink tracking-tight mt-3">
-            Register Trade Enterprise
-          </h2>
-          <p className="text-xs text-muted">
-            Provision access for trade compliance, landed cost modeling, and Akshara AI.
-          </p>
-        </div>
+      {/* Main Centered Container holding Card + Badges directly below */}
+      <div className="relative z-10 w-full max-w-[560px] flex flex-col items-center">
+        {/* Floating White Card Container with ALL elements INSIDE */}
+        <div className="w-full bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/80 shadow-[0_20px_50px_-10px_rgba(29,78,216,0.12)] p-7 sm:p-9 space-y-6">
+          {/* Logo & Header INSIDE the Card */}
+          <div className="flex flex-col items-center text-center space-y-3">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center group transition-transform hover:scale-[1.01]"
+              title="Return to EximIntegra Homepage"
+            >
+              <Image
+                src="/eximintegra-logo-without-bg-name.png"
+                alt="EximIntegra"
+                width={220}
+                height={58}
+                className="h-16 w-auto object-contain"
+                priority
+              />
+            </Link>
 
-        {/* Form Card */}
-        <div className="bg-panel border border-line rounded-xl shadow-xs p-8 space-y-5">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight">
+                Register Trade Enterprise
+              </h1>
+              <p className="text-xs leading-relaxed max-w-md">
+                Provision access for trade compliance, landed cost modeling, and Akshara AI.
+              </p>
+            </div>
+          </div>
+
+          {/* Error Message */}
           {errorMsg && (
-            <div className="p-3 bg-red-dim border border-red/30 rounded-lg flex items-start gap-2.5 text-xs text-red">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{errorMsg}</span>
+            <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-xs text-red-700 animate-in fade-in duration-200">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{errorMsg}</span>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-ink mb-1.5">
+            {/* Row 1: Full Name & Company */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="name"
+                  className="block text-xs font-semibold text-[#1E293B]"
+                >
                   Full Name
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
+                <div className="relative rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#1D68F2]/20 focus-within:border-[#1D68F2]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
                     <User className="w-4 h-4" />
                   </div>
                   <input
+                    id="name"
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
+                    placeholder="Enter your full name"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm bg-[#F8FAFC] border border-[#CBD5E1]/70 rounded-xl text-[#0F172A] placeholder:text-[#94A3B8] focus:bg-white focus:outline-none transition-colors"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-ink mb-1.5">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="company"
+                  className="block text-xs font-semibold text-[#1E293B]"
+                >
                   Company / Organization
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
-                    <Building2 className="w-4 h-4" />
+                <div className="relative rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#1D68F2]/20 focus-within:border-[#1D68F2]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
+                    <Building className="w-4 h-4" />
                   </div>
                   <input
+                    id="company"
                     type="text"
                     required
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
+                    placeholder="Enter company name"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm bg-[#F8FAFC] border border-[#CBD5E1]/70 rounded-xl text-[#0F172A] placeholder:text-[#94A3B8] focus:bg-white focus:outline-none transition-colors"
                   />
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-ink mb-1.5">
+            {/* Row 2: Work Email Address */}
+            <div className="space-y-1.5">
+              <label
+                htmlFor="email"
+                className="block text-xs font-semibold text-[#1E293B]"
+              >
                 Work Email Address
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
+              <div className="relative rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#1D68F2]/20 focus-within:border-[#1D68F2]">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
                   <Mail className="w-4 h-4" />
                 </div>
                 <input
+                  id="email"
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
+                  placeholder="yourname@company.com"
+                  className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-[#F8FAFC] border border-[#CBD5E1]/70 rounded-xl text-[#0F172A] placeholder:text-[#94A3B8] focus:bg-white focus:outline-none transition-colors"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-ink mb-1.5">
+            {/* Row 3: Trade Role & Password */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="role"
+                  className="block text-xs font-semibold text-[#1E293B]"
+                >
                   Trade Role
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
+                <div className="relative rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#1D68F2]/20 focus-within:border-[#1D68F2]">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#64748B]">
                     <Briefcase className="w-4 h-4" />
                   </div>
                   <select
+                    id="role"
                     value={role}
                     onChange={(e) => setRole(e.target.value as any)}
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue cursor-pointer"
+                    className="w-full pl-9 pr-8 py-2.5 text-xs bg-[#F8FAFC] border border-[#CBD5E1]/70 rounded-xl text-[#0F172A] focus:bg-white focus:outline-none transition-colors appearance-none cursor-pointer"
                   >
                     <option value="IMPORTER">Importer (Finished / Raw)</option>
                     <option value="EXPORTER">Exporter (Global Outbound)</option>
                     <option value="CUSTOMS_BROKER">Customs Broker / CHA</option>
                     <option value="TRADE_ADVISOR">Trade Advisory / Counsel</option>
                   </select>
+                  <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[#64748B]">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-ink mb-1.5">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-semibold text-[#1E293B]"
+                >
                   Password
                 </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted">
+                <div className="relative rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#1D68F2]/20 focus-within:border-[#1D68F2]">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#64748B]">
                     <Lock className="w-4 h-4" />
                   </div>
                   <input
-                    type="password"
+                    id="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue font-mono"
+                    placeholder="Create a secure password"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-[#F8FAFC] border border-[#CBD5E1]/70 rounded-xl text-[#0F172A] placeholder:text-[#94A3B8] focus:bg-white focus:outline-none transition-colors"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#94A3B8] hover:text-[#475569] cursor-pointer focus:outline-none"
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-blue hover:bg-blue-dark text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+              className="w-full mt-2 py-3 px-5 rounded-xl bg-[#1D68F2] hover:bg-[#1557D6] active:scale-[0.99] text-white text-xs sm:text-sm font-semibold shadow-lg shadow-blue-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? (
-                <span className="font-mono">Provisioning Account...</span>
+                <div className="flex items-center gap-2 font-mono">
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span>Provisioning Account...</span>
+                </div>
               ) : (
                 <>
-                  <span>Create Enterprise Account</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <span>Create Account</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="text-center pt-2 border-t border-line">
-            <span className="text-xs text-muted">
+          {/* Bottom Switcher INSIDE the Card */}
+          <div className="text-center border-t border-slate-100">
+            <span className="text-xs text-[#64748B]">
               Already registered?{" "}
               <Link
                 href="/login"
-                className="text-blue font-semibold hover:underline"
+                className="font-bold text-[#1D68F2] hover:underline"
               >
                 Sign In to Workspace
               </Link>
@@ -224,16 +283,23 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* Provenance Footer */}
-        <div className="flex items-center justify-center gap-4 text-muted text-[11px]">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-green" />
-            <span>Encrypted Credentials</span>
+        {/* Security & Provenance Footer directly below form container */}
+        <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 sm:gap-6 text-xs text-[#475569]">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-full bg-[#E7F7ED] flex items-center justify-center text-[#16A34A]">
+              <ShieldCheck className="w-3.5 h-3.5" />
+            </div>
+            <span className="font-medium text-[#334155]">Encrypted Credentials</span>
           </div>
-          <span>•</span>
-          <div className="flex items-center gap-1.5">
-            <ProvenanceBadge type="LIVE" compact />
-            <span>Multi-Tenant Enterprise Isolation</span>
+
+          <span className="text-[#94A3B8]">•</span>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E7F7ED] border border-[#BBF7D0] text-[#16A34A] text-[11px] font-bold font-mono">
+              <CheckCircle2 className="w-3 h-3" />
+              LIVE
+            </span>
+            <span className="font-medium text-[#334155]">Multi-Tenant Enterprise Isolation</span>
           </div>
         </div>
       </div>
