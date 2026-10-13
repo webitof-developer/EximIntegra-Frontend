@@ -299,13 +299,25 @@ export interface EligibilityResponse {
 }
 
 /* Country Comparison Types */
+export interface OriginInput {
+  country_code: string;
+  fob_value: number;
+  freight?: number;
+  insurance?: number;
+}
+
 export interface CountryComparisonRequest {
   hs_code: string;
-  assessable_value: number;
   currency: string;
   quantity: number;
   unit: string;
-  countries: string[]; // e.g. ["US", "AE", "AU", "VN"]
+  port_of_discharge?: string;
+  baseline_origin?: string;
+  as_of?: string;
+  origins?: OriginInput[];
+  // Legacy v1 fields
+  assessable_value?: number;
+  countries?: string[];
 }
 
 export interface CountryComparisonItem {
@@ -315,6 +327,25 @@ export interface CountryComparisonItem {
   trade_agreement: string;
   is_preferential_fta: boolean;
   coverage?: "COVERED" | "NOT_COVERED";
+  applied_regime?: "FTA" | "MFN" | string;
+  agreement_code?: string;
+  concession_notification?: string | null;
+  requires_certificate_of_origin?: boolean;
+  inputs?: {
+    fob_value: number;
+    freight: number;
+    insurance: number;
+    currency: string;
+  };
+  duties?: Record<string, { rate?: number | null; amount_inr: number }>;
+  landed?: {
+    net_landed_cost_inr?: number | null;
+    landed_cost_per_mt_inr?: number | null;
+  };
+  fta_saving_inr?: number;
+  delta_vs_baseline_inr?: number;
+  delta_vs_baseline_pct?: number;
+  warnings?: string[];
   cif_inr: number;
   bcd_rate?: number | null;
   bcd_inr: number;
@@ -339,11 +370,16 @@ export interface CountryComparisonResponse {
   hs_description?: string | null;
   coverage?: "COVERED" | "NOT_COVERED";
   coverage_note?: string;
+  as_of?: string;
+  dataset_versions?: Record<string, string>;
+  baseline_origin?: string;
+  best_origin?: string;
+  best_arbitrage_country?: string | null;
+  max_savings_inr: number;
+  warnings?: string[];
   quantity: number;
   unit: string;
   timestamp: string;
-  best_arbitrage_country?: string | null;
-  max_savings_inr: number;
   comparisons: CountryComparisonItem[];
 }
 

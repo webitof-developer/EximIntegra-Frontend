@@ -339,13 +339,13 @@ export function CountryComparisonMatrix({
               {/* SECTION 4: ARBITRAGE SAVINGS DELTA */}
               <tr className="bg-bg/40 font-mono text-[10px] uppercase text-muted font-bold">
                 <td colSpan={data.comparisons.length + 1} className="py-2 px-5">
-                  4. Sourcing Arbitrage Savings (vs MFN Benchmark)
+                  4. Arbitrage Economics vs Baseline ({data.baseline_origin || "MFN Benchmark"})
                 </td>
               </tr>
 
-              <tr className="bg-green-dim/30">
-                <td className="py-3.5 px-5 font-bold text-green">
-                  Arbitrage Delta (Savings)
+              <tr className="bg-blue-dim/10">
+                <td className="py-3.5 px-5 font-bold text-ink">
+                  Delta vs Baseline ({data.baseline_origin || "Benchmark"})
                 </td>
                 {data.comparisons.map((c) => (
                   <td
@@ -353,22 +353,62 @@ export function CountryComparisonMatrix({
                     className={`py-3.5 px-5 text-center font-data font-bold text-xs ${
                       c.coverage === "NOT_COVERED"
                         ? "text-muted"
-                        : c.savings_vs_mfn_inr > 0
+                        : c.delta_vs_baseline_inr != null && c.delta_vs_baseline_inr < 0
                         ? "text-green"
+                        : c.delta_vs_baseline_inr != null && c.delta_vs_baseline_inr > 0
+                        ? "text-amber-dark"
                         : "text-muted"
                     } ${c.is_recommended_arbitrage ? "border-x-2 border-green/30" : "border-r border-line"}`}
                   >
                     {c.coverage === "NOT_COVERED" ? (
                       <span className="text-xs text-muted font-normal">Not Covered</span>
-                    ) : c.savings_vs_mfn_inr > 0 ? (
+                    ) : c.country_code === data.baseline_origin ? (
+                      <span className="text-muted font-semibold">Baseline Origin</span>
+                    ) : c.delta_vs_baseline_inr != null && c.delta_vs_baseline_inr < 0 ? (
                       <div>
-                        <span>+{formatCurrency(c.savings_vs_mfn_inr, "INR")}</span>
-                        <div className="text-[10px] opacity-80">
-                          ({c.savings_percentage}% saved)
+                        <span>-{formatCurrency(Math.abs(c.delta_vs_baseline_inr), "INR")}</span>
+                        <div className="text-[10px] opacity-80 text-green">
+                          ({Math.abs(c.delta_vs_baseline_pct || 0)}% cheaper)
+                        </div>
+                      </div>
+                    ) : c.delta_vs_baseline_inr != null && c.delta_vs_baseline_inr > 0 ? (
+                      <div>
+                        <span>+{formatCurrency(c.delta_vs_baseline_inr, "INR")}</span>
+                        <div className="text-[10px] opacity-80 text-amber-dark">
+                          (+{c.delta_vs_baseline_pct || 0}% higher)
                         </div>
                       </div>
                     ) : (
-                      <span>Baseline MFN</span>
+                      <span>Parity (0.00)</span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+
+              <tr>
+                <td className="py-3 px-5 font-semibold text-ink">
+                  Preferential FTA Savings
+                </td>
+                {data.comparisons.map((c) => (
+                  <td
+                    key={c.country_code}
+                    className={`py-3 px-5 text-center font-data font-semibold text-xs ${
+                      c.coverage === "NOT_COVERED"
+                        ? "text-muted"
+                        : c.fta_saving_inr && c.fta_saving_inr > 0
+                        ? "text-green"
+                        : "text-muted"
+                    } ${c.is_recommended_arbitrage ? "border-x-2 border-green/30" : "border-r border-line"}`}
+                  >
+                    {c.coverage === "NOT_COVERED" ? (
+                      <span className="text-xs text-muted font-normal">—</span>
+                    ) : c.fta_saving_inr && c.fta_saving_inr > 0 ? (
+                      <div>
+                        <span>+{formatCurrency(c.fta_saving_inr, "INR")}</span>
+                        <div className="text-[10px] opacity-80 text-green font-normal">vs own MFN</div>
+                      </div>
+                    ) : (
+                      <span className="text-muted font-normal text-xs">Standard MFN</span>
                     )}
                   </td>
                 ))}

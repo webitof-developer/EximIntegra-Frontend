@@ -39,6 +39,18 @@ function CompareContent() {
     "VN",
   ]);
 
+  const [baselineOrigin, setBaselineOrigin] = useState<string>("US");
+  const [showCostInputs, setShowCostInputs] = useState<boolean>(false);
+
+  // Per-origin FOB & Freight inputs (Contract v2)
+  const [originCosts, setOriginCosts] = useState<Record<string, { fob_value: number; freight: number; insurance: number }>>({
+    US: { fob_value: 43000, freight: 5200, insurance: 120 },
+    AE: { fob_value: 42000, freight: 3500, insurance: 120 },
+    AU: { fob_value: 42500, freight: 4500, insurance: 120 },
+    VN: { fob_value: 41000, freight: 4100, insurance: 120 },
+    CN: { fob_value: 41500, freight: 3800, insurance: 120 },
+  });
+
   const [compareCountries, { isLoading }] = useCompareCountriesMutation();
   const [comparisonResult, setComparisonResult] =
     useState<CountryComparisonResponse | null>(null);
@@ -56,17 +68,33 @@ function CompareContent() {
 
   const handleRunComparison = async (
     hsToCompare = activeHs,
-    countriesToCompare = selectedCountries
+    countriesToCompare = selectedCountries,
+    baselineToCompare = baselineOrigin
   ) => {
     try {
       setErrorState(null);
       setValidationMessage(null);
+
+      // Construct Contract v2 origins array
+      const originsPayload = countriesToCompare.map((c) => {
+        const item = originCosts[c] || { fob_value: assessableVal, freight: 3500, insurance: 120 };
+        return {
+          country_code: c,
+          fob_value: item.fob_value,
+          freight: item.freight,
+          insurance: item.insurance,
+        };
+      });
+
       const res = await compareCountries({
         hs_code: hsToCompare,
-        assessable_value: assessableVal,
         currency: currentContext.currency || "USD",
         quantity,
         unit,
+        baseline_origin: baselineToCompare,
+        origins: originsPayload,
+        // Legacy fallback fields for backward compatibility
+        assessable_value: assessableVal,
         countries: countriesToCompare,
       }).unwrap();
 
@@ -82,15 +110,25 @@ function CompareContent() {
   };
 
   useEffect(() => {
-    handleRunComparison(activeHs, selectedCountries);
-  }, [activeHs, assessableVal]);
+    handleRunComparison(activeHs, selectedCountries, baselineOrigin);
+  }, [activeHs, assessableVal, baselineOrigin]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchHsInput.trim()) {
       setActiveHs(searchHsInput.trim());
-      handleRunComparison(searchHsInput.trim(), selectedCountries);
+      handleRunComparison(searchHsInput.trim(), selectedCountries, baselineOrigin);
     }
+  };
+
+  const handleCostChange = (code: string, field: "fob_value" | "freight", value: number) => {
+    setOriginCosts((prev) => ({
+      ...prev,
+      [code]: {
+        ...(prev[code] || { fob_value: 42000, freight: 3500, insurance: 120 }),
+        [field]: value,
+      },
+    }));
   };
 
   const toggleCountry = (code: string) => {
@@ -102,6 +140,9 @@ function CompareContent() {
         return;
       }
       updated = selectedCountries.filter((c) => c !== code);
+      if (baselineOrigin === code && updated.length > 0) {
+        setBaselineOrigin(updated[0]);
+      }
     } else {
       if (selectedCountries.length >= 5) {
         setValidationMessage("Maximum 5 origins can be compared simultaneously.");
@@ -110,7 +151,7 @@ function CompareContent() {
       updated = [...selectedCountries, code];
     }
     setSelectedCountries(updated);
-    handleRunComparison(activeHs, updated);
+    handleRunComparison(activeHs, updated, baselineOrigin);
   };
 
   const handleApplyCountry = (country: CountryComparisonItem) => {
@@ -162,32 +203,138 @@ function CompareContent() {
         </div>
 
         {/* Multi-Country Toggle Buttons */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <span className="text-xs font-mono font-bold text-muted uppercase">Origins:</span>
-          <div className="flex flex-wrap items-center gap-2">
-            {availableOptions.map((opt) => {
-              const isSelected = selectedCountries.includes(opt.code);
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-muted uppercase">Baseline:</span>
+            <select
+              value={baselineOrigin}
+              onChange={(e) => {
+                setBaselineOrigin(e.target.value);
+                handleRunComparison(activeHs, selectedCountries, e.target.value);
+              }}
+              className="py-1 px-2 text-xs bg-bg border border-line rounded font-mono font-semibold text-ink focus:outline-none focus:border-blue cursor-pointer"
+            >
+              {selectedCountries.map((c) => (
+                <option key={c} value={c}>
+                  {c} ({availableOptions.find((o) => o.code === c)?.name || c})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono font-bold text-muted uppercase">Origins:</span>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {availableOptions.map((opt) => {
+                const isSelected = selectedCountries.includes(opt.code);
+                return (
+                  <button
+                    key={opt.code}
+                    type="button"
+                    onClick={() => toggleCountry(opt.code)}
+                    title={opt.name}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer select-none ${
+                      isSelected
+                        ? "bg-blue-dim text-blue border-blue/30 shadow-xs"
+                        : "bg-bg text-muted border-line hover:text-ink hover:bg-line/40"
+                    }`}
+                  >
+                    <span>{opt.flag}</span>
+                    <span>{opt.code}</span>
+                    {isSelected && <Check className="w-3 h-3 text-blue" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowCostInputs(!showCostInputs)}
+            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
+              showCostInputs
+                ? "bg-ink text-white border-ink"
+                : "bg-bg text-muted border-line hover:text-ink hover:bg-line/30"
+            }`}
+          >
+            {showCostInputs ? "Hide Pricing & Freight" : "Adjust Pricing & Freight"}
+          </button>
+        </div>
+      </div>
+
+      {/* Per-Origin Pricing & Freight Customization Panel (Contract v2) */}
+      {showCostInputs && (
+        <div className="p-4 bg-panel border border-line rounded-xl shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-xs font-bold text-ink uppercase tracking-wider font-mono">
+                Per-Origin Commercial Valuation & Freight (Contract v2)
+              </h4>
+              <p className="text-[11px] text-muted">
+                Declare specific FOB invoice valuations and forwarder ocean freight per corridor to compute realistic sourcing economics.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleRunComparison(activeHs, selectedCountries, baselineOrigin)}
+              className="px-3 py-1.5 bg-blue hover:bg-blue-dark text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
+            >
+              Recalculate Matrix
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+            {selectedCountries.map((code) => {
+              const opt = availableOptions.find((o) => o.code === code);
+              const cost = originCosts[code] || { fob_value: 42000, freight: 3500, insurance: 120 };
               return (
-                <button
-                  key={opt.code}
-                  type="button"
-                  onClick={() => toggleCountry(opt.code)}
-                  title={opt.name}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer select-none ${
-                    isSelected
-                      ? "bg-blue-dim text-blue border-blue/30 shadow-xs"
-                      : "bg-bg text-muted border-line hover:text-ink hover:bg-line/40"
-                  }`}
-                >
-                  <span>{opt.flag}</span>
-                  <span>{opt.code}</span>
-                  {isSelected && <Check className="w-3 h-3 text-blue" />}
-                </button>
+                <div key={code} className="p-3 bg-bg border border-line rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-ink flex items-center gap-1.5">
+                      <span>{opt?.flag}</span>
+                      <span>{code}</span>
+                    </span>
+                    {code === baselineOrigin && (
+                      <span className="text-[10px] font-mono font-bold bg-blue-dim text-blue px-1.5 py-0.5 rounded">
+                        BASELINE
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <div>
+                      <span className="text-[10px] font-mono text-muted block">FOB Value (USD):</span>
+                      <input
+                        type="number"
+                        value={cost.fob_value}
+                        onChange={(e) => handleCostChange(code, "fob_value", parseFloat(e.target.value) || 0)}
+                        className="w-full py-1 px-2 text-xs bg-panel border border-line rounded font-mono font-bold text-ink focus:outline-none focus:border-blue"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-mono text-muted block">Ocean Freight (USD):</span>
+                      <input
+                        type="number"
+                        value={cost.freight}
+                        onChange={(e) => handleCostChange(code, "freight", parseFloat(e.target.value) || 0)}
+                        className="w-full py-1 px-2 text-xs bg-panel border border-line rounded font-mono font-bold text-ink focus:outline-none focus:border-blue"
+                      />
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Warnings Banner */}
+      {comparisonResult?.warnings && comparisonResult.warnings.length > 0 && (
+        <div className="p-3 bg-amber-dim/50 border border-amber/30 rounded-lg text-xs font-mono text-amber-dark flex items-center gap-2">
+          <span className="font-bold">Valuation Note:</span>
+          <span>{comparisonResult.warnings.join(", ")}</span>
+        </div>
+      )}
 
       {/* Validation Message */}
       {validationMessage && (
