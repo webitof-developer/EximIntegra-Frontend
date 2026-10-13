@@ -286,10 +286,13 @@ export interface RegulatoryMeasure {
 
 export interface EligibilityResponse {
   hs_code: string;
-  hs_description: string;
-  effective_as_of_date: string;
+  hs_description?: string | null;
+  standard_mfn_rate?: number | null;
+  effective_as_of_date?: string | null;
+  coverage?: "COVERED" | "NOT_COVERED";
+  coverage_note?: string;
   prominent_disclaimer: string;
-  statutory_policy_status: "Free" | "Restricted" | "Prohibited" | "STE";
+  statutory_policy_status: "Free" | "Restricted" | "Prohibited" | "STE" | "NOT_COVERED";
   schemes: SchemeDetail[];
   regulatory_measures: RegulatoryMeasure[];
   last_updated: string;
@@ -311,19 +314,20 @@ export interface CountryComparisonItem {
   flag: string;
   trade_agreement: string;
   is_preferential_fta: boolean;
+  coverage?: "COVERED" | "NOT_COVERED";
   cif_inr: number;
-  bcd_rate: number;
+  bcd_rate?: number | null;
   bcd_inr: number;
   sws_inr: number;
   add_inr: number;
   igst_inr: number;
   total_customs_duty_inr: number;
   port_logistics_inr: number;
-  net_landed_cost_inr: number;
-  net_landed_cost_usd: number;
-  landed_cost_per_mt_inr: number;
-  landed_cost_per_mt_usd: number;
-  contained_metal_cost_mt_inr?: number;
+  net_landed_cost_inr?: number | null;
+  net_landed_cost_usd?: number | null;
+  landed_cost_per_mt_inr?: number | null;
+  landed_cost_per_mt_usd?: number | null;
+  contained_metal_cost_mt_inr?: number | null;
   savings_vs_mfn_inr: number;
   savings_percentage: number;
   is_recommended_arbitrage: boolean;
@@ -332,11 +336,13 @@ export interface CountryComparisonItem {
 
 export interface CountryComparisonResponse {
   hs_code: string;
-  hs_description: string;
+  hs_description?: string | null;
+  coverage?: "COVERED" | "NOT_COVERED";
+  coverage_note?: string;
   quantity: number;
   unit: string;
   timestamp: string;
-  best_arbitrage_country: string;
+  best_arbitrage_country?: string | null;
   max_savings_inr: number;
   comparisons: CountryComparisonItem[];
 }

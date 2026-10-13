@@ -42,10 +42,18 @@ export default function EligibilityPage() {
                 <div className="flex items-center gap-2 font-mono">
                   <span className="text-muted uppercase text-[10px]">Tariff Item:</span>
                   <strong className="text-ink font-bold">{formatHsCode(activeHs)}</strong>
-                  <StatusPill label="LIVE" variant="success" size="xs" />
+                  {data?.coverage === "NOT_COVERED" ? (
+                    <StatusPill label="NOT COVERED" variant="neutral" size="xs" />
+                  ) : (
+                    <StatusPill
+                      label={data?.schemes?.[0]?.provenance?.type || "ILLUSTRATIVE"}
+                      variant={data?.schemes?.[0]?.provenance?.type === "LIVE" ? "success" : "warning"}
+                      size="xs"
+                    />
+                  )}
                 </div>
                 <span className="text-muted text-[11px] truncate block max-w-sm">
-                  {currentContext.materialName || "Ferrous Waste & Scrap"}
+                  {data?.hs_description || currentContext.materialName || "Tariff commodity unlisted in reference dataset"}
                 </span>
               </div>
             </div>
