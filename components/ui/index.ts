@@ -7,3 +7,4 @@ export * from "./StepBadge";
 export * from "./WidgetTile";
 export * from "./DegradedStateAlert";
 export * from "./Table";
+export * from "./CustomDropdown";

@@ -12,6 +12,7 @@ import {
   TableRow,
   TableCell,
   StatusPill,
+  CustomDropdown,
 } from "@/components/ui";
 import {
   Search,
@@ -136,34 +137,42 @@ export function UserDirectoryTab({
 
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="flex items-center gap-1.5 text-xs text-muted">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Role:</span>
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-2.5 py-1.5 bg-bg border border-line rounded-lg text-xs font-semibold text-ink"
-            >
-              <option value="ALL">All Roles</option>
-              <option value="ADMIN">Super Admin</option>
-              <option value="IMPORTER">Importer</option>
-              <option value="EXPORTER">Exporter</option>
-              <option value="CUSTOMS_BROKER">Customs Broker</option>
-              <option value="TRADE_ADVISOR">Trade Advisor</option>
-            </select>
+            <Filter className="w-3.5 h-3.5 shrink-0" />
+            <span className="shrink-0">Role:</span>
+            <div className="w-36">
+              <CustomDropdown
+                value={roleFilter}
+                onChange={(val) => setRoleFilter(val)}
+                options={[
+                  { value: "ALL", label: "All Roles" },
+                  { value: "ADMIN", label: "Super Admin" },
+                  { value: "IMPORTER", label: "Importer" },
+                  { value: "EXPORTER", label: "Exporter" },
+                  { value: "CUSTOMS_BROKER", label: "Customs Broker" },
+                  { value: "TRADE_ADVISOR", label: "Trade Advisor" },
+                ]}
+                size="sm"
+                buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-lg text-xs font-semibold text-ink"
+              />
+            </div>
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-muted">
-            <span>Tier:</span>
-            <select
-              value={tierFilter}
-              onChange={(e) => setTierFilter(e.target.value)}
-              className="px-2.5 py-1.5 bg-bg border border-line rounded-lg text-xs font-semibold text-ink"
-            >
-              <option value="ALL">All Tiers</option>
-              <option value="STARTER">Starter</option>
-              <option value="PROFESSIONAL">Professional</option>
-              <option value="ENTERPRISE">Enterprise</option>
-            </select>
+            <span className="shrink-0">Tier:</span>
+            <div className="w-32">
+              <CustomDropdown
+                value={tierFilter}
+                onChange={(val) => setTierFilter(val)}
+                options={[
+                  { value: "ALL", label: "All Tiers" },
+                  { value: "STARTER", label: "Starter" },
+                  { value: "PROFESSIONAL", label: "Professional" },
+                  { value: "ENTERPRISE", label: "Enterprise" },
+                ]}
+                size="sm"
+                buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-lg text-xs font-semibold text-ink"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -318,30 +327,32 @@ export function UserDirectoryTab({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted">Corporate Role</label>
-                  <select
+                  <CustomDropdown
                     value={editRole}
-                    onChange={(e) => setEditRole(e.target.value as AdminUserItem["role"])}
-                    className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink font-semibold focus:border-blue focus:outline-hidden"
-                  >
-                    <option value="IMPORTER">Importer</option>
-                    <option value="EXPORTER">Exporter</option>
-                    <option value="CUSTOMS_BROKER">Customs Broker</option>
-                    <option value="TRADE_ADVISOR">Trade Advisor</option>
-                    <option value="ADMIN">Super Admin</option>
-                  </select>
+                    onChange={(val) => setEditRole(val as AdminUserItem["role"])}
+                    options={[
+                      { value: "IMPORTER", label: "Importer" },
+                      { value: "EXPORTER", label: "Exporter" },
+                      { value: "CUSTOMS_BROKER", label: "Customs Broker" },
+                      { value: "TRADE_ADVISOR", label: "Trade Advisor" },
+                      { value: "ADMIN", label: "Super Admin" },
+                    ]}
+                    buttonClassName="px-3 py-2 bg-bg border-line rounded-xl text-xs text-ink font-semibold focus:border-blue"
+                  />
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted">Subscription Plan</label>
-                  <select
+                  <CustomDropdown
                     value={editTier}
-                    onChange={(e) => setEditTier(e.target.value as AdminUserItem["tier"])}
-                    className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink font-semibold focus:border-blue focus:outline-hidden"
-                  >
-                    <option value="STARTER">Starter</option>
-                    <option value="PROFESSIONAL">Professional</option>
-                    <option value="ENTERPRISE">Enterprise</option>
-                  </select>
+                    onChange={(val) => setEditTier(val as AdminUserItem["tier"])}
+                    options={[
+                      { value: "STARTER", label: "Starter" },
+                      { value: "PROFESSIONAL", label: "Professional" },
+                      { value: "ENTERPRISE", label: "Enterprise" },
+                    ]}
+                    buttonClassName="px-3 py-2 bg-bg border-line rounded-xl text-xs text-ink font-semibold focus:border-blue"
+                  />
                 </div>
               </div>
 

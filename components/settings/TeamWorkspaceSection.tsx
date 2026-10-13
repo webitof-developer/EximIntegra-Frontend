@@ -10,6 +10,7 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  CustomDropdown,
 } from "@/components/ui";
 import {
   Users,
@@ -363,16 +364,17 @@ export function TeamWorkspaceSection() {
                 <label className="text-[11px] font-semibold text-muted block mb-1">
                   Designated Role & Access Level
                 </label>
-                <select
+                <CustomDropdown
                   value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as RoleType)}
-                  className="w-full py-2 px-3 bg-bg border border-line rounded-xl text-ink font-mono focus:outline-none focus:border-blue cursor-pointer"
-                >
-                  <option value="TRADE_OFFICER">Trade Officer (Classify, Duty & Landed Cost)</option>
-                  <option value="CUSTOMS_BROKER">Customs Broker (Restricted Smelter Margin View)</option>
-                  <option value="AUDITOR">Auditor (Read-Only History & Provenance)</option>
-                  <option value="ADMIN">Organization Admin (Full Access)</option>
-                </select>
+                  onChange={(val) => setInviteRole(val as RoleType)}
+                  options={[
+                    { value: "TRADE_OFFICER", label: "Trade Officer (Classify, Duty & Landed Cost)" },
+                    { value: "CUSTOMS_BROKER", label: "Customs Broker (Restricted Smelter Margin View)" },
+                    { value: "AUDITOR", label: "Auditor (Read-Only History & Provenance)" },
+                    { value: "ADMIN", label: "Organization Admin (Full Access)" },
+                  ]}
+                  buttonClassName="py-2 px-3 bg-bg border-line rounded-xl text-ink font-mono focus:border-blue"
+                />
                 <span className="text-[10px] text-muted block mt-1">
                   {roleDetails[inviteRole].description}
                 </span>

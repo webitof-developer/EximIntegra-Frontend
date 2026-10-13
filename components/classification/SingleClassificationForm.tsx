@@ -11,6 +11,7 @@ import {
   DollarSign,
   Package,
 } from "lucide-react";
+import { CustomDropdown } from "@/components/ui";
 
 interface SingleClassificationFormProps {
   onSubmit: (request: ClassificationRequest & { assessableValue?: number; currency?: string; quantity?: number; unit?: string }) => void;
@@ -140,42 +141,40 @@ export function SingleClassificationForm({
           <label className="block text-xs font-semibold text-ink mb-1.5">
             Commodity Class
           </label>
-          <select
+          <CustomDropdown
             value={materialType}
-            onChange={(e) => setMaterialType(e.target.value)}
-            className="w-full py-2 px-3 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue cursor-pointer"
-          >
-            <option value="Metals & Scrap">Metals & Ferrous Scrap (Ch. 72-83)</option>
-            <option value="Electrical Equipment">Electrical Machinery (Ch. 85)</option>
-            <option value="Chemicals">Organic & Inorganic Chemicals (Ch. 28-38)</option>
-            <option value="Textiles">Textiles & Articles (Ch. 50-63)</option>
-            <option value="Minerals">Mineral Fuels & Ores (Ch. 25-27)</option>
-          </select>
+            onChange={(val) => setMaterialType(val)}
+            options={[
+              { value: "Metals & Scrap", label: "Metals & Ferrous Scrap (Ch. 72-83)" },
+              { value: "Electrical Equipment", label: "Electrical Machinery (Ch. 85)" },
+              { value: "Chemicals", label: "Organic & Inorganic Chemicals (Ch. 28-38)" },
+              { value: "Textiles", label: "Textiles & Articles (Ch. 50-63)" },
+              { value: "Minerals", label: "Mineral Fuels & Ores (Ch. 25-27)" },
+            ]}
+            buttonClassName="py-2 px-3 text-xs bg-bg border-line rounded-lg text-ink focus:border-blue"
+          />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-ink mb-1.5">
             Country of Origin
           </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted">
-              <Globe className="w-3.5 h-3.5" />
-            </div>
-            <select
-              value={countryOfOrigin}
-              onChange={(e) => setCountryOfOrigin(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue cursor-pointer"
-            >
-              <option value="US">United States (US)</option>
-              <option value="CN">China (CN)</option>
-              <option value="AE">United Arab Emirates (AE - CEPA)</option>
-              <option value="AU">Australia (AU - ECTA)</option>
-              <option value="DE">Germany / EU (DE)</option>
-              <option value="VN">Vietnam (VN - ASEAN)</option>
-              <option value="JP">Japan (JP - CEPA)</option>
-              <option value="KR">South Korea (KR - CEPA)</option>
-            </select>
-          </div>
+          <CustomDropdown
+            value={countryOfOrigin}
+            onChange={(val) => setCountryOfOrigin(val)}
+            options={[
+              { value: "US", label: "United States (US)" },
+              { value: "CN", label: "China (CN)" },
+              { value: "AE", label: "United Arab Emirates (AE - CEPA)" },
+              { value: "AU", label: "Australia (AU - ECTA)" },
+              { value: "DE", label: "Germany / EU (DE)" },
+              { value: "VN", label: "Vietnam (VN - ASEAN)" },
+              { value: "JP", label: "Japan (JP - CEPA)" },
+              { value: "KR", label: "South Korea (KR - CEPA)" },
+            ]}
+            icon={<Globe className="w-3.5 h-3.5" />}
+            buttonClassName="py-2 px-3 text-xs bg-bg border-line rounded-lg text-ink focus:border-blue"
+          />
         </div>
 
         <div>
@@ -183,16 +182,14 @@ export function SingleClassificationForm({
             Consignment Valuation
           </label>
           <div className="flex items-center gap-1.5">
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-20 py-2 px-2 text-xs bg-bg border border-line rounded-lg text-ink font-mono focus:outline-none focus:border-blue cursor-pointer"
-            >
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="AED">AED</option>
-              <option value="INR">INR</option>
-            </select>
+            <div className="w-24 shrink-0">
+              <CustomDropdown
+                value={currency}
+                onChange={(val) => setCurrency(val)}
+                options={["USD", "EUR", "AED", "INR"]}
+                buttonClassName="py-2 px-2 text-xs bg-bg border-line rounded-lg text-ink font-mono focus:border-blue"
+              />
+            </div>
             <input
               type="number"
               value={assessableValue}
@@ -214,16 +211,14 @@ export function SingleClassificationForm({
               onChange={(e) => setQuantity(Number(e.target.value))}
               className="flex-1 py-2 px-3 text-xs bg-bg border border-line rounded-lg text-ink font-mono focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue"
             />
-            <select
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              className="w-16 py-2 px-2 text-xs bg-bg border border-line rounded-lg text-ink font-mono focus:outline-none focus:border-blue cursor-pointer"
-            >
-              <option value="MT">MT</option>
-              <option value="KG">KG</option>
-              <option value="PCS">PCS</option>
-              <option value="L">L</option>
-            </select>
+            <div className="w-20 shrink-0">
+              <CustomDropdown
+                value={unit}
+                onChange={(val) => setUnit(val)}
+                options={["MT", "KG", "PCS", "L"]}
+                buttonClassName="py-2 px-2 text-xs bg-bg border-line rounded-lg text-ink font-mono focus:border-blue"
+              />
+            </div>
           </div>
         </div>
       </div>

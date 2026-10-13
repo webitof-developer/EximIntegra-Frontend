@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { LandedCostRequest } from "@/lib/types";
 import { ProvenanceBadge } from "@/components/ui/ProvenanceBadge";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { CustomDropdown } from "@/components/ui";
 import {
   Ship,
   Anchor,
@@ -122,19 +123,38 @@ export function LandedCostForm({
             <label className="block text-xs font-semibold text-ink mb-1.5">
               Port of Discharge
             </label>
-            <select
+            <CustomDropdown
               value={port}
-              onChange={(e) => setPort(e.target.value)}
-              className="w-full py-2 px-3 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue cursor-pointer"
-            >
-              <option value="Nhava Sheva (JNPT), Mumbai">
-                Nhava Sheva (JNPT), Mumbai [INNSA1]
-              </option>
-              <option value="Mundra Port, Gujarat">Mundra Port, Gujarat [INMUN1]</option>
-              <option value="Chennai Port, Tamil Nadu">Chennai Port [INMAA1]</option>
-              <option value="Kolkata Port, West Bengal">Kolkata Port [INCCU1]</option>
-              <option value="Hazira Port, Surat">Hazira Port, Surat [INHZA1]</option>
-            </select>
+              onChange={(val) => setPort(val)}
+              options={[
+                {
+                  value: "Nhava Sheva (JNPT), Mumbai",
+                  label: "Nhava Sheva (JNPT), Mumbai",
+                  secondaryLabel: "[INNSA1]",
+                },
+                {
+                  value: "Mundra Port, Gujarat",
+                  label: "Mundra Port, Gujarat",
+                  secondaryLabel: "[INMUN1]",
+                },
+                {
+                  value: "Chennai Port, Tamil Nadu",
+                  label: "Chennai Port",
+                  secondaryLabel: "[INMAA1]",
+                },
+                {
+                  value: "Kolkata Port, West Bengal",
+                  label: "Kolkata Port",
+                  secondaryLabel: "[INCCU1]",
+                },
+                {
+                  value: "Hazira Port, Surat",
+                  label: "Hazira Port, Surat",
+                  secondaryLabel: "[INHZA1]",
+                },
+              ]}
+              buttonClassName="py-2 px-3 text-xs bg-bg border-line rounded-lg text-ink focus:border-blue"
+            />
           </div>
 
           <div>
@@ -148,15 +168,14 @@ export function LandedCostForm({
                 onChange={(e) => setQuantity(Number(e.target.value))}
                 className="flex-1 py-2 px-3 text-xs bg-bg border border-line rounded-lg text-ink font-mono font-bold focus:outline-none focus:border-blue"
               />
-              <select
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                className="w-18 py-2 px-2 text-xs bg-bg border border-line rounded-lg text-ink font-mono cursor-pointer"
-              >
-                <option value="MT">MT</option>
-                <option value="KG">KG</option>
-                <option value="PCS">PCS</option>
-              </select>
+              <div className="w-20 shrink-0">
+                <CustomDropdown
+                  value={unit}
+                  onChange={(val) => setUnit(val)}
+                  options={["MT", "KG", "PCS"]}
+                  buttonClassName="py-2 px-2 text-xs bg-bg border-line rounded-lg text-ink font-mono focus:border-blue"
+                />
+              </div>
             </div>
           </div>
 
@@ -248,17 +267,18 @@ export function LandedCostForm({
             <label className="block text-xs font-semibold text-ink mb-1.5">
               Primary Contained Element
             </label>
-            <select
+            <CustomDropdown
               value={containedMetal}
-              onChange={(e) => setContainedMetal(e.target.value)}
-              className="w-full py-2 px-3 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue cursor-pointer"
-            >
-              <option value="Iron (Fe)">Iron (Fe) — Ferrous Scrap</option>
-              <option value="Copper (Cu)">Copper (Cu) — Non-Ferrous</option>
-              <option value="Aluminium (Al)">Aluminium (Al) — Foundry Scrap</option>
-              <option value="Nickel (Ni)">Nickel (Ni) — Superalloys</option>
-              <option value="Zinc (Zn)">Zinc (Zn) — Die-cast</option>
-            </select>
+              onChange={(val) => setContainedMetal(val)}
+              options={[
+                { value: "Iron (Fe)", label: "Iron (Fe)", secondaryLabel: "— Ferrous Scrap" },
+                { value: "Copper (Cu)", label: "Copper (Cu)", secondaryLabel: "— Non-Ferrous" },
+                { value: "Aluminium (Al)", label: "Aluminium (Al)", secondaryLabel: "— Foundry Scrap" },
+                { value: "Nickel (Ni)", label: "Nickel (Ni)", secondaryLabel: "— Superalloys" },
+                { value: "Zinc (Zn)", label: "Zinc (Zn)", secondaryLabel: "— Die-cast" },
+              ]}
+              buttonClassName="py-2 px-3 text-xs bg-bg border-line rounded-lg text-ink focus:border-blue"
+            />
           </div>
 
           <div>

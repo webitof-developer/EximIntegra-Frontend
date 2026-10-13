@@ -10,6 +10,7 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  CustomDropdown,
 } from "@/components/ui";
 import {
   Key,
@@ -224,14 +225,16 @@ export function PlatformKeysSection() {
 
               <div>
                 <label className="text-[11px] text-muted block mb-1">Access Scope</label>
-                <select
+                <CustomDropdown
                   value={newKeyScope}
-                  onChange={(e) => setNewKeyScope(e.target.value)}
-                  className="w-full py-1.5 px-2.5 bg-bg border border-line rounded-lg text-ink font-mono focus:outline-none focus:border-blue cursor-pointer"
-                >
-                  <option value="all">Full Access (Classify, Duty, Landed Cost, Reports)</option>
-                  <option value="read">Read Only & Duty Calculation</option>
-                </select>
+                  onChange={(val) => setNewKeyScope(val)}
+                  options={[
+                    { value: "all", label: "Full Access (Classify, Duty, Landed Cost, Reports)" },
+                    { value: "read", label: "Read Only & Duty Calculation" },
+                  ]}
+                  size="sm"
+                  buttonClassName="py-1.5 px-2.5 bg-bg border-line rounded-lg text-ink font-mono focus:border-blue"
+                />
               </div>
             </div>
 

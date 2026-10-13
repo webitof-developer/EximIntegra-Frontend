@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { DutyCalculationRequest } from "@/lib/types";
 import { ProvenanceBadge } from "@/components/ui/ProvenanceBadge";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { CustomDropdown } from "@/components/ui";
 import {
   Calculator,
   Globe,
@@ -122,51 +123,48 @@ export function DutyCalculationForm({
           <label className="block text-xs font-semibold text-ink mb-1.5">
             Country of Origin <span className="text-red">*</span>
           </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted">
-              <Globe className="w-3.5 h-3.5" />
-            </div>
-            <select
-              value={countryOfOrigin}
-              onChange={(e) => setCountryOfOrigin(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue cursor-pointer"
-            >
-              <option value="US">United States (US)</option>
-              <option value="AE">United Arab Emirates (AE)</option>
-              <option value="AU">Australia (AU)</option>
-              <option value="CN">China (CN)</option>
-              <option value="DE">Germany (DE / EU)</option>
-              <option value="JP">Japan (JP)</option>
-              <option value="VN">Vietnam (VN)</option>
-            </select>
-          </div>
+          <CustomDropdown
+            value={countryOfOrigin}
+            onChange={(val) => setCountryOfOrigin(val)}
+            options={[
+              { value: "US", label: "United States (US)" },
+              { value: "AE", label: "United Arab Emirates (AE)" },
+              { value: "AU", label: "Australia (AU)" },
+              { value: "CN", label: "China (CN)" },
+              { value: "DE", label: "Germany (DE / EU)" },
+              { value: "JP", label: "Japan (JP)" },
+              { value: "VN", label: "Vietnam (VN)" },
+            ]}
+            icon={<Globe className="w-3.5 h-3.5" />}
+            buttonClassName="py-2 px-3 text-xs bg-bg border-line rounded-lg text-ink focus:border-blue"
+          />
         </div>
 
         <div>
           <label className="block text-xs font-semibold text-ink mb-1.5">
             Trade Agreement / FTA
           </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-muted">
-              <FileCheck className="w-3.5 h-3.5" />
-            </div>
-            <select
-              value={tradeAgreement}
-              onChange={(e) => setTradeAgreement(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 text-xs bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue focus:ring-1 focus:ring-blue cursor-pointer"
-            >
-              <option value="STANDARD_MFN">Standard MFN Statutory Tariff</option>
-              <option value="INDIA_UAE_CEPA">
-                India-UAE CEPA (Preferential 0% / Reduced)
-              </option>
-              <option value="INDIA_AUS_ECTA">
-                India-Australia ECTA (Concessional)
-              </option>
-              <option value="INDIA_ASEAN_AIFTA">
-                ASEAN-India AIFTA (Reduced Tariff)
-              </option>
-            </select>
-          </div>
+          <CustomDropdown
+            value={tradeAgreement}
+            onChange={(val) => setTradeAgreement(val)}
+            options={[
+              { value: "STANDARD_MFN", label: "Standard MFN Statutory Tariff" },
+              {
+                value: "INDIA_UAE_CEPA",
+                label: "India-UAE CEPA (Preferential 0% / Reduced)",
+              },
+              {
+                value: "INDIA_AUS_ECTA",
+                label: "India-Australia ECTA (Concessional)",
+              },
+              {
+                value: "INDIA_ASEAN_AIFTA",
+                label: "ASEAN-India AIFTA (Reduced Tariff)",
+              },
+            ]}
+            icon={<FileCheck className="w-3.5 h-3.5" />}
+            buttonClassName="py-2 px-3 text-xs bg-bg border-line rounded-lg text-ink focus:border-blue"
+          />
         </div>
       </div>
 
@@ -177,16 +175,14 @@ export function DutyCalculationForm({
             Invoice FOB / Ex-Works Value
           </label>
           <div className="flex items-center gap-1.5">
-            <select
-              value={currency}
-              onChange={(e) => handleCurrencyChange(e.target.value)}
-              className="w-20 py-2 px-2 text-xs bg-bg border border-line rounded-lg text-ink font-mono font-bold focus:outline-none focus:border-blue cursor-pointer"
-            >
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="AED">AED</option>
-              <option value="INR">INR</option>
-            </select>
+            <div className="w-24 shrink-0">
+              <CustomDropdown
+                value={currency}
+                onChange={(val) => handleCurrencyChange(val)}
+                options={["USD", "EUR", "AED", "INR"]}
+                buttonClassName="py-2 px-2 text-xs bg-bg border-line rounded-lg text-ink font-mono font-bold focus:border-blue"
+              />
+            </div>
             <input
               type="number"
               required

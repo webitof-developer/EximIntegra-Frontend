@@ -9,6 +9,7 @@ import { useAppDispatch } from "@/store";
 import { setCredentials } from "@/store/authSlice";
 import { getApiErrorMessage } from "@/lib/utils";
 import { ThreeBackground } from "@/components/auth/ThreeBackground";
+import { CustomDropdown } from "@/components/ui";
 import {
   Lock,
   Mail,
@@ -192,25 +193,19 @@ export default function RegisterPage() {
                 >
                   Trade Role
                 </label>
-                <div className="relative rounded-xl transition-all focus-within:ring-2 focus-within:ring-[#1D68F2]/20 focus-within:border-[#1D68F2]">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#64748B]">
-                    <Briefcase className="w-4 h-4" />
-                  </div>
-                  <select
-                    id="role"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as any)}
-                    className="w-full pl-9 pr-8 py-2.5 text-xs bg-[#F8FAFC] border border-[#CBD5E1]/70 rounded-xl text-[#0F172A] focus:bg-white focus:outline-none transition-colors appearance-none cursor-pointer"
-                  >
-                    <option value="IMPORTER">Importer (Finished / Raw)</option>
-                    <option value="EXPORTER">Exporter (Global Outbound)</option>
-                    <option value="CUSTOMS_BROKER">Customs Broker / CHA</option>
-                    <option value="TRADE_ADVISOR">Trade Advisory / Counsel</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none text-[#64748B]">
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </div>
+                <CustomDropdown
+                  id="role"
+                  value={role}
+                  onChange={(val) => setRole(val as any)}
+                  options={[
+                    { value: "IMPORTER", label: "Importer (Finished / Raw)" },
+                    { value: "EXPORTER", label: "Exporter (Global Outbound)" },
+                    { value: "CUSTOMS_BROKER", label: "Customs Broker / CHA" },
+                    { value: "TRADE_ADVISOR", label: "Trade Advisory / Counsel" },
+                  ]}
+                  icon={<Briefcase className="w-4 h-4" />}
+                  buttonClassName="py-2.5 text-xs bg-[#F8FAFC] border-[#CBD5E1]/70 rounded-xl text-[#0F172A]"
+                />
               </div>
 
               <div className="space-y-1.5">

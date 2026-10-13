@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, StatusPill } from "@/components/ui";
+import { Card, StatusPill, CustomDropdown } from "@/components/ui";
 import {
   Sparkles,
   Key,
@@ -316,17 +316,13 @@ export function LlmProvidersSection() {
                   <label className="text-[11px] font-semibold text-ink">
                     Default Model
                   </label>
-                  <select
+                  <CustomDropdown
                     value={p.defaultModel}
-                    onChange={(e) => handleModelChange(p.id, e.target.value)}
-                    className="w-full py-2 px-2.5 text-xs bg-bg border border-line rounded-lg text-ink font-mono focus:outline-none focus:border-blue cursor-pointer"
-                  >
-                    {p.models.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => handleModelChange(p.id, val)}
+                    options={p.models}
+                    size="sm"
+                    buttonClassName="py-2 px-2.5 text-xs bg-bg border-line rounded-lg text-ink font-mono focus:border-blue"
+                  />
                 </div>
 
                 {/* Actions & Verification */}
