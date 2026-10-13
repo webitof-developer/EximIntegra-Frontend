@@ -12,6 +12,7 @@ export interface ProvenanceMetadata {
   notes?: string;
   dataset_version?: string;
   dataset_version_id?: string;
+  stale?: boolean;
 }
 
 export interface MaterialContext {
