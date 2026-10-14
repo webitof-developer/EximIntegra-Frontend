@@ -28,18 +28,6 @@ interface SchemeEligibilityViewProps {
   direction?: "import" | "export";
 }
 
-function ApplicabilityChip({ applicability }: { applicability?: string }) {
-  if (!applicability) return null;
-  const appUpper = applicability.toUpperCase();
-  if (appUpper === "DIRECT") {
-    return <StatusPill label="DIRECT APPLICABILITY" variant="success" size="xs" />;
-  }
-  if (appUpper === "CONDITIONAL") {
-    return <StatusPill label="CONDITIONAL CONCESSION" variant="warning" size="xs" />;
-  }
-  return <StatusPill label={applicability} variant="neutral" size="xs" />;
-}
-
 export function SchemeEligibilityView({
   data,
   selectedOrigin,
@@ -147,29 +135,20 @@ export function SchemeEligibilityView({
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
                 {ftaSchemes.map((scheme) => (
-                  <Card
+                  <div
                     key={scheme.id}
-                    className="flex flex-col justify-between hover:border-blue/40 transition-all"
-                    noPadding
+                    className="bg-panel border border-line rounded-xl shadow-xs hover:border-blue/40 transition-all flex flex-col h-full overflow-hidden"
                   >
-                    <div className="p-5 space-y-3">
+                    <div className="p-5 space-y-3 flex-1 flex flex-col">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <StatusPill
-                            label={scheme.status}
-                            variant={
-                              scheme.status === "CONCESSION_AVAILABLE" || scheme.status === "ELIGIBLE"
-                                ? "success"
-                                : "warning"
-                            }
-                            size="xs"
-                            dot
-                          />
-                          {/* Applicability Chip (Phase 6.3) */}
-                          <ApplicabilityChip applicability={scheme.applicability} />
-                        </div>
+                        <StatusPill
+                          label="CONCESSION AVAILABLE"
+                          variant="success"
+                          size="xs"
+                          dot
+                        />
                         <ProvenanceBadge
                           type={scheme.provenance?.type || "LIVE"}
                           source={scheme.provenance?.source || "CBIC Gazette"}
@@ -188,14 +167,16 @@ export function SchemeEligibilityView({
                       </div>
 
                       {/* Rules of Origin */}
-                      <div className="space-y-1 text-xs text-muted">
-                        <div className="font-semibold text-ink text-[11px]">
-                          Rules of Origin (RoO) Criteria:
+                      {scheme.rules_of_origin && (
+                        <div className="space-y-1 text-xs text-muted">
+                          <div className="font-semibold text-ink text-[11px]">
+                            Rules of Origin (RoO) Criteria:
+                          </div>
+                          <p className="text-[11px] leading-relaxed bg-bg p-2 rounded border border-line">
+                            {scheme.rules_of_origin}
+                          </p>
                         </div>
-                        <p className="text-[11px] leading-relaxed bg-bg p-2 rounded border border-line">
-                          {scheme.rules_of_origin}
-                        </p>
-                      </div>
+                      )}
 
                       {/* Conditions Checklist (Phase 6.3) */}
                       {scheme.conditions && scheme.conditions.length > 0 && (
@@ -215,21 +196,23 @@ export function SchemeEligibilityView({
                       )}
 
                       {/* Required Documentation */}
-                      <div className="space-y-1 text-[11px] text-muted">
-                        <span className="font-semibold text-ink block">
-                          Required Trade Documentation:
-                        </span>
-                        <ul className="list-disc list-inside space-y-0.5 text-[10px]">
-                          {scheme.documentation_required?.map((doc, idx) => (
-                            <li key={idx} className="truncate">
-                              {doc}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                      {scheme.documentation_required && scheme.documentation_required.length > 0 && (
+                        <div className="space-y-1 text-[11px] text-muted">
+                          <span className="font-semibold text-ink block">
+                            Required Trade Documentation:
+                          </span>
+                          <ul className="list-disc list-inside space-y-0.5 text-[10px]">
+                            {scheme.documentation_required.map((doc, idx) => (
+                              <li key={idx} className="truncate">
+                                {doc}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="p-4 bg-bg border-t border-line flex items-center justify-between">
+                    <div className="p-4 bg-bg border-t border-line flex items-center justify-between mt-auto shrink-0">
                       <span className="text-[10px] font-mono text-muted">
                         Effective: {scheme.effective_date}
                       </span>
@@ -249,7 +232,7 @@ export function SchemeEligibilityView({
                         <ArrowRight className="w-3 h-3" />
                       </Link>
                     </div>
-                  </Card>
+                  </div>
                 ))}
               </div>
             </div>
@@ -265,21 +248,27 @@ export function SchemeEligibilityView({
                   : "Manufacturing & Duty Deferral Authorisations"}
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-stretch">
                 {nonFtaSchemes.map((scheme) => (
                   <div
                     key={scheme.id}
-                    className="p-5 bg-panel border border-line rounded-xl space-y-3 hover:border-line-dark transition-all flex flex-col justify-between"
+                    className="bg-panel border border-line rounded-xl shadow-xs hover:border-line-dark transition-all flex flex-col h-full overflow-hidden"
                   >
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-mono uppercase bg-bg px-2 py-0.5 rounded text-muted font-semibold">
-                          {scheme.category}
+                    <div className="p-5 space-y-3 flex-1 flex flex-col">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-mono uppercase bg-bg px-2 py-0.5 rounded text-muted font-semibold border border-line">
+                          {scheme.category.replace(/_/g, " ")}
                         </span>
-                        <div className="flex items-center gap-1.5">
-                          <StatusPill label={scheme.status} variant="success" size="xs" />
-                          <ApplicabilityChip applicability={scheme.applicability} />
-                        </div>
+                        <StatusPill
+                          label={
+                            scheme.applicability === "DIRECT"
+                              ? "DIRECT APPLICABILITY"
+                              : "CONDITIONAL CONCESSION"
+                          }
+                          variant={scheme.applicability === "DIRECT" ? "success" : "warning"}
+                          size="xs"
+                          dot
+                        />
                       </div>
 
                       <div>
@@ -308,23 +297,52 @@ export function SchemeEligibilityView({
                         </div>
                       )}
 
-                      <div className="text-[11px] text-muted space-y-1">
-                        <span className="font-semibold text-ink block">
-                          Policy Provision:
-                        </span>
-                        <p className="leading-relaxed bg-bg p-2 rounded border border-line text-[10px]">
-                          {scheme.rules_of_origin}
-                        </p>
-                      </div>
+                      {/* Policy Provision */}
+                      {(scheme.rules_of_origin || scheme.provenance?.notes) && (
+                        <div className="text-[11px] text-muted space-y-1">
+                          <span className="font-semibold text-ink block">
+                            Policy Provision:
+                          </span>
+                          <p className="leading-relaxed bg-bg p-2 rounded border border-line text-[10px] text-ink">
+                            {scheme.rules_of_origin || scheme.provenance?.notes}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Required Documentation */}
+                      {scheme.documentation_required && scheme.documentation_required.length > 0 && (
+                        <div className="space-y-1 text-[11px] text-muted">
+                          <span className="font-semibold text-ink block">
+                            Required Trade Documentation:
+                          </span>
+                          <ul className="list-disc list-inside space-y-0.5 text-[10px]">
+                            {scheme.documentation_required.map((doc, idx) => (
+                              <li key={idx} className="truncate">
+                                {doc}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="pt-2 flex items-center justify-between border-t border-line text-[10px] font-mono text-muted">
-                      <span>{scheme.effective_date ? `Eff: ${scheme.effective_date}` : scheme.provenance?.source}</span>
-                      <ProvenanceBadge
-                        type={scheme.provenance?.type || "LIVE"}
-                        source={scheme.provenance?.source || "DGFT FTP 2023"}
-                        compact
-                      />
+                    {/* Attached Bottom Footer */}
+                    <div className="p-4 bg-bg border-t border-line flex items-center justify-between mt-auto shrink-0">
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-muted">
+                        <span>Effective: {scheme.effective_date || "2023-04-01"}</span>
+                        <ProvenanceBadge
+                          type={scheme.provenance?.type || "LIVE"}
+                          source={scheme.provenance?.source || "DGFT FTP 2023"}
+                          compact
+                        />
+                      </div>
+                      <Link
+                        href={`/duty?hs_code=${data.hs_code}${selectedOrigin ? `&origin=${selectedOrigin}` : ""}`}
+                        className="text-xs text-blue font-semibold hover:underline flex items-center gap-1"
+                      >
+                        <span>Apply in Duty Calculator</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
                     </div>
                   </div>
                 ))}
