@@ -6,7 +6,6 @@ import { EligibilityResponse, SchemeDetail } from "@/lib/types";
 import { Card, ProvenanceBadge, StatusPill } from "@/components/ui";
 import { formatPercent } from "@/lib/formatters";
 import {
-  AlertTriangle,
   AlertCircle,
   FileCheck,
   ShieldCheck,
@@ -55,33 +54,6 @@ export function SchemeEligibilityView({
 
   return (
     <div className="space-y-6">
-      {/* 1. CRITICAL PROMINENT STATUTORY DISCLAIMER */}
-      <div className="p-5 rounded-xl bg-amber-dim border-2 border-amber/40 shadow-xs text-amber-dark space-y-2">
-        <div className="flex items-center gap-2.5">
-          <AlertTriangle className="w-5 h-5 text-amber shrink-0 stroke-[2.5]" />
-          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-amber-dark">
-            STATUTORY CONCESSION & POLICY STATUS AS OF {data.effective_as_of_date || data.as_of || "DATASET BASELINE"} — VERIFY MANUALLY
-          </h4>
-          <span className="text-[10px] font-mono bg-white/70 px-2 py-0.5 rounded border border-amber/30 font-semibold">
-            DGFT / CBIC NOTICES
-          </span>
-        </div>
-
-        <p className="text-xs text-ink leading-relaxed font-medium">
-          {data.prominent_disclaimer}
-        </p>
-
-        <div className="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-amber/20 text-[11px] text-amber-dark font-mono">
-          <div className="flex items-center gap-2">
-            <span>Last Verified Against Official Gazette:</span>
-            <strong>{data.effective_as_of_date || data.as_of || "Current"}</strong>
-          </div>
-          <span className="text-muted text-[10px]">
-            Direction: <strong className="uppercase text-ink">{data.direction || direction}</strong>
-            {selectedOrigin && <> &bull; Origin Filter: <strong className="uppercase text-ink">{selectedOrigin}</strong></>}
-          </span>
-        </div>
-      </div>
 
       {/* NOT COVERED State View */}
       {isNotCovered ? (
