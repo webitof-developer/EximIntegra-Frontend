@@ -62,15 +62,15 @@ function EligibilityContent() {
   return (
     <div className="space-y-6 pb-16">
           {/* Tariff Item Lookup & Filter Bar */}
-          <div className="p-4 bg-panel border border-line rounded-xl shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+          <div className="p-3.5 sm:p-4 bg-panel border border-line rounded-xl shadow-xs flex flex-col xl:flex-row items-start xl:items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 min-w-0 shrink">
               <div className="w-9 h-9 rounded-lg bg-blue-dim text-blue flex items-center justify-center shrink-0">
                 <FileCheck className="w-5 h-5" />
               </div>
-              <div className="text-xs">
-                <div className="flex items-center gap-2 font-mono">
-                  <span className="text-muted uppercase text-[10px]">Statutory Item:</span>
-                  <strong className="text-ink font-bold text-sm">{formatHsCode(activeHs)}</strong>
+              <div className="text-xs min-w-0">
+                <div className="flex items-center gap-2 font-mono flex-nowrap">
+                  <span className="text-muted uppercase text-[10px] shrink-0">Statutory Item:</span>
+                  <strong className="text-ink font-bold text-sm shrink-0">{formatHsCode(activeHs)}</strong>
                   {isNotCovered ? (
                     <StatusPill label="NOT COVERED" variant="neutral" size="xs" />
                   ) : (
@@ -82,20 +82,20 @@ function EligibilityContent() {
                     />
                   )}
                 </div>
-                <span className="text-muted text-[11px] truncate block max-w-sm">
+                <span className="text-muted text-[11px] truncate block max-w-xs md:max-w-sm lg:max-w-md xl:max-w-lg">
                   {data?.hs_description || currentContext.materialName || "Tariff commodity unlisted in reference dataset"}
                 </span>
               </div>
             </div>
 
-            {/* Direction Toggle & Origin Selector & Search Input */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Direction Toggle (Phase 6.1) */}
-              <div className="flex items-center bg-bg border border-line rounded-lg p-0.5 text-xs font-mono font-semibold">
+            {/* Direction Toggle & Origin Selector & Search Input - All in One Line */}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-nowrap overflow-x-auto max-w-full">
+              {/* Direction Toggle */}
+              <div className="flex items-center bg-bg border border-line rounded-lg p-0.5 text-xs font-mono font-semibold shrink-0">
                 <button
                   type="button"
                   onClick={() => setDirection("import")}
-                  className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-md transition-colors cursor-pointer text-xs whitespace-nowrap ${
                     direction === "import"
                       ? "bg-blue text-white shadow-xs font-bold"
                       : "text-muted hover:text-ink"
@@ -106,7 +106,7 @@ function EligibilityContent() {
                 <button
                   type="button"
                   onClick={() => setDirection("export")}
-                  className={`px-3 py-1.5 rounded-md transition-colors cursor-pointer ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-md transition-colors cursor-pointer text-xs whitespace-nowrap ${
                     direction === "export"
                       ? "bg-blue text-white shadow-xs font-bold"
                       : "text-muted hover:text-ink"
@@ -116,13 +116,13 @@ function EligibilityContent() {
                 </button>
               </div>
 
-              {/* Origin Country Selector (Phase 6.1) */}
-              <div className="flex items-center gap-1.5 text-xs">
+              {/* Origin Country Selector */}
+              <div className="flex items-center gap-1.5 text-xs shrink-0">
                 <Globe className="w-3.5 h-3.5 text-muted shrink-0" />
                 <select
                   value={selectedOrigin}
                   onChange={(e) => setSelectedOrigin(e.target.value)}
-                  className="py-1.5 px-2 bg-bg border border-line rounded-lg text-ink font-semibold focus:outline-none focus:border-blue cursor-pointer"
+                  className="py-1.5 px-2 bg-bg border border-line rounded-lg text-ink font-semibold focus:outline-none focus:border-blue cursor-pointer text-xs max-w-[140px] sm:max-w-[170px] truncate"
                 >
                   <option value="">All Partner Origins</option>
                   {countries?.map((c) => (
@@ -134,14 +134,14 @@ function EligibilityContent() {
               </div>
 
               {/* HS Search Form */}
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <form onSubmit={handleSearch} className="flex items-center gap-1.5 shrink-0">
                 <div className="relative">
                   <input
                     type="text"
                     value={searchHs}
                     onChange={(e) => setSearchHs(e.target.value)}
-                    placeholder="HS Code (e.g. 7204.49.00)"
-                    className="w-36 sm:w-44 py-1.5 px-2.5 text-xs bg-bg border border-line rounded-lg text-ink font-mono font-bold focus:outline-none focus:border-blue"
+                    placeholder="HS Code"
+                    className="w-28 sm:w-36 py-1.5 px-2.5 text-xs bg-bg border border-line rounded-lg text-ink font-mono font-bold focus:outline-none focus:border-blue"
                   />
                 </div>
                 <button
