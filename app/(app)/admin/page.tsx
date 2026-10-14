@@ -20,6 +20,8 @@ import {
   UserDirectoryTab,
   DynamicPricingTab,
   RolePermissionsTab,
+  FreshnessDashboardTab,
+  OperationsRolloutTab,
 } from "./tabs";
 import {
   ShieldCheck,
@@ -30,11 +32,15 @@ import {
   RefreshCw,
   Sliders,
   CheckCircle2,
+  Database,
+  ToggleLeft,
 } from "lucide-react";
 
 export default function AdminPage() {
   const { user } = useAppSelector((state) => state.auth);
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "pricing" | "rbac">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "users" | "pricing" | "rbac" | "freshness" | "operations"
+  >("overview");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // RTK Query Hooks
@@ -205,6 +211,32 @@ export default function AdminPage() {
               <DollarSign className="w-3.5 h-3.5" />
               <span>Dynamic SaaS Pricing</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("freshness")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === "freshness"
+                  ? "bg-blue text-white shadow-xs"
+                  : "text-muted hover:text-ink hover:bg-bg"
+              }`}
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>Dataset Freshness</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("operations")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === "operations"
+                  ? "bg-purple-600 text-white shadow-xs"
+                  : "text-muted hover:text-ink hover:bg-bg"
+              }`}
+            >
+              <ToggleLeft className="w-3.5 h-3.5" />
+              <span>Operations & Flags</span>
+            </button>
           </div>
 
           {/* Tab 1: Platform Metrics */}
@@ -242,6 +274,16 @@ export default function AdminPage() {
               onSaveRBAC={async (roles) => updateRBAC({ roles }).unwrap()}
               showToast={showToast}
             />
+          )}
+
+          {/* Tab 5: Dataset Freshness & Ingestion */}
+          {activeTab === "freshness" && (
+            <FreshnessDashboardTab showToast={showToast} />
+          )}
+
+          {/* Tab 6: Operations & Feature Flags */}
+          {activeTab === "operations" && (
+            <OperationsRolloutTab showToast={showToast} />
           )}
         </div>
 

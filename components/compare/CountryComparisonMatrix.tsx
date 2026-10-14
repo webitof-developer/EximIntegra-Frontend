@@ -489,6 +489,22 @@ export function CountryComparisonMatrix({
           </Table>
         </div>
       </Card>
+
+      {/* Statutory Legal Disclaimer & Licensing Notice (Phase 8 Operations & Rollout) */}
+      <div className="p-4 bg-panel border border-line rounded-xl text-xs space-y-2">
+        <div className="flex items-center gap-2 font-bold text-ink text-[11px] uppercase tracking-wider font-mono">
+          <Scale className="w-4 h-4 text-blue shrink-0" />
+          <span>Official Gazette Statutory Disclaimer & Data Licensing Notice</span>
+        </div>
+        <p className="text-muted leading-relaxed text-[11px]">
+          <strong>Statutory Disclaimer:</strong> Trade duty calculations, FTA preferential rates, and policy restrictions are computed against official Gazette notifications (CBIC, DGFT, DGTR) for indicative commercial planning purposes. Official customs clearance requires Bill of Entry filing and assessment under the Customs Act, 1962.
+        </p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-mono text-muted pt-1 border-t border-line/60">
+          <span>CBIC Notifications: 22/2022-Cus (CEPA) • 112/2022-Cus (ECTA) • 46/2011-Cus (AIFTA)</span>
+          <span>External Data: UN Comtrade API & ECB / CBIC Forex</span>
+          <span>Audit: Dataset versions recorded in comparison run</span>
+        </div>
+      </div>
     </div>
   );
 }

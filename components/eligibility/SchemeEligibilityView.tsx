@@ -429,6 +429,22 @@ export function SchemeEligibilityView({
               </Link>
             </div>
           </div>
+
+          {/* Statutory Legal Disclaimer & Licensing Notice (Phase 8 Operations & Rollout) */}
+          <div className="p-4 bg-panel border border-line rounded-xl text-xs space-y-2">
+            <div className="flex items-center gap-2 font-bold text-ink text-[11px] uppercase tracking-wider font-mono">
+              <Scale className="w-4 h-4 text-blue shrink-0" />
+              <span>Statutory Disclaimer & Trade Policy Compliance Notice</span>
+            </div>
+            <p className="text-muted leading-relaxed text-[11px]">
+              {data.prominent_disclaimer ||
+                "Statutory Disclaimer: Trade scheme eligibility, concessional duty benefits, and non-tariff regulatory measures are determined against statutory DGFT Foreign Trade Policy schedules and CBIC Gazette notifications for preliminary trade planning. Legal customs clearance requires Bill of Entry examination under the Customs Act, 1962."}
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] font-mono text-muted pt-1 border-t border-line/60">
+              <span>Statutory Sources: DGFT FTP 2023 • CBIC Customs Tariff Act 1975 • Ministry of Steel QCO</span>
+              <span>Audit: Cryptographic dataset versions stamped on evaluation</span>
+            </div>
+          </div>
         </>
       )}
     </div>
