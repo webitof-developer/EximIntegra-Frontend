@@ -23,7 +23,7 @@ import {
   Info,
 } from "lucide-react";
 
-export default function EligibilityPage() {
+function EligibilityContent() {
   const searchParams = useSearchParams();
   const queryHs = searchParams.get("hs_code");
   const queryOrigin = searchParams.get("origin") || "";
@@ -60,9 +60,7 @@ export default function EligibilityPage() {
   const isNotCovered = data?.coverage === "NOT_COVERED" || data?.statutory_policy_status === "NOT_COVERED";
 
   return (
-    <AuthGuard>
-      <AppShell>
-        <div className="space-y-6 pb-16">
+    <div className="space-y-6 pb-16">
           {/* Tariff Item Lookup & Filter Bar */}
           <div className="p-4 bg-panel border border-line rounded-xl shadow-xs flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -192,6 +190,22 @@ export default function EligibilityPage() {
             />
           ) : null}
         </div>
+  );
+}
+
+export default function EligibilityPage() {
+  return (
+    <AuthGuard>
+      <AppShell>
+        <React.Suspense
+          fallback={
+            <div className="p-12 text-center text-xs font-mono text-muted bg-panel border border-line rounded-xl">
+              Loading Statutory Eligibility & Policy Engine...
+            </div>
+          }
+        >
+          <EligibilityContent />
+        </React.Suspense>
       </AppShell>
     </AuthGuard>
   );
