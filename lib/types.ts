@@ -8,6 +8,8 @@ export interface ProvenanceMetadata {
   type: ProvenanceType;
   source: string;
   effectiveDate?: string;
+  effective_date?: string;
+  as_of?: string;
   confidenceScore?: number;
   notes?: string;
   dataset_version?: string;
@@ -188,6 +190,9 @@ export interface DutyCalculationResponse {
   effective_duty_percentage: number;
   total_effective_tax_percentage: number;
   liability_disclaimer: string;
+  coverage?: "COVERED" | "NOT_COVERED";
+  coverage_note?: string;
+  statutory_bcd_rate?: number;
 }
 
 /* Landed Cost Engine Types */
@@ -263,15 +268,18 @@ export interface LandedCostResponse {
 export interface SchemeDetail {
   id: string;
   name: string;
-  category: "FTA" | "EXPORT_PROMOTION" | "DUTY_DEFERRAL" | "REMISSION";
-  status: "ELIGIBLE" | "CONDITIONALLY_ELIGIBLE" | "RESTRICTED" | "NOT_ELIGIBLE";
+  category: "FTA" | "EXPORT_PROMOTION" | "DUTY_DEFERRAL" | "REMISSION" | string;
+  status: "ELIGIBLE" | "CONCESSION_AVAILABLE" | "CONDITIONALLY_ELIGIBLE" | "RESTRICTED" | "NOT_ELIGIBLE" | string;
+  applicability?: "DIRECT" | "CONDITIONAL" | "EXCLUDED" | string;
   headline_benefit: string;
-  preferential_duty_rate?: number;
-  standard_mfn_rate: number;
-  duty_saving_percentage: number;
-  rules_of_origin: string;
+  preferential_duty_rate?: number | null;
+  standard_mfn_rate?: number | null;
+  duty_saving_percentage?: number | null;
+  rules_of_origin?: string;
+  conditions?: string[];
   documentation_required: string[];
   effective_date: string;
+  source_notification?: string;
   provenance: ProvenanceMetadata;
 }
 
@@ -279,9 +287,24 @@ export interface RegulatoryMeasure {
   id: string;
   agency: string;
   title: string;
+  name?: string;
   mandatory: boolean;
-  status: "COMPLIANCE_REQUIRED" | "EXEMPT" | "RECOMMENDED";
+  status: "COMPLIANCE_REQUIRED" | "EXEMPT" | "RECOMMENDED" | string;
+  compliance_status?: string;
   description: string;
+  requirement?: string;
+  conditions?: string[];
+  exemptions?: string[];
+  effective_date?: string;
+  notification?: string;
+  provenance: ProvenanceMetadata;
+}
+
+export interface PolicyDetail {
+  status: "FREE" | "RESTRICTED" | "PROHIBITED" | "STE" | "NOT_COVERED" | string;
+  conditions: string[];
+  notification?: string | null;
+  effective_from?: string | null;
   provenance: ProvenanceMetadata;
 }
 
@@ -292,11 +315,40 @@ export interface EligibilityResponse {
   effective_as_of_date?: string | null;
   coverage?: "COVERED" | "NOT_COVERED";
   coverage_note?: string;
+  direction?: "import" | "export";
+  origin?: string | null;
+  as_of?: string | null;
   prominent_disclaimer: string;
-  statutory_policy_status: "Free" | "Restricted" | "Prohibited" | "STE" | "NOT_COVERED";
+  statutory_policy_status: "Free" | "Restricted" | "Prohibited" | "STE" | "NOT_COVERED" | string;
+  statutory_policy_conditions?: string[];
+  statutory_policy_notification?: string | null;
+  policy?: PolicyDetail;
+  dataset_versions?: Record<string, string>;
   schemes: SchemeDetail[];
   regulatory_measures: RegulatoryMeasure[];
+  provenance?: ProvenanceMetadata;
+  warnings?: string[];
   last_updated: string;
+}
+
+export interface CountryOption {
+  code: string;
+  name: string;
+  flag: string;
+  agreements?: string[];
+}
+
+export interface BenchmarkPriceResponse {
+  hs_code: string;
+  hs6: string;
+  origin_country: string;
+  indicative_unit_value_usd?: number | null;
+  indicative_unit_value_inr?: number | null;
+  unit: string;
+  label: string;
+  source: string;
+  valuation_disclaimer: string;
+  provenance: ProvenanceMetadata;
 }
 
 /* Country Comparison Types */
@@ -337,6 +389,8 @@ export interface CountryComparisonItem {
     freight: number;
     insurance: number;
     currency: string;
+    benchmark_label?: string;
+    indicative_benchmark_usd?: number;
   };
   duties?: Record<string, { rate?: number | null; amount_inr: number }>;
   landed?: {
@@ -363,7 +417,8 @@ export interface CountryComparisonItem {
   savings_vs_mfn_inr: number;
   savings_percentage: number;
   is_recommended_arbitrage: boolean;
-  provenance: ProvenanceMetadata;
+  benchmark?: Record<string, any>;
+  provenance: ProvenanceMetadata | Record<string, any>;
 }
 
 export interface CountryComparisonResponse {

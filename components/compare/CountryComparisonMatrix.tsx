@@ -121,36 +121,74 @@ export function CountryComparisonMatrix({
             {/* Country Headers */}
             <TableHeader>
               <tr className="bg-[#FAFBFD] border-b border-line">
-                <th className="py-4 px-5 text-muted uppercase font-mono text-[10px] w-56">
+                <th className="py-4 px-5 text-muted uppercase font-mono text-[10px] w-56 text-left">
                   Metric / Cost Element
                 </th>
-                {data.comparisons.map((c) => (
-                  <th
-                    key={c.country_code}
-                    className={`py-4 px-5 text-center transition-colors min-w-[200px] ${
-                      c.is_recommended_arbitrage
-                        ? "bg-green-dim/40 border-x-2 border-green/30"
-                        : "border-r border-line"
-                    }`}
-                  >
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-2xl">{c.flag}</span>
-                      <span className="font-bold text-ink text-sm">
-                        {c.country_name}
-                      </span>
-                      <span className="text-[10px] text-muted font-normal max-w-[170px] truncate">
-                        {c.trade_agreement}
-                      </span>
-                      <div className="mt-1 flex items-center gap-1.5">
-                        <ProvenanceBadge
-                          type={c.provenance.type}
-                          source={c.provenance.source}
-                          compact
-                        />
+                {data.comparisons.map((c) => {
+                  const isColNotCovered = c.coverage === "NOT_COVERED";
+                  return (
+                    <th
+                      key={c.country_code}
+                      className={`py-4 px-5 text-center transition-colors min-w-[210px] ${
+                        isColNotCovered
+                          ? "bg-slate-50/80 border-r border-line text-muted"
+                          : c.is_recommended_arbitrage
+                          ? "bg-green-dim/40 border-x-2 border-green/30"
+                          : "border-r border-line"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-1.5">
+                        <span className="text-2xl">{c.flag}</span>
+                        <span className="font-bold text-ink text-sm flex items-center gap-1">
+                          {c.country_name}
+                          {c.country_code === data.baseline_origin && (
+                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-blue-dim text-blue font-semibold">
+                              BASE
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-[10px] text-muted font-normal max-w-[180px] truncate">
+                          {c.trade_agreement}
+                        </span>
+
+                        {/* Distinct NOT_COVERED badge or Provenance Badge */}
+                        <div className="mt-1 flex flex-col items-center gap-1">
+                          {isColNotCovered ? (
+                            <StatusPill label="NOT COVERED" variant="neutral" size="xs" />
+                          ) : (
+                            <ProvenanceBadge
+                              type={c.provenance?.type || "LIVE"}
+                              source={c.provenance?.source || "CBIC"}
+                              compact
+                            />
+                          )}
+
+                          {/* Freshness Strip per column */}
+                          <div className="flex items-center gap-1 text-[9px] font-mono text-muted/80">
+                            <span>v: {c.provenance?.dataset_version || "2026.1"}</span>
+                            <span>&bull;</span>
+                            <span>{c.provenance?.effective_date || data.as_of || "Current"}</span>
+                          </div>
+
+                          {/* Column Warnings (e.g., FREIGHT_DEFAULTED) */}
+                          {c.warnings && c.warnings.length > 0 && (
+                            <div className="flex flex-wrap justify-center gap-1 mt-0.5">
+                              {c.warnings.map((w, wIdx) => (
+                                <span
+                                  key={wIdx}
+                                  className="text-[9px] font-mono px-1.5 py-0.2 bg-amber-dim text-amber-dark border border-amber/30 rounded"
+                                  title={w}
+                                >
+                                  {w.replace(/_/g, " ")}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </th>
-                ))}
+                    </th>
+                  );
+                })}
               </tr>
             </TableHeader>
 
@@ -363,23 +401,25 @@ export function CountryComparisonMatrix({
                     {c.coverage === "NOT_COVERED" ? (
                       <span className="text-xs text-muted font-normal">Not Covered</span>
                     ) : c.country_code === data.baseline_origin ? (
-                      <span className="text-muted font-semibold">Baseline Origin</span>
+                      <span className="text-muted font-semibold bg-bg px-2 py-0.5 rounded border border-line">Baseline Benchmark</span>
                     ) : c.delta_vs_baseline_inr != null && c.delta_vs_baseline_inr < 0 ? (
-                      <div>
-                        <span>-{formatCurrency(Math.abs(c.delta_vs_baseline_inr), "INR")}</span>
-                        <div className="text-[10px] opacity-80 text-green">
-                          ({Math.abs(c.delta_vs_baseline_pct || 0)}% cheaper)
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] uppercase font-mono font-bold text-green">ARBITRAGE SAVING</div>
+                        <div className="text-green font-bold">-{formatCurrency(Math.abs(c.delta_vs_baseline_inr), "INR")}</div>
+                        <div className="text-[10px] text-green font-medium">
+                          ({Math.abs(c.delta_vs_baseline_pct || 0)}% cheaper vs {data.baseline_origin})
                         </div>
                       </div>
                     ) : c.delta_vs_baseline_inr != null && c.delta_vs_baseline_inr > 0 ? (
-                      <div>
-                        <span>+{formatCurrency(c.delta_vs_baseline_inr, "INR")}</span>
-                        <div className="text-[10px] opacity-80 text-amber-dark">
-                          (+{c.delta_vs_baseline_pct || 0}% higher)
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] uppercase font-mono font-bold text-amber-dark">COST INCREASE</div>
+                        <div className="text-amber-dark font-bold">+{formatCurrency(c.delta_vs_baseline_inr, "INR")}</div>
+                        <div className="text-[10px] text-amber-dark font-medium">
+                          (+{c.delta_vs_baseline_pct || 0}% higher vs {data.baseline_origin})
                         </div>
                       </div>
                     ) : (
-                      <span>Parity (0.00)</span>
+                      <span className="text-muted">Parity (₹0.00)</span>
                     )}
                   </td>
                 ))}
