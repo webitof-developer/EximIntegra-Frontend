@@ -201,7 +201,7 @@ export default function AksharaPage() {
     ]);
   };
 
-  const hasByokKey = Boolean(activeLlm && activeLlm.apiKey && activeLlm.apiKey.trim().length > 0);
+  const isLlmConfigured = Boolean(activeLlm && activeLlm.apiKey && activeLlm.apiKey.trim().length > 0);
 
   return (
     <AuthGuard>
@@ -238,7 +238,7 @@ export default function AksharaPage() {
               {/* Active AI Engine Indicator */}
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono bg-bg border border-line shadow-3xs">
                 <Cpu className="w-3.5 h-3.5 text-blue shrink-0" />
-                {hasByokKey && activeLlm ? (
+                {isLlmConfigured && activeLlm ? (
                   isAdmin ? (
                     <Link
                       href="/admin?tab=llm"
@@ -318,7 +318,6 @@ export default function AksharaPage() {
             requiredTier="ENTERPRISE"
             featureName="Akshara AI Copilot"
             description="Access grounded trade intelligence with autonomous GIR classification, real-time customs gazette citations, and verified tool-call audit trails."
-            allowByok={hasByokKey}
           >
             <div className="space-y-4">
               <div className="bg-bg/40 border border-line rounded-2xl p-4 min-h-[460px] max-h-[640px] overflow-y-auto space-y-4 shadow-inner">
@@ -345,7 +344,7 @@ export default function AksharaPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {!hasByokKey && (
+              {!isLlmConfigured && (
                 <div className="p-3 bg-blue/5 border border-blue/20 rounded-xl text-xs flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-200">
                   <div className="flex items-center gap-2 text-ink">
                     <Info className="w-4 h-4 text-blue shrink-0" />

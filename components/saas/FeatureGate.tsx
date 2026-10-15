@@ -12,7 +12,6 @@ interface FeatureGateProps {
   description?: string;
   children: React.ReactNode;
   fallbackMode?: "overlay" | "banner";
-  allowByok?: boolean;
 }
 
 const tierWeights: Record<TierType, number> = {
@@ -27,7 +26,6 @@ export function FeatureGate({
   description,
   children,
   fallbackMode = "overlay",
-  allowByok = false,
 }: FeatureGateProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const user = useAppSelector((state) => state.auth.user);
@@ -36,7 +34,7 @@ export function FeatureGate({
   const currentWeight = tierWeights[currentTier] || 1;
   const requiredWeight = tierWeights[requiredTier] || 2;
 
-  const isUnlocked = currentWeight >= requiredWeight || allowByok;
+  const isUnlocked = currentWeight >= requiredWeight;
 
   if (isUnlocked) {
     return <>{children}</>;
@@ -95,16 +93,6 @@ export function FeatureGate({
                     <span>View Benefits</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
-                </div>
-
-                <div className="pt-1 text-center">
-                  <a
-                    href="/settings?tab=llm"
-                    className="text-[11px] text-blue hover:underline inline-flex items-center gap-1 font-medium"
-                  >
-                    <span>Or bring your own API key (BYOK in Settings)</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </a>
                 </div>
               </div>
             </div>
