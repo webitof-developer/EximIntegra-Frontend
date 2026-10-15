@@ -16,7 +16,11 @@ import {
   Scale,
   Ship,
   Sparkles,
+  CreditCard,
+  ArrowRight,
+  Zap,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { updateUser } from "@/store/authSlice";
 import { useUpdateProfileMutation } from "@/store/authApi";
@@ -29,6 +33,7 @@ interface UserProfileModalProps {
 }
 
 export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
@@ -40,6 +45,11 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [updateProfileMutation, { isLoading }] = useUpdateProfileMutation();
+
+  const handleChangePlan = () => {
+    onClose();
+    router.push("/settings?tab=billing");
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -342,34 +352,84 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
             </p>
           </div>
 
+          {/* Subscription Tier & Change Plan */}
+          <div className="space-y-1.5 pt-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5 text-blue" />
+                <span>Subscription Plan</span>
+              </label>
+              <span className="text-[10px] font-mono text-muted uppercase tracking-wider">
+                Billing & Quotas
+              </span>
+            </div>
+
+            <div className="p-3 bg-panel border border-blue/20 bg-blue/5 rounded-xl flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue/10 border border-blue/20 flex items-center justify-center text-blue shrink-0">
+                  <Zap className="w-4 h-4 text-blue" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <TierBadge tier={user.tier || "STARTER"} size="sm" />
+                    <span className="text-[11px] font-semibold text-ink">Active Plan</span>
+                  </div>
+                  <span className="text-[11px] text-muted block mt-0.5">
+                    Manage billing cycles, statutory quotas, and tier upgrades.
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleChangePlan}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue bg-panel hover:bg-blue hover:text-white border border-blue/30 hover:border-blue transition-all flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer group"
+              >
+                <span>Change Plan</span>
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            </div>
+          </div>
+
           {/* Footer Actions */}
-          <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-line flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-muted hover:text-ink border border-line bg-bg hover:bg-panel transition-colors cursor-pointer"
+              onClick={handleChangePlan}
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold text-blue hover:text-blue-dark border border-blue/20 hover:border-blue/40 bg-blue/5 hover:bg-blue/10 transition-colors cursor-pointer flex items-center gap-1.5"
             >
-              Cancel
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>Change Plan</span>
             </button>
-            <button
-              type="submit"
-              disabled={isLoading || !hasChanges}
-              className={`px-5 py-2 rounded-xl text-xs font-semibold text-white transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
-                isLoading || !hasChanges
-                  ? "bg-blue/50 opacity-60 cursor-not-allowed"
-                  : "bg-blue hover:bg-blue-dark active:scale-[0.98]"
-              }`}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Saving Changes...</span>
-                </>
-              ) : (
-                <span>Save Profile Changes</span>
-              )}
-            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isLoading}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted hover:text-ink border border-line bg-bg hover:bg-panel transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isLoading || !hasChanges}
+                className={`px-5 py-2 rounded-xl text-xs font-semibold text-white transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
+                  isLoading || !hasChanges
+                    ? "bg-blue/50 opacity-60 cursor-not-allowed"
+                    : "bg-blue hover:bg-blue-dark active:scale-[0.98]"
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving Changes...</span>
+                  </>
+                ) : (
+                  <span>Save Profile Changes</span>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
