@@ -73,8 +73,8 @@ const initialProviders: LlmProviderConfig[] = [
     id: "google",
     name: "Google Gemini",
     badge: "HIGH SPEED",
-    defaultModel: "gemini-1.5-pro",
-    models: ["gemini-1.5-pro", "gemini-2.0-flash", "gemini-1.5-flash"],
+    defaultModel: "gemini-3.5-flash",
+    models: ["gemini-3.5-flash", "gemini-3-flash-preview", "gemini-3.8-flash", "gemini-3.1-pro-preview"],
     keyPrefix: "AIzaSy",
     apiKey: "",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta",
@@ -153,7 +153,7 @@ export function LlmProvidersSection() {
                   defaultModel: savedP.defaultModel || initP.defaultModel,
                   models:
                     Array.isArray(savedP.models) && savedP.models.length > 0
-                      ? savedP.models
+                      ? Array.from(new Set([...savedP.models, ...initP.models]))
                       : initP.models,
                   isConfigured:
                     savedP.isConfigured !== undefined

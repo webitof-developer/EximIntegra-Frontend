@@ -21,22 +21,22 @@ export function ChatInput({
 
   const suggestions = [
     {
-      label: "Classify Heavy Melting Steel Scrap & check statutory duty",
-      query: "Classify Heavy Melting Steel Scrap (HMS 1/2) and compute statutory customs tariffs.",
+      label: "Classify commodity & calculate customs tariff",
+      query: "Help me classify my product under the Customs Tariff Act and calculate applicable BCD, SWS, and IGST.",
       icon: Sparkles,
-      tag: "Tariff & GIR",
+      tag: "Classification & Duty",
     },
     {
-      label: "Compare UAE vs US sourcing for HS 7204.49.00",
-      query: "Compare UAE CEPA preferential tariff vs United States MFN duty for HS 7204.49.00.",
+      label: "Compare FTA / CEPA preferential tariff vs MFN",
+      query: "Compare preferential tariff rates under CEPA/FTA trade agreements versus standard MFN customs duty for my shipment.",
       icon: ArrowRightLeft,
-      tag: "Sourcing Arbitrage",
+      tag: "Trade Agreements",
     },
     {
-      label: "Can I import hazardous e-scrap in 2029 without license?",
-      query: "What will be the custom duty on hazardous electronic scrap in 2029 and can I import without an MoEFCC license?",
+      label: "Check mandatory port compliance & licenses",
+      query: "What mandatory licenses, non-tariff clearances (BIS, SIMS, EPR), and port certifications are required for import?",
       icon: AlertTriangle,
-      tag: "Statutory Limitation Check",
+      tag: "Compliance & Clearance",
     },
   ];
 

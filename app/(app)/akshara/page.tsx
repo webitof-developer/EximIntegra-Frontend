@@ -21,36 +21,76 @@ import {
   ArrowRight,
   Database,
   Info,
+  Cpu,
 } from "lucide-react";
 import { FeatureGate } from "@/components/saas/FeatureGate";
 
+interface ActiveLlmInfo {
+  id: string;
+  name: string;
+  apiKey: string;
+  model: string;
+  baseUrl?: string;
+}
+
+function getActiveLlmFromStorage(): ActiveLlmInfo | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("eximintegra_llm_providers_config");
+    if (!raw) return null;
+    const providers = JSON.parse(raw);
+    if (!Array.isArray(providers)) return null;
+
+    // Check provider designated as active copilot and configured with API key
+    const active = providers.find(
+      (p) => p.isActiveCopilot && p.apiKey && p.apiKey.trim().length > 0
+    );
+    if (active) {
+      return {
+        id: active.id,
+        name: active.name,
+        apiKey: active.apiKey.trim(),
+        model: active.defaultModel,
+        baseUrl: active.baseUrl,
+      };
+    }
+
+    // Fallback: any configured provider that has an API key
+    const anyConfigured = providers.find(
+      (p) => p.apiKey && p.apiKey.trim().length > 0
+    );
+    if (anyConfigured) {
+      return {
+        id: anyConfigured.id,
+        name: anyConfigured.name,
+        apiKey: anyConfigured.apiKey.trim(),
+        model: anyConfigured.defaultModel,
+        baseUrl: anyConfigured.baseUrl,
+      };
+    }
+  } catch (e) {
+    console.error("Failed to read active LLM config", e);
+  }
+  return null;
+}
+
 export default function AksharaPage() {
   const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+  const isAdmin = user?.role === "ADMIN";
   const currentContext = useAppSelector((state) => state.context.current);
   const [sendChatMessage, { isLoading }] = useSendChatMessageMutation();
 
+  const [activeLlm, setActiveLlm] = useState<ActiveLlmInfo | null>(null);
   const [conversationId, setConversationId] = useState<string>(() => `conv_${Date.now()}`);
   const [messages, setMessages] = useState<AksharaMessage[]>([
     {
       id: "msg_welcome",
       role: "assistant",
       content:
-        "### Welcome to Akshara\n\nAsk me about HS classification, customs duties, preferential trade agreements, or import compliance.\n\nEvery calculation includes a verified tool-call audit trail. What commodity would you like to evaluate?",
+        "### Welcome to Akshara\n\nI am your AI Trade & Customs Advisory Copilot. Ask me about HS classification, customs duties, preferential trade agreements (CEPA/FTAs), or import compliance.",
       timestamp: new Date().toISOString(),
-      tool_calls_made: [
-        {
-          id: "tc_init_01",
-          tool_name: "statutory_registry_sync",
-          endpoint: "GET /api/v1/dataset-versions",
-          summary: "Verified active CBIC Tariff Database v2026.03 and DGFT Import Policy Gazette.",
-          parameters: { jurisdiction: "IN", effective_date: "2026-03-01" },
-          execution_time_ms: 84,
-          provenance: {
-            type: "LIVE",
-            source: "CBIC Central Server v2026.03",
-          },
-        },
-      ],
+      tool_calls_made: [],
       unresolved_subclaims: [],
     },
   ]);
@@ -62,10 +102,19 @@ export default function AksharaPage() {
   };
 
   useEffect(() => {
+    setActiveLlm(getActiveLlmFromStorage());
+  }, []);
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
 
   const handleSendMessage = async (text: string) => {
+    const currentActiveLlm = getActiveLlmFromStorage();
+    if (currentActiveLlm !== activeLlm) {
+      setActiveLlm(currentActiveLlm);
+    }
+
     const userMsg: AksharaMessage = {
       id: `user_${Date.now()}`,
       role: "user",
@@ -75,11 +124,34 @@ export default function AksharaPage() {
 
     setMessages((prev) => [...prev, userMsg]);
 
+    // If API key is not configured, inform user with a clean, normal message
+    if (!currentActiveLlm || !currentActiveLlm.apiKey || !currentActiveLlm.apiKey.trim()) {
+      const unconfiguredMsg: AksharaMessage = {
+        id: `asst_unconfigured_${Date.now()}`,
+        role: "assistant",
+        content: isAdmin
+          ? "### ⚠️ AI Advisory Engine Unconfigured\n\nNo active AI model credentials have been configured for the platform.\n\nAs a Super Admin, you can set up corporate API keys and select the active AI model in the Admin Cockpit:\n\n[**Configure AI in Admin Cockpit ➔**](/admin?tab=llm)"
+          : "### ⚠️ Advisory Service Currently Unavailable\n\nAkshara AI trade advisory is currently unavailable because the enterprise AI copilot engine has not been configured. Please contact your platform administrator.",
+        timestamp: new Date().toISOString(),
+        tool_calls_made: [],
+        unresolved_subclaims: [],
+        is_unresolvable_warning: true,
+      };
+      setMessages((prev) => [...prev, unconfiguredMsg]);
+      return;
+    }
+
     try {
       const response = await sendChatMessage({
         message: text,
         conversation_id: conversationId,
         active_context: currentContext,
+        llm_config: {
+          provider: currentActiveLlm.id,
+          api_key: currentActiveLlm.apiKey,
+          model: currentActiveLlm.model,
+          base_url: currentActiveLlm.baseUrl,
+        },
       }).unwrap();
 
       const assistantMsg: AksharaMessage = {
@@ -94,31 +166,19 @@ export default function AksharaPage() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
-    } catch (err) {
+    } catch (err: any) {
+      const errDetail =
+        err?.data?.message || err?.message || "Unable to reach the live consultation endpoints.";
       const errorMsg: AksharaMessage = {
         id: `err_${Date.now()}`,
         role: "assistant",
-        content:
-          "### ⚠️ Statutory Service Temporarily Unavailable\n\nUnable to reach the live statutory consultation endpoints. Please verify network connectivity or review the active CBIC system status.",
+        content: isAdmin
+          ? `### ⚠️ Advisory Service Temporarily Unavailable\n\nAkshara could not complete the consultation with the configured AI provider.\n\n**Details:** \`${errDetail}\`\n\nAs a Super Admin, verify your provider credentials and endpoints in the Admin Cockpit:\n\n[**Manage AI Providers in Admin Cockpit ➔**](/admin?tab=llm)`
+          : "### ⚠️ Advisory Service Temporarily Unavailable\n\nAkshara Copilot is currently experiencing a temporary service interruption. Please try your inquiry again in a moment, or contact your system administrator if the issue persists.",
         timestamp: new Date().toISOString(),
         is_unresolvable_warning: true,
-        tool_calls_made: [
-          {
-            id: "tc_err_01",
-            tool_name: "gateway_dispatch_error",
-            endpoint: "POST /api/v1/akshara/chat",
-            summary: "Upstream gateway timeout or mock failure.",
-            parameters: {},
-            execution_time_ms: 0,
-            provenance: {
-              type: "UNAVAILABLE",
-              source: "ICEGATE / DGFT Gateway",
-            },
-          },
-        ],
-        unresolved_subclaims: [
-          "Real-time statutory valuation could not be verified due to endpoint error.",
-        ],
+        tool_calls_made: [],
+        unresolved_subclaims: [],
       };
       setMessages((prev) => [...prev, errorMsg]);
     }
@@ -141,11 +201,13 @@ export default function AksharaPage() {
     ]);
   };
 
+  const hasByokKey = Boolean(activeLlm && activeLlm.apiKey && activeLlm.apiKey.trim().length > 0);
+
   return (
     <AuthGuard>
       <AppShell>
         <div className="space-y-5 max-w-5xl mx-auto pb-16">
-          {/* Active Shared Context Bar */}
+          {/* Active Shared Context & Engine Bar */}
           <div className="bg-panel border border-line rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-3">
               <div className="w-7 h-7 rounded-md bg-blue-dim text-blue flex items-center justify-center shrink-0">
@@ -171,14 +233,66 @@ export default function AksharaPage() {
               </div>
             </div>
 
-            {/* Quick Actions & Navigation */}
-            <div className="flex items-center gap-2">
+            {/* Active AI Engine Badge & Navigation */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Active AI Engine Indicator */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono bg-bg border border-line shadow-3xs">
+                <Cpu className="w-3.5 h-3.5 text-blue shrink-0" />
+                {hasByokKey && activeLlm ? (
+                  isAdmin ? (
+                    <Link
+                      href="/admin?tab=llm"
+                      className="flex items-center gap-1.5 hover:text-blue transition-colors group"
+                      title="Super Admin: Click to manage AI in Admin Cockpit"
+                    >
+                      <span className="font-bold text-ink">{activeLlm.name}</span>
+                      <span className="text-muted/60">&bull;</span>
+                      <span className="text-blue font-bold truncate max-w-[140px]">
+                        {activeLlm.model}
+                      </span>
+                      <span className="text-[9px] bg-green-dim text-green font-bold px-1.5 py-0.5 rounded border border-green/30 tracking-wider">
+                        LIVE
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-ink">{activeLlm.name}</span>
+                      <span className="text-muted/60">&bull;</span>
+                      <span className="text-blue font-bold truncate max-w-[140px]">
+                        {activeLlm.model}
+                      </span>
+                      <span className="text-[9px] bg-green-dim text-green font-bold px-1.5 py-0.5 rounded border border-green/30 tracking-wider">
+                        LIVE
+                      </span>
+                    </div>
+                  )
+                ) : isAdmin ? (
+                  <Link
+                    href="/admin?tab=llm"
+                    className="text-muted hover:text-ink transition-colors flex items-center gap-1"
+                    title="Click to configure AI providers in Admin Cockpit"
+                  >
+                    <span>Statutory Engine</span>
+                    <span className="text-blue font-sans text-[10px] font-semibold underline ml-1">
+                      Configure AI (Admin)
+                    </span>
+                  </Link>
+                ) : (
+                  <span className="text-muted flex items-center gap-1">
+                    <span>Statutory Engine</span>
+                    <span className="text-[9px] bg-panel text-muted px-1.5 py-0.5 rounded border border-line ml-1">
+                      Enterprise Governed
+                    </span>
+                  </span>
+                )}
+              </div>
+
               <Link
                 href="/duty"
                 className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-bg hover:bg-line text-ink border border-line transition-colors"
               >
                 <Calculator className="w-3 h-3 text-blue" />
-                <span>Duty Calculator</span>
+                <span>Duty</span>
               </Link>
               <Link
                 href="/landed-cost"
@@ -186,13 +300,6 @@ export default function AksharaPage() {
               >
                 <Ship className="w-3 h-3 text-green" />
                 <span>Landed Cost</span>
-              </Link>
-              <Link
-                href="/compare"
-                className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-bg hover:bg-line text-ink border border-line transition-colors"
-              >
-                <Scale className="w-3 h-3 text-amber" />
-                <span>Compare</span>
               </Link>
               <button
                 type="button"
@@ -206,12 +313,12 @@ export default function AksharaPage() {
             </div>
           </div>
 
-
           {/* Chat Messages & Input Container */}
           <FeatureGate
             requiredTier="ENTERPRISE"
             featureName="Akshara AI Copilot"
             description="Access grounded trade intelligence with autonomous GIR classification, real-time customs gazette citations, and verified tool-call audit trails."
+            allowByok={hasByokKey}
           >
             <div className="space-y-4">
               <div className="bg-bg/40 border border-line rounded-2xl p-4 min-h-[460px] max-h-[640px] overflow-y-auto space-y-4 shadow-inner">
@@ -224,15 +331,13 @@ export default function AksharaPage() {
                 ))}
 
                 {isLoading && (
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-8 h-8 rounded-lg bg-blue text-white shrink-0 flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 animate-pulse" />
+                  <div className="flex items-center gap-3 p-4 bg-panel border border-line rounded-2xl animate-pulse">
+                    <div className="w-8 h-8 rounded-xl bg-blue/10 text-blue flex items-center justify-center shrink-0">
+                      <Sparkles className="w-4 h-4 animate-spin text-blue" />
                     </div>
-                    <div className="bg-panel border border-line px-3.5 py-2.5 rounded-xl rounded-tl-none shadow-xs">
-                      <div className="flex items-center gap-2 text-xs font-mono text-blue font-semibold">
-                        <div className="w-2 h-2 rounded-full bg-blue animate-ping" />
-                        <span>Analyzing trade regulations & tariffs...</span>
-                      </div>
+                    <div className="space-y-1.5 flex-1">
+                      <div className="h-3 bg-line/80 rounded w-1/3"></div>
+                      <div className="h-2 bg-line/50 rounded w-2/3"></div>
                     </div>
                   </div>
                 )}
@@ -240,12 +345,39 @@ export default function AksharaPage() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input Section */}
+              {!hasByokKey && (
+                <div className="p-3 bg-blue/5 border border-blue/20 rounded-xl text-xs flex flex-wrap items-center justify-between gap-3 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2 text-ink">
+                    <Info className="w-4 h-4 text-blue shrink-0" />
+                    <span>
+                      {isAdmin ? (
+                        <>
+                          <strong>Super Admin Notice:</strong> Enterprise AI model credentials are not yet configured. Set up API keys in the Admin Cockpit to enable live advisory.
+                        </>
+                      ) : (
+                        <>
+                          <strong>Notice:</strong> Akshara Copilot is operating in baseline statutory mode. Enterprise AI intelligence is managed centrally by your administrator.
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  {isAdmin && (
+                    <Link
+                      href="/admin?tab=llm"
+                      className="px-3 py-1.5 rounded-lg bg-blue hover:bg-blue-dark text-white text-xs font-semibold transition-colors shrink-0 shadow-xs flex items-center gap-1"
+                    >
+                      <span>Admin Cockpit</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  )}
+                </div>
+              )}
+
+              {/* Chat Input */}
               <ChatInput
                 onSendMessage={handleSendMessage}
                 isLoading={isLoading}
                 activeHs={currentContext.hsCode}
-                activeOrigin={currentContext.countryOfOrigin}
               />
             </div>
           </FeatureGate>
@@ -254,4 +386,3 @@ export default function AksharaPage() {
     </AuthGuard>
   );
 }
-

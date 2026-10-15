@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { useAppSelector } from "@/store";
 import { Tabs } from "@/components/ui/Tabs";
 import { StatusPill, ProvenanceBadge } from "@/components/ui";
-import { LlmProvidersSection } from "@/components/settings/LlmProvidersSection";
 import { CustomGatewaysSection } from "@/components/settings/CustomGatewaysSection";
 import { ContractRatesSection } from "@/components/settings/ContractRatesSection";
 import { PlatformKeysSection } from "@/components/settings/PlatformKeysSection";
@@ -23,11 +25,14 @@ import {
   ShieldCheck,
   Cpu,
   Layers,
+  Shield,
+  ArrowRight,
 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
 
 function SettingsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAppSelector((state) => state.auth);
   const tabParam = searchParams.get("tab")?.toLowerCase();
 
   const getInitialTab = () => {
@@ -39,11 +44,11 @@ function SettingsContent() {
     ) {
       return "billing";
     }
-    const validTabs = ["llm", "gateways", "contracts", "platform", "billing", "team"];
+    const validTabs = ["gateways", "contracts", "platform", "billing", "team"];
     if (tabParam && validTabs.includes(tabParam)) {
       return tabParam;
     }
-    return "llm";
+    return "gateways";
   };
 
   const [activeTab, setActiveTab] = useState<string>(getInitialTab);
@@ -57,21 +62,22 @@ function SettingsContent() {
       currentTab === "plans"
     ) {
       setActiveTab("billing");
+    } else if (currentTab === "llm" || currentTab === "ai") {
+      // AI/LLM configuration has moved to the Super Admin Cockpit
+      if (user?.role === "ADMIN") {
+        router.push("/admin?tab=llm");
+      } else {
+        setActiveTab("gateways");
+      }
     } else if (
       currentTab &&
-      ["llm", "gateways", "contracts", "platform", "billing", "team"].includes(currentTab)
+      ["gateways", "contracts", "platform", "billing", "team"].includes(currentTab)
     ) {
       setActiveTab(currentTab);
     }
-  }, [searchParams]);
+  }, [searchParams, user, router]);
 
   const tabsConfig = [
-    {
-      id: "llm",
-      label: "AI / LLM Providers",
-      icon: <Sparkles className="w-3.5 h-3.5 text-blue" />,
-      badge: "5",
-    },
     {
       id: "gateways",
       label: "Trade Gateways",
@@ -110,15 +116,25 @@ function SettingsContent() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
           <span className="text-[10px] font-mono uppercase text-muted block">
-            Active AI Engine
+            AI / LLM Orchestration
           </span>
           <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
             <Cpu className="w-3.5 h-3.5 text-blue" />
-            <span>Claude 3.5 Sonnet</span>
+            <span>Admin Cockpit</span>
           </div>
-          <span className="text-[10px] text-green font-mono block mt-0.5">
-            Latency: ~42ms
-          </span>
+          {user?.role === "ADMIN" ? (
+            <Link
+              href="/admin?tab=llm"
+              className="text-[10px] text-blue hover:underline font-mono inline-flex items-center gap-1 mt-0.5"
+            >
+              <span>Manage Models & Keys</span>
+              <ArrowRight className="w-2.5 h-2.5" />
+            </Link>
+          ) : (
+            <span className="text-[10px] text-muted font-mono block mt-0.5">
+              Centrally Governed by Admin
+            </span>
+          )}
         </div>
 
         <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
@@ -172,7 +188,6 @@ function SettingsContent() {
       </div>
 
       {/* Active Tab Content Panel */}
-      {activeTab === "llm" && <LlmProvidersSection />}
       {activeTab === "gateways" && <CustomGatewaysSection />}
       {activeTab === "contracts" && (
         <FeatureGate

@@ -466,10 +466,18 @@ export interface AksharaMessage {
   is_unresolvable_warning?: boolean;
 }
 
+export interface LlmConfigPayload {
+  provider?: string;
+  api_key?: string;
+  model?: string;
+  base_url?: string;
+}
+
 export interface AksharaRequest {
   message: string;
   conversation_id?: string;
   active_context?: Partial<MaterialContext>;
+  llm_config?: LlmConfigPayload;
 }
 
 export interface AksharaResponse {

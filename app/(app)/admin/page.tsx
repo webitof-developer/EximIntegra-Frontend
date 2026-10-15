@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAppSelector } from "@/store";
@@ -21,6 +22,7 @@ import {
   DynamicPricingTab,
   RolePermissionsTab,
 } from "./tabs";
+import { LlmProvidersSection } from "@/components/settings/LlmProvidersSection";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -30,12 +32,24 @@ import {
   RefreshCw,
   Sliders,
   CheckCircle2,
+  Cpu,
+  Sparkles,
 } from "lucide-react";
 
-export default function AdminPage() {
+function AdminPageContent() {
   const { user } = useAppSelector((state) => state.auth);
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "pricing" | "rbac">("overview");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"overview" | "users" | "pricing" | "rbac" | "llm">("overview");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab")?.toLowerCase();
+    if (tab === "llm" || tab === "ai") {
+      setActiveTab("llm");
+    } else if (tab && ["overview", "users", "pricing", "rbac", "llm"].includes(tab)) {
+      setActiveTab(tab as any);
+    }
+  }, [searchParams]);
 
   // RTK Query Hooks
   const {
@@ -205,6 +219,22 @@ export default function AdminPage() {
               <DollarSign className="w-3.5 h-3.5" />
               <span>Dynamic SaaS Pricing</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("llm")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === "llm"
+                  ? "bg-blue text-white shadow-xs"
+                  : "text-muted hover:text-ink hover:bg-bg"
+              }`}
+            >
+              <Cpu className="w-3.5 h-3.5" />
+              <span>AI / LLM Providers</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-blue-500/20 text-blue-300 font-bold border border-blue-400/30">
+                ADMIN ONLY
+              </span>
+            </button>
           </div>
 
           {/* Tab 1: Platform Metrics */}
@@ -243,6 +273,28 @@ export default function AdminPage() {
               showToast={showToast}
             />
           )}
+
+          {/* Tab 5: AI / LLM Providers (Admin Cockpit Governed) */}
+          {activeTab === "llm" && (
+            <div className="bg-panel border border-line rounded-2xl p-6 shadow-xs space-y-6">
+              <div className="space-y-1.5 pb-4 border-b border-line">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue font-bold uppercase tracking-wider inline-flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" />
+                    SUPER ADMIN AI ORCHESTRATION
+                  </span>
+                </div>
+                <h2 className="text-lg font-bold text-ink">
+                  Enterprise AI & LLM Engine Configuration
+                </h2>
+                <p className="text-xs text-muted max-w-2xl leading-relaxed">
+                  Centrally configure corporate AI credentials (Anthropic Claude, OpenAI, Google Gemini, Groq, Private vLLM), manage active model dropdowns, and set the global default copilot engine for Akshara across your organization.
+                </p>
+              </div>
+
+              <LlmProvidersSection />
+            </div>
+          )}
         </div>
 
         {/* Global Toast Notification */}
@@ -254,5 +306,19 @@ export default function AdminPage() {
         )}
       </AppShell>
     </AuthGuard>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[400px] text-xs font-mono text-muted">
+          Loading Admin Cockpit...
+        </div>
+      }
+    >
+      <AdminPageContent />
+    </Suspense>
   );
 }
