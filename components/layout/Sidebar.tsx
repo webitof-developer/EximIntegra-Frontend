@@ -152,7 +152,7 @@ const navSections: NavSection[] = [
       },
       {
         id: "settings",
-        title: "API Keys & BYOK",
+        title: "Settings & Integrations",
         href: "/settings",
         icon: <Settings className="w-4 h-4" />,
         glyph: "SET",

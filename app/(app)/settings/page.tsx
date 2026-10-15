@@ -15,18 +15,11 @@ import { SubscriptionBillingSection } from "@/components/settings/SubscriptionBi
 import { TeamWorkspaceSection } from "@/components/settings/TeamWorkspaceSection";
 import { FeatureGate } from "@/components/saas/FeatureGate";
 import {
-  Sparkles,
   Globe,
   Ship,
   Key,
   CreditCard,
   Users,
-  Sliders,
-  ShieldCheck,
-  Cpu,
-  Layers,
-  Shield,
-  ArrowRight,
 } from "lucide-react";
 
 function SettingsContent() {
@@ -113,30 +106,7 @@ function SettingsContent() {
   return (
     <div className="space-y-6 w-full pb-16">
       {/* Quick Status Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
-          <span className="text-[10px] font-mono uppercase text-muted block">
-            AI / LLM Orchestration
-          </span>
-          <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
-            <Cpu className="w-3.5 h-3.5 text-blue" />
-            <span>Admin Cockpit</span>
-          </div>
-          {user?.role === "ADMIN" ? (
-            <Link
-              href="/admin?tab=llm"
-              className="text-[10px] text-blue hover:underline font-mono inline-flex items-center gap-1 mt-0.5"
-            >
-              <span>Manage Models & Keys</span>
-              <ArrowRight className="w-2.5 h-2.5" />
-            </Link>
-          ) : (
-            <span className="text-[10px] text-muted font-mono block mt-0.5">
-              Centrally Governed by Admin
-            </span>
-          )}
-        </div>
-
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
           <span className="text-[10px] font-mono uppercase text-muted block">
             Customs Gateways

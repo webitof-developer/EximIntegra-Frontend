@@ -90,7 +90,7 @@ export function LandingFooter() {
               </li>
               <li>
                 <Link href="/settings" className="hover:text-ink transition-colors">
-                  API Keys & BYOK
+                  Settings & Integrations
                 </Link>
               </li>
               <li>

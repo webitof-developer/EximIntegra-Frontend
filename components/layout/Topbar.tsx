@@ -64,8 +64,8 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     description: "Isolated component library, design tokens, typography, and interactive state playground.",
   },
   "/settings": {
-    title: "API Keys & BYOK",
-    description: "Configure LLM provider credentials, gateway tokens, contract rates, and webhooks.",
+    title: "Settings & Integrations",
+    description: "Configure customs gateways, contract rates, platform API keys, subscription, and team members.",
   },
   "/notifications": {
     title: "Statutory Alerts & Notifications",
@@ -265,7 +265,7 @@ export function Topbar() {
                   className="flex items-center gap-2 px-3 py-2 text-xs text-ink hover:bg-bg rounded-lg transition-colors"
                 >
                   <Shield className="w-3.5 h-3.5 text-muted" />
-                  <span>Security & BYOK Settings</span>
+                  <span>Settings & Integrations</span>
                 </Link>
 
                 <button
