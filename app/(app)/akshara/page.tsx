@@ -6,11 +6,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setMaterialContext } from "@/store/contextSlice";
-import { useSendChatMessageMutation } from "@/store/aksharaApi";
+import { useSendChatMessageMutation, useGetConversationsQuery, AksharaConversationDetail } from "@/store/aksharaApi";
 import { useGetActiveLlmProviderQuery } from "@/store/adminApi";
 import { AksharaMessage, ContextUpdateAction } from "@/lib/types";
 import { ChatMessageItem } from "@/components/akshara/ChatMessageItem";
 import { ChatInput } from "@/components/akshara/ChatInput";
+import { ChatHistoryDrawer } from "@/components/akshara/ChatHistoryDrawer";
 import {
   Sparkles,
   ShieldCheck,
@@ -23,6 +24,8 @@ import {
   Database,
   Info,
   Cpu,
+  History,
+  Plus,
 } from "lucide-react";
 import { FeatureGate } from "@/components/saas/FeatureGate";
 
@@ -96,6 +99,9 @@ export default function AksharaPage() {
       unresolved_subclaims: [],
     },
   ]);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const { data: dbConversations } = useGetConversationsQuery();
+  const historyCount = dbConversations?.length || 0;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -200,17 +206,32 @@ export default function AksharaPage() {
     dispatch(setMaterialContext(action.payload));
   };
 
-  const handleClearHistory = () => {
-    setConversationId(`conv_${Date.now()}`);
+  const handleStartNewChat = () => {
+    const newId = `conv_${Date.now()}`;
+    setConversationId(newId);
     setMessages([
       {
-        id: "msg_reset",
+        id: "msg_welcome",
         role: "assistant",
         content:
-          "Conversation history has been reset. All active context remains loaded in your session. What would you like to evaluate?",
+          "### Welcome to Akshara\n\nI am your AI Trade & Customs Advisory Copilot. Ask me about HS classification, customs duties, preferential trade agreements (CEPA/FTAs), or import compliance.",
         timestamp: new Date().toISOString(),
+        tool_calls_made: [],
+        unresolved_subclaims: [],
       },
     ]);
+  };
+
+  const handleSelectConversation = (detail: AksharaConversationDetail) => {
+    setConversationId(detail.id);
+    setMessages(detail.messages || []);
+    if (detail.activeContext) {
+      dispatch(setMaterialContext(detail.activeContext));
+    }
+  };
+
+  const handleClearHistory = () => {
+    handleStartNewChat();
   };
 
   const clientEngine =
@@ -304,6 +325,31 @@ export default function AksharaPage() {
                 )}
               </div>
 
+              <button
+                type="button"
+                onClick={handleStartNewChat}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold bg-blue hover:bg-blue-dark text-white border border-blue shadow-xs transition-colors cursor-pointer"
+                title="Start a fresh AI trade consultation"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>New Chat</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsHistoryOpen(true)}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-bg hover:bg-line text-ink border border-line transition-colors cursor-pointer"
+                title="View previous consultations date-wise"
+              >
+                <History className="w-3.5 h-3.5 text-blue" />
+                <span>History</span>
+                {historyCount > 0 && (
+                  <span className="text-[9px] font-mono bg-blue-dim text-blue px-1.5 py-0.2 rounded-full font-bold ml-0.5">
+                    {historyCount}
+                  </span>
+                )}
+              </button>
+
               <Link
                 href="/duty"
                 className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-bg hover:bg-line text-ink border border-line transition-colors"
@@ -320,7 +366,7 @@ export default function AksharaPage() {
               </Link>
               <button
                 type="button"
-                onClick={handleClearHistory}
+                onClick={handleStartNewChat}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-bg hover:bg-line text-muted hover:text-ink border border-line transition-colors cursor-pointer"
                 title="Reset active chat session"
               >
@@ -398,6 +444,34 @@ export default function AksharaPage() {
             </div>
           </FeatureGate>
         </div>
+
+        {/* Attached History Tab Button on Screen's Right Center */}
+        <button
+          type="button"
+          onClick={() => setIsHistoryOpen(true)}
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-2 py-3 px-2.5 sm:px-3.5 bg-panel border-l-2 border-y border-l-blue border-y-line rounded-l-xl shadow-2xl hover:bg-bg/95 transition-all text-xs font-semibold text-ink group cursor-pointer hover:pl-4 border-r-0"
+          title="Consultation History (Click to view past sessions date-wise)"
+          aria-label="Open consultation history side panel"
+        >
+          <History className="w-4 h-4 text-blue group-hover:scale-110 group-hover:rotate-[-20deg] transition-all" />
+          <span className="hidden md:inline font-mono tracking-wider text-[11px] font-bold text-ink">
+            History
+          </span>
+          {historyCount > 0 && (
+            <span className="bg-blue-dim text-blue text-[10px] font-mono px-1.5 py-0.5 rounded-full font-bold border border-blue/30 shadow-3xs">
+              {historyCount}
+            </span>
+          )}
+        </button>
+
+        {/* Slide-in Chat History Side Panel */}
+        <ChatHistoryDrawer
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          activeConversationId={conversationId}
+          onSelectConversation={handleSelectConversation}
+          onNewChat={handleStartNewChat}
+        />
       </AppShell>
     </AuthGuard>
   );

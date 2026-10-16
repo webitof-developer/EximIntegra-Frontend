@@ -492,6 +492,15 @@ export interface AksharaResponse {
   is_unresolvable_warning?: boolean;
 }
 
+export interface AksharaSession {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: AksharaMessage[];
+  context?: Partial<MaterialContext>;
+}
+
 /* Phase 7: History & Data Provenance Types (§7) */
 export interface DatasetVersion {
   id: string;
