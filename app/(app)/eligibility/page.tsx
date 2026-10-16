@@ -10,7 +10,7 @@ import {
   useGetCountriesQuery,
 } from "@/store/eligibilityApi";
 import { SchemeEligibilityView } from "@/components/eligibility/SchemeEligibilityView";
-import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert } from "@/components/ui";
+import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert, CustomDropdown } from "@/components/ui";
 import { formatHsCode } from "@/lib/formatters";
 import {
   FileCheck,
@@ -88,8 +88,8 @@ function EligibilityContent() {
               </div>
             </div>
 
-            {/* Direction Toggle & Origin Selector & Search Input - All in One Line */}
-            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-nowrap overflow-x-auto max-w-full">
+            {/* Direction Toggle & Origin Selector & Search Input */}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap max-w-full">
               {/* Direction Toggle */}
               <div className="flex items-center bg-bg border border-line rounded-lg p-0.5 text-xs font-mono font-semibold shrink-0">
                 <button
@@ -119,18 +119,21 @@ function EligibilityContent() {
               {/* Origin Country Selector */}
               <div className="flex items-center gap-1.5 text-xs shrink-0">
                 <Globe className="w-3.5 h-3.5 text-muted shrink-0" />
-                <select
+                <CustomDropdown
                   value={selectedOrigin}
-                  onChange={(e) => setSelectedOrigin(e.target.value)}
-                  className="py-1.5 px-2 bg-bg border border-line rounded-lg text-ink font-semibold focus:outline-none focus:border-blue cursor-pointer text-xs max-w-[140px] sm:max-w-[170px] truncate"
-                >
-                  <option value="">All Partner Origins</option>
-                  {countries?.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.flag} {c.code} - {c.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedOrigin(val)}
+                  options={[
+                    { value: "", label: "All Partner Origins" },
+                    ...(countries || []).map((c) => ({
+                      value: c.code,
+                      label: `${c.code} - ${c.name}`,
+                    })),
+                  ]}
+                  size="sm"
+                  searchable
+                  searchPlaceholder="Search origin country..."
+                  className="w-48 sm:w-60"
+                />
               </div>
 
               {/* HS Search Form */}

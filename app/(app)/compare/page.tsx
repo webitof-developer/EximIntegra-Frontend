@@ -12,7 +12,7 @@ import {
   useGetBenchmarkPriceQuery,
 } from "@/store/eligibilityApi";
 import { CountryComparisonMatrix } from "@/components/compare/CountryComparisonMatrix";
-import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert } from "@/components/ui";
+import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert, CustomDropdown } from "@/components/ui";
 import { formatHsCode } from "@/lib/formatters";
 import {
   CountryComparisonResponse,
@@ -32,6 +32,8 @@ import {
   Lightbulb,
   AlertCircle,
   HelpCircle,
+  SlidersHorizontal,
+  Search,
 } from "lucide-react";
 
 const DEFAULT_COUNTRIES: CountryOption[] = [
@@ -156,7 +158,7 @@ function CompareContent() {
   const [activeHs, setActiveHs] = useState<string>(initialHs);
   const [searchHsInput, setSearchHsInput] = useState<string>(initialHs);
 
-  const [quantity, setQuantity] = useState<number>(currentContext.quantity || 100);
+  const [quantity, setQuantity] = useState<number | string>(currentContext.quantity || 100);
   const [unit, setUnit] = useState<string>(currentContext.unit || "MT");
   const [currency, setCurrency] = useState<string>(currentContext.currency || "USD");
 
@@ -222,10 +224,12 @@ function CompareContent() {
         };
       });
 
+      const numQuantity = typeof quantity === "number" ? quantity : parseFloat(String(quantity)) || 100;
+
       const res = await compareCountries({
         hs_code: hsToCompare,
         currency,
-        quantity,
+        quantity: numQuantity,
         unit,
         baseline_origin: baselineToCompare,
         origins: originsPayload,
@@ -374,7 +378,22 @@ function CompareContent() {
                 <input
                   type="number"
                   value={quantity}
-                  onChange={(e) => setQuantity(parseFloat(e.target.value) || 100)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "") {
+                      setQuantity("");
+                    } else {
+                      const num = parseFloat(val);
+                      setQuantity(isNaN(num) ? "" : num);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (quantity === "" || Number(quantity) <= 0) {
+                      setQuantity(100);
+                    }
+                  }}
+                  placeholder="e.g. 100"
+                  min="1"
                   className="w-full py-2 px-3 text-sm bg-bg border border-line rounded-lg font-mono font-bold text-ink focus:outline-none focus:border-blue"
                 />
               </div>
@@ -382,15 +401,16 @@ function CompareContent() {
                 <label className="text-xs font-mono font-bold text-ink uppercase block mb-1">
                   Unit:
                 </label>
-                <select
+                <CustomDropdown
                   value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
-                  className="w-full py-2 px-3 text-sm bg-bg border border-line rounded-lg font-mono font-bold text-ink focus:outline-none focus:border-blue cursor-pointer"
-                >
-                  <option value="MT">MT (Metric Ton)</option>
-                  <option value="PCS">PCS (Pieces / Units)</option>
-                  <option value="KG">KG (Kilograms)</option>
-                </select>
+                  onChange={(val) => setUnit(val)}
+                  options={[
+                    { value: "MT", label: "MT (Metric Ton)" },
+                    { value: "PCS", label: "PCS (Pieces / Units)" },
+                    { value: "KG", label: "KG (Kilograms)" },
+                  ]}
+                  size="md"
+                />
               </div>
             </div>
 
@@ -410,66 +430,117 @@ function CompareContent() {
   return (
     <div className="space-y-6 pb-16">
       {/* HS Lookup and Country Selection Toolbar */}
-      <div className="p-4 bg-panel border border-line rounded-xl shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
-            <div className="text-xs">
-              <span className="text-muted uppercase text-[10px] font-mono block">Tariff Code:</span>
-              <input
-                type="text"
-                value={searchHsInput}
-                onChange={(e) => setSearchHsInput(e.target.value)}
-                placeholder="HS Code (e.g. 7204.49.00)"
-                className="py-1 px-2 text-xs bg-bg border border-line rounded font-mono font-bold text-ink w-36 focus:outline-none focus:border-blue"
-              />
-            </div>
-            <button
-              type="submit"
-              className="mt-3.5 px-2.5 py-1 bg-blue hover:bg-blue-dark text-white rounded text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
-            >
-              Update
-            </button>
-          </form>
+      <div className="bg-panel border border-line rounded-2xl shadow-xs relative">
+        {/* Top Header Row: Tariff Search, Status & Actions */}
+        <div className="p-4 flex flex-wrap items-center justify-between gap-3 border-b border-line/60 bg-panel rounded-t-2xl">
+          <div className="flex items-center gap-3 flex-wrap">
+            <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+              <div className="relative flex items-center">
+                <Search className="w-3.5 h-3.5 text-muted absolute left-2.5 pointer-events-none" />
+                <input
+                  type="text"
+                  value={searchHsInput}
+                  onChange={(e) => setSearchHsInput(e.target.value)}
+                  placeholder="HS Code (e.g. 7204.49.00)"
+                  className="py-1.5 pl-8 pr-2.5 text-xs bg-bg border border-line rounded-lg font-mono font-bold text-ink w-44 focus:outline-none focus:border-blue shadow-3xs"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-3 py-1.5 bg-blue hover:bg-blue-dark text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer shrink-0"
+              >
+                Update
+              </button>
+            </form>
 
-          <div className="mt-3">
-            {comparisonResult?.coverage === "NOT_COVERED" ? (
-              <StatusPill label="NOT COVERED" variant="neutral" size="xs" />
-            ) : (
-              <StatusPill
-                label={comparisonResult?.comparisons?.[0]?.provenance?.type || "LIVE"}
-                variant={comparisonResult?.comparisons?.[0]?.provenance?.type === "LIVE" ? "success" : "warning"}
-                size="xs"
-                dot
-              />
-            )}
+            <div className="flex items-center gap-2">
+              {comparisonResult?.coverage === "NOT_COVERED" ? (
+                <StatusPill label="NOT COVERED" variant="neutral" size="xs" />
+              ) : (
+                <StatusPill
+                  label={comparisonResult?.comparisons?.[0]?.provenance?.type || "LIVE"}
+                  variant={comparisonResult?.comparisons?.[0]?.provenance?.type === "LIVE" ? "success" : "warning"}
+                  size="xs"
+                  dot
+                />
+              )}
+
+              {activeHs && (
+                <span className="text-xs font-mono text-muted hidden sm:inline">
+                  Tariff: <strong className="text-ink">{formatHsCode(activeHs)}</strong>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowCostInputs(!showCostInputs)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-3xs ${
+                showCostInputs
+                  ? "bg-ink text-white border-ink"
+                  : "bg-bg text-muted border-line hover:text-ink hover:bg-line/40"
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              <span>{showCostInputs ? "Hide Pricing" : "Adjust Pricing & Freight"}</span>
+            </button>
+
+            {/* Save & Alert Action (Phase 6.9) */}
+            <button
+              type="button"
+              onClick={handleSaveAndAlert}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-3xs ${
+                alertActive
+                  ? "bg-green-dim text-green border-green/30"
+                  : "bg-bg text-muted border-line hover:text-ink hover:bg-line/40"
+              }`}
+              title="Save comparison and get alerted when bilateral tariffs or freight change"
+            >
+              <BellRing className="w-3.5 h-3.5" />
+              <span>{alertActive ? "Alert Active" : "Save & Alert"}</span>
+            </button>
           </div>
         </div>
 
-        {/* Multi-Country Toggle Buttons & Baseline Origin */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold text-muted uppercase">Baseline:</span>
-            <select
+        {/* Lower Row: Baseline Origin & Compared Trade Corridors */}
+        <div className="p-3.5 sm:p-4 bg-bg/40 flex flex-col xl:flex-row xl:items-center justify-between gap-3 sm:gap-4 rounded-b-2xl relative z-10">
+          {/* Baseline Benchmark Dropdown */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            <span className="text-[11px] font-mono font-bold text-muted uppercase tracking-wider shrink-0 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-blue" />
+              Baseline Origin:
+            </span>
+            <CustomDropdown
               value={baselineOrigin}
-              onChange={(e) => {
-                setBaselineOrigin(e.target.value);
-                scheduleComparison(activeHs, selectedCountries, e.target.value, originCosts);
+              onChange={(val) => {
+                setBaselineOrigin(val);
+                scheduleComparison(activeHs, selectedCountries, val, originCosts);
               }}
-              className="py-1 px-2 text-xs bg-bg border border-line rounded font-mono font-semibold text-ink focus:outline-none focus:border-blue cursor-pointer"
-            >
-              {selectedCountries.map((c) => {
+              options={selectedCountries.map((c) => {
                 const opt = countries.find((o) => o.code === c);
-                return (
-                  <option key={c} value={c}>
-                    {opt?.flag || ""} {c} ({opt?.name || c})
-                  </option>
-                );
+                return {
+                  value: c,
+                  label: `${c} - ${opt?.name || c}`,
+                };
               })}
-            </select>
+              size="sm"
+              className="w-56 sm:w-64 relative z-30"
+            />
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold text-muted uppercase">Origins:</span>
+          {/* Compared Trade Partner Origin Pills */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 xl:justify-end">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[11px] font-mono font-bold text-muted uppercase tracking-wider">
+                Compare Origins:
+              </span>
+              <span className="text-[10px] font-mono bg-bg text-muted px-1.5 py-0.5 rounded border border-line">
+                {selectedCountries.length}/6 selected
+              </span>
+            </div>
+
             <div className="flex flex-wrap items-center gap-1.5">
               {countries.map((opt) => {
                 const isSelected = selectedCountries.includes(opt.code);
@@ -478,49 +549,20 @@ function CompareContent() {
                     key={opt.code}
                     type="button"
                     onClick={() => toggleCountry(opt.code)}
-                    title={opt.name}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer select-none ${
+                    title={`${opt.name} (${opt.code})`}
+                    className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer select-none shadow-3xs ${
                       isSelected
-                        ? "bg-blue-dim text-blue border-blue/30 shadow-xs"
-                        : "bg-bg text-muted border-line hover:text-ink hover:bg-line/40"
+                        ? "bg-blue-dim text-blue border-blue/40 shadow-xs ring-1 ring-blue/20"
+                        : "bg-panel text-muted border-line hover:text-ink hover:bg-bg hover:border-line"
                     }`}
                   >
-                    <span>{opt.flag}</span>
+                    <span>{opt.flag || "🌐"}</span>
                     <span>{opt.code}</span>
-                    {isSelected && <Check className="w-3 h-3 text-blue" />}
+                    {isSelected && <Check className="w-3 h-3 text-blue ml-0.5" />}
                   </button>
                 );
               })}
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowCostInputs(!showCostInputs)}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
-                showCostInputs
-                  ? "bg-ink text-white border-ink"
-                  : "bg-bg text-muted border-line hover:text-ink hover:bg-line/30"
-              }`}
-            >
-              {showCostInputs ? "Hide Pricing" : "Adjust Pricing & Freight"}
-            </button>
-
-            {/* Save & Alert Action (Phase 6.9) */}
-            <button
-              type="button"
-              onClick={handleSaveAndAlert}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer shrink-0 ${
-                alertActive
-                  ? "bg-green-dim text-green border-green/30"
-                  : "bg-bg text-muted border-line hover:text-ink hover:bg-line/30"
-              }`}
-              title="Save comparison and get alerted when bilateral tariffs or freight change"
-            >
-              <BellRing className="w-3.5 h-3.5" />
-              <span>{alertActive ? "Alert Active" : "Save & Alert"}</span>
-            </button>
           </div>
         </div>
       </div>
@@ -558,7 +600,7 @@ function CompareContent() {
                   cost={cost}
                   isBaseline={code === baselineOrigin}
                   activeHs={activeHs}
-                  quantity={quantity}
+                  quantity={typeof quantity === "number" ? quantity : parseFloat(String(quantity)) || 100}
                   unit={unit}
                   onChange={(field, val) => handleCostChange(code, field, val)}
                 />
