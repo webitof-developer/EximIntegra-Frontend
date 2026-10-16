@@ -73,9 +73,78 @@ export const adminApi = api.injectEndpoints({
       }),
       invalidatesTags: ["RBAC", "Auth"],
     }),
+    getLlmProviders: builder.query<LlmProviderConfigItem[], void>({
+      query: () => "/settings/llm-providers",
+      providesTags: ["LlmProviders"],
+    }),
+    getActiveLlmProvider: builder.query<{
+      id?: string;
+      name?: string;
+      model?: string;
+      baseUrl?: string;
+      isConfigured?: boolean;
+      isActiveCopilot?: boolean;
+    }, void>({
+      query: () => "/settings/llm-providers/active",
+      providesTags: ["LlmProviders"],
+    }),
+    updateLlmProvider: builder.mutation<
+      LlmProviderConfigItem,
+      UpdateLlmProviderPayload
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/settings/llm-providers/${id}`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["LlmProviders"],
+    }),
+    bulkUpdateLlmProviders: builder.mutation<
+      LlmProviderConfigItem[],
+      { providers: UpdateLlmProviderPayload[] }
+    >({
+      query: (body) => ({
+        url: "/settings/llm-providers",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["LlmProviders"],
+    }),
+    testLlmProvider: builder.mutation<
+      { status: string; latencyMs: number; message: string },
+      string
+    >({
+      query: (providerId) => ({
+        url: `/settings/llm-providers/${providerId}/test`,
+        method: "POST",
+      }),
+    }),
   }),
   overrideExisting: false,
 });
+
+export interface LlmProviderConfigItem {
+  id: string;
+  name: string;
+  badge?: string;
+  defaultModel: string;
+  models: string[];
+  keyPrefix: string;
+  apiKey: string;
+  baseUrl: string;
+  isConfigured: boolean;
+  isActiveCopilot: boolean;
+}
+
+export interface UpdateLlmProviderPayload {
+  id: string;
+  name?: string;
+  apiKey?: string;
+  defaultModel?: string;
+  models?: string[];
+  baseUrl?: string;
+  isActiveCopilot?: boolean;
+}
 
 export const {
   useGetAdminStatsQuery,
@@ -86,5 +155,10 @@ export const {
   useUpdatePricingPlansMutation,
   useGetRBACMatrixQuery,
   useUpdateRBACMatrixMutation,
+  useGetLlmProvidersQuery,
+  useGetActiveLlmProviderQuery,
+  useUpdateLlmProviderMutation,
+  useBulkUpdateLlmProvidersMutation,
+  useTestLlmProviderMutation,
 } = adminApi;
 

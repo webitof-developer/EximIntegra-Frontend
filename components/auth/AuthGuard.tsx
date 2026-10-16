@@ -27,9 +27,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, isInitialized, user } = useAppSelector((state) => state.auth);
+  const [mounted, setMounted] = React.useState(false);
 
-  useEffect(() => {
-    if (!isInitialized) return;
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!mounted || !isInitialized) return;
 
     const isAuthRoute = pathname === "/login" || pathname === "/register";
 
@@ -38,9 +43,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
     } else if (isAuthenticated && isAuthRoute) {
       router.replace("/dashboard");
     }
-  }, [isAuthenticated, isInitialized, pathname, router]);
+  }, [isAuthenticated, isInitialized, mounted, pathname, router]);
 
-  if (!isInitialized) {
+  if (!mounted || !isInitialized) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">

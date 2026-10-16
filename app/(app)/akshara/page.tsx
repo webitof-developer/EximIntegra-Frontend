@@ -7,6 +7,7 @@ import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setMaterialContext } from "@/store/contextSlice";
 import { useSendChatMessageMutation } from "@/store/aksharaApi";
+import { useGetActiveLlmProviderQuery } from "@/store/adminApi";
 import { AksharaMessage, ContextUpdateAction } from "@/lib/types";
 import { ChatMessageItem } from "@/components/akshara/ChatMessageItem";
 import { ChatInput } from "@/components/akshara/ChatInput";
@@ -80,6 +81,7 @@ export default function AksharaPage() {
   const isAdmin = user?.role === "ADMIN";
   const currentContext = useAppSelector((state) => state.context.current);
   const [sendChatMessage, { isLoading }] = useSendChatMessageMutation();
+  const { data: dbActiveLlm } = useGetActiveLlmProviderQuery();
 
   const [activeLlm, setActiveLlm] = useState<ActiveLlmInfo | null>(null);
   const [conversationId, setConversationId] = useState<string>(() => `conv_${Date.now()}`);
@@ -115,6 +117,11 @@ export default function AksharaPage() {
       setActiveLlm(currentActiveLlm);
     }
 
+    const isClientConfigured = Boolean(
+      currentActiveLlm && currentActiveLlm.apiKey && currentActiveLlm.apiKey.trim().length > 0
+    );
+    const isDbConfigured = Boolean(dbActiveLlm && dbActiveLlm.isConfigured);
+
     const userMsg: AksharaMessage = {
       id: `user_${Date.now()}`,
       role: "user",
@@ -124,13 +131,13 @@ export default function AksharaPage() {
 
     setMessages((prev) => [...prev, userMsg]);
 
-    // If API key is not configured, inform user with a clean, normal message
-    if (!currentActiveLlm || !currentActiveLlm.apiKey || !currentActiveLlm.apiKey.trim()) {
+    // If neither DB nor client storage has a configured active provider, alert user
+    if (!isClientConfigured && !isDbConfigured) {
       const unconfiguredMsg: AksharaMessage = {
         id: `asst_unconfigured_${Date.now()}`,
         role: "assistant",
         content: isAdmin
-          ? "### ⚠️ AI Advisory Engine Unconfigured\n\nNo active AI model credentials have been configured for the platform.\n\nAs a Super Admin, you can set up corporate API keys and select the active AI model in the Admin Cockpit:\n\n[**Configure AI in Admin Cockpit ➔**](/admin?tab=llm)"
+          ? "### ⚠️ AI Advisory Engine Unconfigured\n\nNo active AI model credentials have been configured for the platform.\n\nAs a Super Admin, you can set up corporate API keys and select the active AI model in the Admin Cockpit to store permanently in the database:\n\n[**Configure AI in Admin Cockpit ➔**](/admin?tab=llm)"
           : "### ⚠️ Advisory Service Currently Unavailable\n\nAkshara AI trade advisory is currently unavailable because the enterprise AI copilot engine has not been configured. Please contact your platform administrator.",
         timestamp: new Date().toISOString(),
         tool_calls_made: [],
@@ -142,17 +149,22 @@ export default function AksharaPage() {
     }
 
     try {
-      const response = await sendChatMessage({
+      const payload: any = {
         message: text,
         conversation_id: conversationId,
         active_context: currentContext,
-        llm_config: {
+      };
+
+      if (isClientConfigured && currentActiveLlm) {
+        payload.llm_config = {
           provider: currentActiveLlm.id,
           api_key: currentActiveLlm.apiKey,
           model: currentActiveLlm.model,
           base_url: currentActiveLlm.baseUrl,
-        },
-      }).unwrap();
+        };
+      }
+
+      const response = await sendChatMessage(payload).unwrap();
 
       const assistantMsg: AksharaMessage = {
         id: response.message_id || `asst_${Date.now()}`,
@@ -201,7 +213,12 @@ export default function AksharaPage() {
     ]);
   };
 
-  const isLlmConfigured = Boolean(activeLlm && activeLlm.apiKey && activeLlm.apiKey.trim().length > 0);
+  const clientEngine =
+    activeLlm && activeLlm.apiKey && activeLlm.apiKey.trim().length > 0 ? activeLlm : null;
+  const dbEngine = dbActiveLlm && dbActiveLlm.isConfigured ? dbActiveLlm : null;
+  const isLlmConfigured = Boolean(clientEngine || dbEngine);
+  const activeEngineName = clientEngine?.name || dbEngine?.name || "AI Advisory Engine";
+  const activeEngineModel = clientEngine?.model || dbEngine?.model || "Active Model";
 
   return (
     <AuthGuard>
@@ -238,17 +255,17 @@ export default function AksharaPage() {
               {/* Active AI Engine Indicator */}
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono bg-bg border border-line shadow-3xs">
                 <Cpu className="w-3.5 h-3.5 text-blue shrink-0" />
-                {isLlmConfigured && activeLlm ? (
+                {isLlmConfigured ? (
                   isAdmin ? (
                     <Link
                       href="/admin?tab=llm"
                       className="flex items-center gap-1.5 hover:text-blue transition-colors group"
                       title="Super Admin: Click to manage AI in Admin Cockpit"
                     >
-                      <span className="font-bold text-ink">{activeLlm.name}</span>
+                      <span className="font-bold text-ink">{activeEngineName}</span>
                       <span className="text-muted/60">&bull;</span>
                       <span className="text-blue font-bold truncate max-w-[140px]">
-                        {activeLlm.model}
+                        {activeEngineModel}
                       </span>
                       <span className="text-[9px] bg-green-dim text-green font-bold px-1.5 py-0.5 rounded border border-green/30 tracking-wider">
                         LIVE
@@ -256,10 +273,10 @@ export default function AksharaPage() {
                     </Link>
                   ) : (
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-ink">{activeLlm.name}</span>
+                      <span className="font-bold text-ink">{activeEngineName}</span>
                       <span className="text-muted/60">&bull;</span>
                       <span className="text-blue font-bold truncate max-w-[140px]">
-                        {activeLlm.model}
+                        {activeEngineModel}
                       </span>
                       <span className="text-[9px] bg-green-dim text-green font-bold px-1.5 py-0.5 rounded border border-green/30 tracking-wider">
                         LIVE

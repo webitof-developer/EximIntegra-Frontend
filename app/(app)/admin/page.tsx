@@ -89,40 +89,37 @@ function AdminPageContent() {
   // Guard against non-admin users
   if (user && user.role !== "ADMIN") {
     return (
-      <AuthGuard>
-        <AppShell>
-          <div className="min-h-[70vh] flex items-center justify-center p-6">
-            <div className="max-w-md w-full bg-panel border border-red/30 rounded-2xl p-8 text-center space-y-5 shadow-lg">
-              <div className="w-14 h-14 rounded-2xl bg-red/10 border border-red/20 text-red flex items-center justify-center mx-auto">
-                <ShieldAlert className="w-7 h-7" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-ink">Super Admin Authority Required</h2>
-                <p className="text-xs text-muted leading-relaxed">
-                  The Admin Command Center is reserved strictly for designated EximIntegra
-                  platform super administrators. Your account (<span className="font-mono">{user.email}</span>)
-                  is registered under role <span className="font-semibold text-ink font-mono">{user.role}</span>.
-                </p>
-              </div>
-              <div className="pt-2">
-                <Link
-                  href="/dashboard"
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-semibold shadow-xs transition-colors"
-                >
-                  Return to Trade Dashboard
-                </Link>
-              </div>
+      <AppShell>
+        <div className="min-h-[70vh] flex items-center justify-center p-6">
+          <div className="max-w-md w-full bg-panel border border-red/30 rounded-2xl p-8 text-center space-y-5 shadow-lg">
+            <div className="w-14 h-14 rounded-2xl bg-red/10 border border-red/20 text-red flex items-center justify-center mx-auto">
+              <ShieldAlert className="w-7 h-7" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-ink">Super Admin Authority Required</h2>
+              <p className="text-xs text-muted leading-relaxed">
+                The Admin Command Center is reserved strictly for designated EximIntegra
+                platform super administrators. Your account (<span className="font-mono">{user.email}</span>)
+                is registered under role <span className="font-semibold text-ink font-mono">{user.role}</span>.
+              </p>
+            </div>
+            <div className="pt-2">
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-semibold shadow-xs transition-colors"
+              >
+                Return to Trade Dashboard
+              </Link>
             </div>
           </div>
-        </AppShell>
-      </AuthGuard>
+        </div>
+      </AppShell>
     );
   }
 
   return (
-    <AuthGuard>
-      <AppShell>
-        <div className="max-w-7xl mx-auto space-y-6">
+    <AppShell>
+      <div className="max-w-7xl mx-auto space-y-6">
           {/* Header Banner */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-panel border border-line rounded-2xl shadow-xs">
             <div className="space-y-1.5">
@@ -305,20 +302,21 @@ function AdminPageContent() {
           </div>
         )}
       </AppShell>
-    </AuthGuard>
   );
 }
 
 export default function AdminPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-[400px] text-xs font-mono text-muted">
-          Loading Admin Cockpit...
-        </div>
-      }
-    >
-      <AdminPageContent />
-    </Suspense>
+    <AuthGuard>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center min-h-[400px] text-xs font-mono text-muted">
+            Loading Admin Cockpit...
+          </div>
+        }
+      >
+        <AdminPageContent />
+      </Suspense>
+    </AuthGuard>
   );
 }

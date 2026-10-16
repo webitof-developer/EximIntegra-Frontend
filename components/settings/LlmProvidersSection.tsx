@@ -22,6 +22,12 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
+import {
+  useGetLlmProvidersQuery,
+  useUpdateLlmProviderMutation,
+  useBulkUpdateLlmProvidersMutation,
+  useTestLlmProviderMutation,
+} from "@/store/adminApi";
 
 interface LlmProviderConfig {
   id: string;
@@ -108,6 +114,11 @@ const initialProviders: LlmProviderConfig[] = [
 ];
 
 export function LlmProvidersSection() {
+  const { data: dbProviders, isLoading: isLoadingDb } = useGetLlmProvidersQuery();
+  const [updateLlmProviderMutation, { isLoading: isUpdatingDb }] = useUpdateLlmProviderMutation();
+  const [bulkUpdateLlmProvidersMutation] = useBulkUpdateLlmProvidersMutation();
+  const [testLlmProviderMutation] = useTestLlmProviderMutation();
+
   const [providers, setProviders] = useState<LlmProviderConfig[]>(initialProviders);
   const [showKeyMap, setShowKeyMap] = useState<Record<string, boolean>>({});
   const [savedNotification, setSavedNotification] = useState<{
@@ -135,45 +146,67 @@ export function LlmProvidersSection() {
     setMounted(true);
   }, []);
 
-  // Hydrate from localStorage on client mount
+  // Hydrate from PostgreSQL database when query resolves
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setProviders((prev) =>
-            prev.map((initP) => {
-              const savedP = parsed.find((p: any) => p.id === initP.id);
-              if (savedP) {
-                return {
-                  ...initP,
-                  apiKey: savedP.apiKey !== undefined ? savedP.apiKey : initP.apiKey,
-                  baseUrl: savedP.baseUrl || initP.baseUrl,
-                  defaultModel: savedP.defaultModel || initP.defaultModel,
-                  models:
-                    Array.isArray(savedP.models) && savedP.models.length > 0
-                      ? Array.from(new Set([...savedP.models, ...initP.models]))
-                      : initP.models,
-                  isConfigured:
-                    savedP.isConfigured !== undefined
-                      ? savedP.isConfigured
-                      : initP.isConfigured,
-                  isActiveCopilot:
-                    savedP.isActiveCopilot !== undefined
-                      ? savedP.isActiveCopilot
-                      : initP.isActiveCopilot,
-                };
-              }
-              return initP;
-            })
-          );
+    if (dbProviders && Array.isArray(dbProviders) && dbProviders.length > 0) {
+      setProviders((prev) =>
+        prev.map((initP) => {
+          const dbP = dbProviders.find((p) => p.id === initP.id);
+          if (dbP) {
+            return {
+              ...initP,
+              name: dbP.name || initP.name,
+              apiKey: dbP.apiKey !== undefined ? dbP.apiKey : initP.apiKey,
+              baseUrl: dbP.baseUrl || initP.baseUrl,
+              defaultModel: dbP.defaultModel || initP.defaultModel,
+              models:
+                Array.isArray(dbP.models) && dbP.models.length > 0
+                  ? Array.from(new Set([...dbP.models, ...initP.models]))
+                  : initP.models,
+              isConfigured: dbP.isConfigured,
+              isActiveCopilot: dbP.isActiveCopilot,
+            };
+          }
+          return initP;
+        })
+      );
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dbProviders));
+      } catch (e) {}
+    } else {
+      // Local cache fallback on initial load before DB returns
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProviders((prev) =>
+              prev.map((initP) => {
+                const savedP = parsed.find((p: any) => p.id === initP.id);
+                if (savedP) {
+                  return {
+                    ...initP,
+                    apiKey: savedP.apiKey !== undefined ? savedP.apiKey : initP.apiKey,
+                    baseUrl: savedP.baseUrl || initP.baseUrl,
+                    defaultModel: savedP.defaultModel || initP.defaultModel,
+                    models:
+                      Array.isArray(savedP.models) && savedP.models.length > 0
+                        ? Array.from(new Set([...savedP.models, ...initP.models]))
+                        : initP.models,
+                    isConfigured: savedP.isConfigured !== undefined ? savedP.isConfigured : initP.isConfigured,
+                    isActiveCopilot: savedP.isActiveCopilot !== undefined ? savedP.isActiveCopilot : initP.isActiveCopilot,
+                  };
+                }
+                return initP;
+              })
+            );
+          }
         }
+      } catch (e) {
+        console.error("Failed to load saved LLM providers from localStorage", e);
       }
-    } catch (e) {
-      console.error("Failed to load saved LLM providers from localStorage", e);
     }
-  }, []);
+  }, [dbProviders]);
 
   const saveToStorage = (updated: LlmProviderConfig[]) => {
     try {
@@ -186,6 +219,26 @@ export function LlmProvidersSection() {
   const showNotice = (msg: string, type: "success" | "error" = "success") => {
     setSavedNotification({ msg, type });
     setTimeout(() => setSavedNotification(null), 3500);
+  };
+
+  const saveProviderToDb = async (provider: LlmProviderConfig, customMsg?: string) => {
+    try {
+      await updateLlmProviderMutation({
+        id: provider.id,
+        name: provider.name,
+        apiKey: provider.apiKey,
+        defaultModel: provider.defaultModel,
+        models: provider.models,
+        baseUrl: provider.baseUrl,
+        isActiveCopilot: provider.isActiveCopilot,
+      }).unwrap();
+      if (customMsg) {
+        showNotice(customMsg);
+      }
+    } catch (err: any) {
+      console.error("Failed to save provider to PostgreSQL database", err);
+      showNotice("Failed to sync changes with database.", "error");
+    }
   };
 
   const toggleShowKey = (id: string) => {
@@ -213,8 +266,10 @@ export function LlmProvidersSection() {
     );
     setProviders(updated);
     saveToStorage(updated);
-    const provider = providers.find((p) => p.id === id);
-    showNotice(`Active model for ${provider?.name || id} switched to "${model}".`);
+    const provider = updated.find((p) => p.id === id);
+    if (provider) {
+      saveProviderToDb(provider, `Active model for ${provider.name} switched to "${model}" (saved to DB).`);
+    }
   };
 
   const handleBaseUrlChange = (id: string, url: string) => {
@@ -225,45 +280,80 @@ export function LlmProvidersSection() {
     saveToStorage(updated);
   };
 
-  const handleSetActiveCopilot = (id: string) => {
+  const handleSetActiveCopilot = async (id: string) => {
     const updated = providers.map((p) => ({
       ...p,
       isActiveCopilot: p.id === id,
     }));
     setProviders(updated);
     saveToStorage(updated);
-    showNotice(
-      `Set ${providers.find((p) => p.id === id)?.name} as active model for Akshara AI.`
-    );
+    const target = updated.find((p) => p.id === id);
+    if (target) {
+      await saveProviderToDb(
+        target,
+        `Set ${target.name} as active model for Akshara AI (saved to DB).`
+      );
+    }
   };
 
-  const handleTestConnection = (id: string) => {
+  const handleTestConnection = async (id: string) => {
     setProviders((prev) =>
       prev.map((p) => (p.id === id ? { ...p, testStatus: "testing" } : p))
     );
-
-    setTimeout(() => {
-      const simulatedLatency = Math.floor(Math.random() * 45) + 38;
-      setProviders((prev) => {
-        const updated = prev.map((p) =>
+    try {
+      const res = await testLlmProviderMutation(id).unwrap();
+      const latency = Math.round(res.latencyMs || 42);
+      setProviders((prev) =>
+        prev.map((p) =>
           p.id === id
             ? {
                 ...p,
                 testStatus: "success" as const,
-                testLatency: simulatedLatency,
+                testLatency: latency,
               }
             : p
-        );
-        saveToStorage(updated);
-        return updated;
-      });
-    }, 850);
+        )
+      );
+      showNotice(`Successfully verified connectivity to ${id} (${latency}ms).`);
+    } catch (e) {
+      setProviders((prev) =>
+        prev.map((p) =>
+          p.id === id ? { ...p, testStatus: "error" as const } : p
+        )
+      );
+      showNotice(`Connection verification failed for ${id}.`, "error");
+    }
   };
 
-  const handleSave = (id: string) => {
+  const handleSave = async (id: string) => {
     const provider = providers.find((p) => p.id === id);
+    if (!provider) return;
     saveToStorage(providers);
-    showNotice(`Credentials and model configuration for ${provider?.name} saved.`);
+    await saveProviderToDb(
+      provider,
+      `Saved ${provider.name} credentials & models to PostgreSQL database.`
+    );
+  };
+
+  const handleSaveAll = async () => {
+    saveToStorage(providers);
+    try {
+      await bulkUpdateLlmProvidersMutation({
+        providers: providers.map((p) => ({
+          id: p.id,
+          name: p.name,
+          apiKey: p.apiKey,
+          defaultModel: p.defaultModel,
+          models: p.models,
+          baseUrl: p.baseUrl,
+          isActiveCopilot: p.isActiveCopilot,
+        })),
+      }).unwrap();
+      showNotice("All AI providers successfully saved to PostgreSQL database!");
+    } catch (err) {
+      console.error("Failed to bulk save to PostgreSQL", err);
+      showNotice("Failed to save providers to database.", "error");
+    }
   };
 
   // --- Save / Add from Input Field ---
@@ -296,6 +386,8 @@ export function LlmProvidersSection() {
 
       setProviders(updated);
       saveToStorage(updated);
+      const targetP = updated.find((p) => p.id === providerId);
+      if (targetP) saveProviderToDb(targetP);
       setEditingModelFor(null);
       setModelInputs((prev) => ({ ...prev, [providerId]: "" }));
       showNotice(`Model renamed to "${raw}" and updated in dropdown.`);
@@ -328,6 +420,8 @@ export function LlmProvidersSection() {
 
     setProviders(updated);
     saveToStorage(updated);
+    const targetP = updated.find((p) => p.id === providerId);
+    if (targetP) saveProviderToDb(targetP);
     setModelInputs((prev) => ({ ...prev, [providerId]: "" }));
     showNotice(`Model "${raw}" saved and selected in dropdown!`);
   };
@@ -371,6 +465,8 @@ export function LlmProvidersSection() {
 
     setProviders(updated);
     saveToStorage(updated);
+    const targetP = updated.find((p) => p.id === providerId);
+    if (targetP) saveProviderToDb(targetP);
 
     if (editingModelFor?.oldModel === modelToDelete) {
       setEditingModelFor(null);
@@ -412,6 +508,8 @@ export function LlmProvidersSection() {
 
     setProviders(updated);
     saveToStorage(updated);
+    const targetP = updated.find((p) => p.id === manageModalProviderId);
+    if (targetP) saveProviderToDb(targetP);
     setModalNewModelInput("");
     showNotice(`Model "${trimmed}" added and selected as default.`);
   };
@@ -445,6 +543,8 @@ export function LlmProvidersSection() {
 
     setProviders(updated);
     saveToStorage(updated);
+    const targetP = updated.find((p) => p.id === manageModalProviderId);
+    if (targetP) saveProviderToDb(targetP);
     setModalEditingModel(null);
     showNotice(`Model updated to "${trimmed}".`);
   };
@@ -479,20 +579,6 @@ export function LlmProvidersSection() {
           </button>
         </div>
       )}
-
-      {/* Security Note Banner */}
-      <div className="p-3.5 bg-blue-dim/40 border border-blue/20 rounded-xl flex items-center justify-between gap-3 text-xs text-blue">
-        <div className="flex items-center gap-2.5">
-          <ShieldCheck className="w-4 h-4 text-blue shrink-0" />
-          <span>
-            <strong>Client-Side BYOK Encryption:</strong> Provider keys and model
-            identifiers are authenticated securely via TLS headers and stored in your browser workspace.
-          </span>
-        </div>
-        <span className="font-mono text-[10px] uppercase font-bold text-blue shrink-0">
-          TLS 1.3 / AES-256
-        </span>
-      </div>
 
       {/* Providers Grid */}
       <div className="grid grid-cols-1 gap-4">
@@ -765,9 +851,10 @@ export function LlmProvidersSection() {
                   <button
                     type="button"
                     onClick={() => handleSave(p.id)}
-                    className="py-2 px-3.5 rounded-lg text-xs font-semibold bg-blue hover:bg-blue-dark text-white transition-colors cursor-pointer shadow-xs"
+                    disabled={isUpdatingDb}
+                    className="py-2 px-3.5 rounded-lg text-xs font-semibold bg-blue hover:bg-blue-dark text-white transition-colors cursor-pointer shadow-xs disabled:opacity-50"
                   >
-                    Save All
+                    Save to DB
                   </button>
                 </div>
 
