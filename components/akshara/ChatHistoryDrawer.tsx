@@ -12,9 +12,9 @@ import {
   Sparkles,
   Calendar,
   AlertTriangle,
-  Database,
   RefreshCw,
   Loader2,
+  ChevronRight,
 } from "lucide-react";
 import {
   useGetConversationsQuery,
@@ -161,7 +161,7 @@ export function ChatHistoryDrawer({
       onSelectConversation(detail);
       onClose();
     } catch (err) {
-      console.error("Failed to load conversation details from database", err);
+      console.error("Failed to load conversation details", err);
     } finally {
       setLoadingSessionId(null);
     }
@@ -173,7 +173,7 @@ export function ChatHistoryDrawer({
       await deleteConversation(id).unwrap();
       setDeletingId(null);
     } catch (err) {
-      console.error("Failed to delete conversation from database", err);
+      console.error("Failed to delete conversation", err);
     }
   };
 
@@ -183,42 +183,45 @@ export function ChatHistoryDrawer({
       setConfirmClear(false);
       onNewChat();
     } catch (err) {
-      console.error("Failed to clear conversations from database", err);
+      console.error("Failed to clear conversations", err);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop with fade-in / fade-out animation */}
       <div
-        className="fixed inset-0 bg-navy/60 backdrop-blur-xs z-50 transition-opacity animate-in fade-in duration-200"
+        className={`fixed inset-0 bg-navy/60 backdrop-blur-xs z-50 transition-opacity duration-300 ease-in-out ${
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
         onClick={onClose}
-        aria-hidden="true"
+        aria-hidden={!isOpen}
       />
 
-      {/* Drawer */}
+      {/* Drawer with slide-in / slide-out animation */}
       <div
         role="dialog"
-        aria-label="Chat Consultation Database History"
-        className="fixed inset-y-0 right-0 w-full sm:w-[410px] bg-panel border-l border-line z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 ease-out"
+        aria-label="Consultation History"
+        aria-hidden={!isOpen}
+        className={`fixed inset-y-0 right-0 w-full sm:w-[420px] bg-panel border-l border-line z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"
+        }`}
       >
         {/* Header */}
         <div className="p-4 border-b border-line flex items-center justify-between gap-3 bg-panel/90 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-blue-dim text-blue flex items-center justify-center shrink-0">
-              <Database className="w-4 h-4" />
+              <History className="w-4 h-4" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-ink">Database Consultation History</h2>
-                <span className="text-[10px] font-mono bg-bg text-blue px-2 py-0.5 rounded-full border border-line font-bold">
-                  PostgreSQL
+                <h2 className="text-sm font-bold text-ink tracking-tight">Consultation History</h2>
+                <span className="text-[10px] font-mono bg-bg text-muted px-2 py-0.5 rounded-full border border-line">
+                  {sessions.length} {sessions.length === 1 ? "chat" : "chats"}
                 </span>
               </div>
               <p className="text-[11px] text-muted">
-                Persisted in <code className="font-mono text-blue text-[10px]">akshara_conversations</code>
+                Previous trade inquiries & statutory advisory sessions
               </p>
             </div>
           </div>
@@ -228,7 +231,7 @@ export function ChatHistoryDrawer({
               type="button"
               onClick={() => refetch()}
               className="p-1.5 rounded-lg text-muted hover:text-ink hover:bg-line transition-colors cursor-pointer"
-              title="Refresh from database"
+              title="Refresh history"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-blue" : ""}`} />
             </button>
@@ -244,14 +247,14 @@ export function ChatHistoryDrawer({
         </div>
 
         {/* Action Bar: New Chat & Search */}
-        <div className="p-3.5 border-b border-line space-y-2.5 bg-bg/50">
+        <div className="p-3.5 border-b border-line space-y-2.5 bg-bg/40">
           <button
             type="button"
             onClick={() => {
               onNewChat();
               onClose();
             }}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer group"
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer group"
           >
             <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
             <span>Start New Consultation</span>
@@ -262,7 +265,7 @@ export function ChatHistoryDrawer({
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
-              placeholder="Search database consultations..."
+              placeholder="Search consultations by commodity or question..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-panel border border-line text-xs text-ink placeholder:text-muted/60 focus:outline-none focus:border-blue transition-colors"
@@ -271,7 +274,7 @@ export function ChatHistoryDrawer({
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink text-xs"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink text-xs cursor-pointer"
               >
                 Clear
               </button>
@@ -284,7 +287,7 @@ export function ChatHistoryDrawer({
           {isLoading ? (
             <div className="py-16 text-center space-y-3">
               <Loader2 className="w-6 h-6 animate-spin text-blue mx-auto" />
-              <p className="text-xs text-muted font-mono">Loading consultations from PostgreSQL...</p>
+              <p className="text-xs text-muted font-mono">Loading history...</p>
             </div>
           ) : sessions.length === 0 ? (
             <div className="py-16 text-center space-y-3">
@@ -292,9 +295,9 @@ export function ChatHistoryDrawer({
                 <MessageSquare className="w-6 h-6 opacity-40" />
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-ink">No Database Consultations Yet</p>
+                <p className="text-xs font-semibold text-ink">No Saved Consultations</p>
                 <p className="text-[11px] text-muted max-w-xs mx-auto">
-                  Every Akshara AI trade consultation is automatically saved permanently to your PostgreSQL database.
+                  Your Akshara AI trade inquiries and advisory sessions will be organized here by date.
                 </p>
               </div>
             </div>
@@ -304,7 +307,7 @@ export function ChatHistoryDrawer({
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="text-blue hover:underline text-[11px]"
+                className="text-blue hover:underline text-[11px] cursor-pointer"
               >
                 Clear search filter
               </button>
@@ -351,7 +354,6 @@ export function ChatHistoryDrawer({
                             <div className="flex items-center gap-2 pt-0.5 flex-wrap">
                               {s.activeContext?.hsCode && (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-mono bg-bg text-blue px-1.5 py-0.5 rounded border border-line">
-                                  <Database className="w-2.5 h-2.5" />
                                   HS {s.activeContext.hsCode}
                                 </span>
                               )}
@@ -398,7 +400,7 @@ export function ChatHistoryDrawer({
                                   setDeletingId(s.id);
                                 }}
                                 className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-muted hover:text-red hover:bg-red/10 transition-all cursor-pointer"
-                                title="Delete this consultation from database"
+                                title="Delete this consultation"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -425,7 +427,7 @@ export function ChatHistoryDrawer({
               <div className="flex items-center justify-between w-full gap-2">
                 <span className="text-[11px] text-red font-medium flex items-center gap-1">
                   <AlertTriangle className="w-3.5 h-3.5 text-red" />
-                  Clear all DB chats?
+                  Clear all history?
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -448,7 +450,7 @@ export function ChatHistoryDrawer({
             ) : (
               <>
                 <span className="text-[11px] font-mono text-muted">
-                  Stored in PostgreSQL ({sessions.length})
+                  {sessions.length} {sessions.length === 1 ? "session" : "sessions"} saved
                 </span>
                 <button
                   type="button"
@@ -456,7 +458,7 @@ export function ChatHistoryDrawer({
                   className="text-[11px] font-mono text-muted hover:text-red transition-colors cursor-pointer flex items-center gap-1"
                 >
                   <Trash2 className="w-3 h-3" />
-                  <span>Clear All DB</span>
+                  <span>Clear All</span>
                 </button>
               </>
             )}

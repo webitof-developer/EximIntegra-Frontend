@@ -1,13 +1,26 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Send, CornerDownLeft, Sparkles, AlertTriangle, ArrowRightLeft } from "lucide-react";
+import Link from "next/link";
+import {
+  Send,
+  CornerDownLeft,
+  Sparkles,
+  AlertTriangle,
+  ArrowRightLeft,
+  Plus,
+  History,
+  Calculator,
+  Ship,
+} from "lucide-react";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
   activeHs?: string;
   activeOrigin?: string;
+  onNewChat?: () => void;
+  onOpenHistory?: () => void;
 }
 
 export function ChatInput({
@@ -15,6 +28,8 @@ export function ChatInput({
   isLoading,
   activeHs,
   activeOrigin,
+  onNewChat,
+  onOpenHistory,
 }: ChatInputProps) {
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -126,7 +141,8 @@ export function ChatInput({
           />
         </div>
 
-        <div className="px-3 py-2 bg-bg/50 border-t border-line/60 flex items-center justify-between gap-3">
+        <div className="px-3 py-2 bg-bg/50 border-t border-line/60 flex flex-wrap items-center justify-between gap-2.5">
+          {/* Left: Input hints & Active Context */}
           <div className="flex items-center gap-3 text-[10px] font-mono text-muted">
             <span className="hidden sm:inline-flex items-center gap-1">
               <CornerDownLeft className="w-2.5 h-2.5" />
@@ -140,23 +156,75 @@ export function ChatInput({
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={!text.trim() || isLoading}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue hover:bg-blue-dark disabled:opacity-40 disabled:hover:bg-blue text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
-          >
-            {isLoading ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Executing Tools...</span>
-              </>
-            ) : (
-              <>
-                <Send className="w-3.5 h-3.5" />
-                <span>Consult Akshara</span>
-              </>
+          {/* Right: Shortcuts & Consult Button */}
+          <div className="flex items-center gap-1.5 flex-wrap ml-auto">
+            {/* Session Actions - Icon only buttons */}
+            {onNewChat && (
+              <button
+                type="button"
+                onClick={onNewChat}
+                className="p-1.5 rounded-lg border border-line bg-panel hover:bg-bg hover:border-blue/40 text-ink transition-colors cursor-pointer shadow-3xs flex items-center justify-center group"
+                title="New Chat"
+                aria-label="New Chat"
+              >
+                <Plus className="w-3.5 h-3.5 text-blue group-hover:scale-110 transition-transform" />
+              </button>
             )}
-          </button>
+
+            {onOpenHistory && (
+              <button
+                type="button"
+                onClick={onOpenHistory}
+                className="p-1.5 rounded-lg border border-line bg-panel hover:bg-bg hover:border-blue/40 text-ink transition-colors cursor-pointer shadow-3xs flex items-center justify-center group"
+                title="Consultation History"
+                aria-label="Consultation History"
+              >
+                <History className="w-3.5 h-3.5 text-blue group-hover:scale-110 transition-transform" />
+              </button>
+            )}
+
+            <div className="h-4 w-px bg-line/80 mx-0.5 hidden sm:block" />
+
+            {/* Quick Module Shortcuts - Icon AND Text */}
+            <Link
+              href="/duty"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-line bg-panel hover:bg-bg hover:border-blue/40 text-[11px] font-semibold text-ink transition-colors shadow-3xs"
+              title="Duty Calculator"
+            >
+              <Calculator className="w-3 h-3 text-blue shrink-0" />
+              <span>Duty</span>
+            </Link>
+
+            <Link
+              href="/landed-cost"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-line bg-panel hover:bg-bg hover:border-green/40 text-[11px] font-semibold text-ink transition-colors shadow-3xs"
+              title="Landed Cost Estimator"
+            >
+              <Ship className="w-3 h-3 text-green shrink-0" />
+              <span>Landed Cost</span>
+            </Link>
+
+            <div className="h-4 w-px bg-line/80 mx-0.5 hidden sm:block" />
+
+            {/* Primary Action Button */}
+            <button
+              type="submit"
+              disabled={!text.trim() || isLoading}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue hover:bg-blue-dark disabled:opacity-40 disabled:hover:bg-blue text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Executing Tools...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Consult Akshara</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>
