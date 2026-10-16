@@ -354,7 +354,7 @@ export interface BenchmarkPriceResponse {
 /* Country Comparison Types */
 export interface OriginInput {
   country_code: string;
-  fob_value: number;
+  fob_value?: number;
   freight?: number;
   insurance?: number;
 }

@@ -59,13 +59,14 @@ function OriginCostRow({
 }: {
   code: string;
   country?: CountryOption;
-  cost: { fob_value: number; freight: number; insurance: number };
+  cost?: { fob_value: number; freight: number; insurance: number };
   isBaseline: boolean;
   activeHs: string;
   quantity: number;
   unit: string;
   onChange: (field: "fob_value" | "freight" | "insurance", value: number) => void;
 }) {
+  const currentCost = cost || { fob_value: 0, freight: 0, insurance: 0 };
   const { data: bench } = useGetBenchmarkPriceQuery(
     { hs_code: activeHs, origin: code },
     { skip: !activeHs }
@@ -118,27 +119,30 @@ function OriginCostRow({
           <span className="text-[10px] font-mono text-muted block">FOB (USD):</span>
           <input
             type="number"
-            value={cost.fob_value}
+            value={currentCost.fob_value || ""}
+            placeholder="Auto (Live)"
             onChange={(e) => onChange("fob_value", parseFloat(e.target.value) || 0)}
-            className="w-full py-1 px-2 text-xs bg-panel border border-line rounded font-mono font-bold text-ink focus:outline-none focus:border-blue"
+            className="w-full py-1 px-2 text-xs bg-panel border border-line rounded font-mono font-bold text-ink focus:outline-none focus:border-blue placeholder:text-muted/60"
           />
         </div>
         <div>
           <span className="text-[10px] font-mono text-muted block">Freight (USD):</span>
           <input
             type="number"
-            value={cost.freight}
+            value={currentCost.freight || ""}
+            placeholder="Auto (Live)"
             onChange={(e) => onChange("freight", parseFloat(e.target.value) || 0)}
-            className="w-full py-1 px-2 text-xs bg-panel border border-line rounded font-mono font-bold text-ink focus:outline-none focus:border-blue"
+            className="w-full py-1 px-2 text-xs bg-panel border border-line rounded font-mono font-bold text-ink focus:outline-none focus:border-blue placeholder:text-muted/60"
           />
         </div>
         <div>
           <span className="text-[10px] font-mono text-muted block">Ins. (USD):</span>
           <input
             type="number"
-            value={cost.insurance}
+            value={currentCost.insurance || ""}
+            placeholder="Auto (1.125%)"
             onChange={(e) => onChange("insurance", parseFloat(e.target.value) || 0)}
-            className="w-full py-1 px-2 text-xs bg-panel border border-line rounded font-mono font-bold text-ink focus:outline-none focus:border-blue"
+            className="w-full py-1 px-2 text-xs bg-panel border border-line rounded font-mono font-bold text-ink focus:outline-none focus:border-blue placeholder:text-muted/60"
           />
         </div>
       </div>
@@ -178,16 +182,7 @@ function CompareContent() {
   const [alertActive, setAlertActive] = useState<boolean>(false);
 
   // Per-origin FOB, Freight, and Insurance inputs (Contract v2)
-  const [originCosts, setOriginCosts] = useState<Record<string, { fob_value: number; freight: number; insurance: number }>>({
-    US: { fob_value: 43000, freight: 5200, insurance: 120 },
-    AE: { fob_value: 42000, freight: 3500, insurance: 120 },
-    AU: { fob_value: 42500, freight: 4500, insurance: 120 },
-    VN: { fob_value: 41000, freight: 4100, insurance: 120 },
-    CN: { fob_value: 41500, freight: 3800, insurance: 120 },
-    SG: { fob_value: 42200, freight: 3900, insurance: 120 },
-    DE: { fob_value: 44000, freight: 5000, insurance: 130 },
-    GB: { fob_value: 43500, freight: 5100, insurance: 130 },
-  });
+  const [originCosts, setOriginCosts] = useState<Record<string, { fob_value: number; freight: number; insurance: number }>>({});
 
   const [compareCountries, { isLoading }] = useCompareCountriesMutation();
   const [comparisonResult, setComparisonResult] = useState<CountryComparisonResponse | null>(null);
@@ -214,13 +209,19 @@ function CompareContent() {
       setErrorState(null);
       setValidationMessage(null);
 
+      // Only send user overrides if explicitly customized; otherwise backend computes live benchmarks dynamically
       const originsPayload = countriesToCompare.map((c) => {
-        const item = costs[c] || { fob_value: 42000, freight: 3500, insurance: 120 };
+        const item = costs[c];
+        if (item && item.fob_value > 0) {
+          return {
+            country_code: c,
+            fob_value: item.fob_value,
+            freight: item.freight,
+            insurance: item.insurance,
+          };
+        }
         return {
           country_code: c,
-          fob_value: item.fob_value,
-          freight: item.freight,
-          insurance: item.insurance,
         };
       });
 
@@ -233,13 +234,37 @@ function CompareContent() {
         unit,
         baseline_origin: baselineToCompare,
         origins: originsPayload,
-        assessable_value: costs[baselineToCompare]?.fob_value || 42000,
+        assessable_value: costs[baselineToCompare]?.fob_value,
         countries: countriesToCompare,
       }).unwrap();
 
       // Ignore out-of-order responses (F12)
       if (reqId === latestRequestId.current) {
         setComparisonResult(res);
+
+        // Pre-fill live calculated values into originCosts for the pricing panel
+        if (res.comparisons) {
+          const liveCosts: Record<string, { fob_value: number; freight: number; insurance: number }> = {};
+          res.comparisons.forEach((item) => {
+            if (item.inputs) {
+              liveCosts[item.country_code] = {
+                fob_value: item.inputs.fob_value || 0,
+                freight: item.inputs.freight || 0,
+                insurance: item.inputs.insurance || 0,
+              };
+            }
+          });
+          setOriginCosts((prev) => {
+            const merged = { ...liveCosts };
+            // Keep any user-customized fields that the user explicitly edited
+            Object.keys(prev).forEach((k) => {
+              if (prev[k] && prev[k].fob_value > 0) {
+                merged[k] = prev[k];
+              }
+            });
+            return merged;
+          });
+        }
       }
     } catch (err: any) {
       if (reqId === latestRequestId.current) {
@@ -279,8 +304,11 @@ function CompareContent() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchHsInput.trim()) {
-      setActiveHs(searchHsInput.trim());
-      scheduleComparison(searchHsInput.trim(), selectedCountries, baselineOrigin, originCosts);
+      const cleanNewHs = searchHsInput.trim();
+      setActiveHs(cleanNewHs);
+      // Reset user overrides when searching a new tariff code so live benchmarks are computed fresh
+      setOriginCosts({});
+      scheduleComparison(cleanNewHs, selectedCountries, baselineOrigin, {});
     }
   };
 
@@ -591,7 +619,7 @@ function CompareContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
             {selectedCountries.map((code) => {
               const country = countries.find((o) => o.code === code);
-              const cost = originCosts[code] || { fob_value: 42000, freight: 3500, insurance: 120 };
+              const cost = originCosts[code];
               return (
                 <OriginCostRow
                   key={code}
