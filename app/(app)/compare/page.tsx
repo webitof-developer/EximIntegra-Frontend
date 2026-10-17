@@ -11,6 +11,7 @@ import {
   useGetCountriesQuery,
   useGetBenchmarkPriceQuery,
 } from "@/store/eligibilityApi";
+import { useCreateNotificationMutation } from "@/store/notificationsApi";
 import { CountryComparisonMatrix } from "@/components/compare/CountryComparisonMatrix";
 import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert, CustomDropdown, ToastNotification } from "@/components/ui";
 import { formatHsCode } from "@/lib/formatters";
@@ -185,6 +186,7 @@ function CompareContent() {
   const [originCosts, setOriginCosts] = useState<Record<string, { fob_value: number; freight: number; insurance: number }>>({});
 
   const [compareCountries, { isLoading }] = useCompareCountriesMutation();
+  const [createNotification] = useCreateNotificationMutation();
   const [comparisonResult, setComparisonResult] = useState<CountryComparisonResponse | null>(null);
   const [errorState, setErrorState] = useState<string | null>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
@@ -353,12 +355,36 @@ function CompareContent() {
         countryOfOrigin: country.country_code,
       })
     );
+    // Explicit user action: persist notification
+    createNotification({
+      title: `Active Origin Applied: ${country.country_name} (${country.country_code})`,
+      message: `Set ${country.country_name} as primary origin for HS ${formatHsCode(activeHs)} in shared context.`,
+      module: "compare",
+      type: "arbitrage",
+      link: `/compare?hs=${encodeURIComponent(activeHs)}`,
+      link_text: "View Comparison",
+    })
+      .unwrap()
+      .catch(() => {});
+
     setActionFeedback(`Applied ${country.country_name} (${country.country_code}) as active origin in shared context.`);
     setTimeout(() => setActionFeedback(null), 4000);
   };
 
   const handleSaveAndAlert = () => {
     setAlertActive(true);
+    // Explicit user action: persist notification
+    createNotification({
+      title: `Arbitrage Alert Saved: HS ${formatHsCode(activeHs)}`,
+      message: `Monitoring statutory tariffs and landed cost differentials across ${selectedCountries.join(", ")} with baseline ${baselineOrigin}.`,
+      module: "compare",
+      type: "arbitrage",
+      link: `/compare?hs=${encodeURIComponent(activeHs)}`,
+      link_text: "View Comparison",
+    })
+      .unwrap()
+      .catch(() => {});
+
     setActionFeedback(
       `Arbitrage Alert Saved: We will monitor statutory tariff and freight rate differentials for HS ${formatHsCode(
         activeHs
