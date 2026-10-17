@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { StatusPill, CustomDropdown } from "@/components/ui";
+import { StatusPill, CustomDropdown, ToastNotification } from "@/components/ui";
 import {
   Key,
   Eye,
@@ -553,32 +553,13 @@ export function LlmProvidersSection() {
 
   return (
     <div className="space-y-6">
-      {/* Toast Alert */}
-      {savedNotification && (
-        <div
-          className={`p-3 border rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in duration-150 ${
-            savedNotification.type === "error"
-              ? "bg-red-dim border-red/30 text-red"
-              : "bg-green-dim border-green/30 text-green"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {savedNotification.type === "error" ? (
-              <AlertCircle className="w-4 h-4 shrink-0" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-            )}
-            <span>{savedNotification.msg}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setSavedNotification(null)}
-            className="text-xs hover:underline cursor-pointer ml-3"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+      {/* Floating Bottom-Right Toast Notification */}
+      <ToastNotification
+        isOpen={!!savedNotification}
+        variant={savedNotification?.type || "success"}
+        message={savedNotification?.msg}
+        onClose={() => setSavedNotification(null)}
+      />
 
       {/* Providers Grid */}
       <div className="grid grid-cols-1 gap-4">

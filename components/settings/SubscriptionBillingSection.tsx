@@ -13,6 +13,7 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  ToastNotification,
 } from "@/components/ui";
 import {
   CreditCard,
@@ -102,22 +103,13 @@ export function SubscriptionBillingSection() {
 
   return (
     <div className="space-y-8">
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div className="p-3.5 bg-green-dim border border-green/30 text-green rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>{toastMessage}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setToastMessage(null)}
-            className="text-xs hover:underline cursor-pointer"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+      {/* Floating Bottom-Right Toast Notification */}
+      <ToastNotification
+        isOpen={!!toastMessage}
+        variant="success"
+        message={toastMessage}
+        onClose={() => setToastMessage(null)}
+      />
 
       {/* 1. Active Plan Overview Card */}
       <div className="p-6 bg-panel border border-line rounded-2xl shadow-xs space-y-6">

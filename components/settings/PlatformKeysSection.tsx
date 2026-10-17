@@ -11,6 +11,7 @@ import {
   TableRow,
   TableCell,
   CustomDropdown,
+  ToastNotification,
 } from "@/components/ui";
 import {
   Key,
@@ -163,22 +164,13 @@ export function PlatformKeysSection() {
 
   return (
     <div className="space-y-7">
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div className="p-3 bg-green-dim border border-green/30 text-green rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4" />
-            <span>{toastMessage}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setToastMessage(null)}
-            className="text-xs hover:underline cursor-pointer"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+      {/* Floating Bottom-Right Toast Notification */}
+      <ToastNotification
+        isOpen={!!toastMessage}
+        variant="success"
+        message={toastMessage}
+        onClose={() => setToastMessage(null)}
+      />
 
       {/* 1. Developer Platform Secret Keys */}
       <div className="space-y-3">

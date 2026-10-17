@@ -23,6 +23,7 @@ import {
   RolePermissionsTab,
 } from "./tabs";
 import { LlmProvidersSection } from "@/components/settings/LlmProvidersSection";
+import { ToastNotification } from "@/components/ui";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -295,12 +296,12 @@ function AdminPageContent() {
         </div>
 
         {/* Global Toast Notification */}
-        {toastMessage && (
-          <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 bg-panel border border-line text-ink rounded-xl shadow-xl text-xs font-semibold animate-in fade-in slide-in-from-bottom-5">
-            <CheckCircle2 className="w-4 h-4 text-green" />
-            <span>{toastMessage}</span>
-          </div>
-        )}
+        <ToastNotification
+          isOpen={!!toastMessage}
+          variant="success"
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
+        />
       </AppShell>
   );
 }

@@ -8,3 +8,4 @@ export * from "./WidgetTile";
 export * from "./DegradedStateAlert";
 export * from "./Table";
 export * from "./CustomDropdown";
+export * from "./ToastNotification";

@@ -12,7 +12,7 @@ import {
   useGetBenchmarkPriceQuery,
 } from "@/store/eligibilityApi";
 import { CountryComparisonMatrix } from "@/components/compare/CountryComparisonMatrix";
-import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert, CustomDropdown } from "@/components/ui";
+import { Card, ProvenanceBadge, StatusPill, DegradedStateAlert, CustomDropdown, ToastNotification } from "@/components/ui";
 import { formatHsCode } from "@/lib/formatters";
 import {
   CountryComparisonResponse,
@@ -646,31 +646,19 @@ function CompareContent() {
         </div>
       )}
 
-      {/* Validation Message */}
-      {validationMessage && (
-        <div className="p-3 bg-amber-dim border border-amber/30 rounded-lg text-xs font-medium text-amber-dark flex items-center justify-between">
-          <span>{validationMessage}</span>
-          <button
-            onClick={() => setValidationMessage(null)}
-            className="text-amber-dark font-bold hover:underline cursor-pointer"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
-      {/* Action Feedback */}
-      {actionFeedback && (
-        <div className="p-3 bg-green-dim border border-green/30 rounded-lg text-xs font-medium text-green flex items-center justify-between">
-          <span>{actionFeedback}</span>
-          <button
-            onClick={() => setActionFeedback(null)}
-            className="text-green font-bold hover:underline cursor-pointer"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
+      {/* Floating Bottom-Right Toast Notifications */}
+      <ToastNotification
+        isOpen={!!validationMessage}
+        variant="warning"
+        message={validationMessage}
+        onClose={() => setValidationMessage(null)}
+      />
+      <ToastNotification
+        isOpen={!!actionFeedback}
+        variant="success"
+        message={actionFeedback}
+        onClose={() => setActionFeedback(null)}
+      />
 
       {/* Error / Degraded State Alert */}
       {errorState && (
