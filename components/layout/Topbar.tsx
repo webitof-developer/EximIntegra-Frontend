@@ -34,6 +34,10 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     title: "Super Admin — Role Permissions (RBAC)",
     description: "Granular access control policies, feature gating, and module permissions matrix.",
   },
+  "/admin/tier-access": {
+    title: "Super Admin — Tier Page Access & Gating",
+    description: "Manage page-level and feature-level subscription tier access, plan gating rules, and upgrade templates.",
+  },
   "/admin/pricing": {
     title: "Super Admin — Dynamic SaaS Pricing",
     description: "Configure tier definitions, feature quotas, regional currencies, and live plan limits.",

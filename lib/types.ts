@@ -628,3 +628,14 @@ export interface NotificationListResponse {
   unread_count: number;
   total: number;
 }
+
+export interface TierPageAccessGate {
+  id: string;
+  pagePath: string;
+  title: string;
+  category: string;
+  description: string;
+  requiredTier: "ALL" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE" | string;
+  isActive: boolean;
+  updatedAt?: string;
+}

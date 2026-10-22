@@ -82,6 +82,7 @@ export const api = createApi({
     "RBAC",
     "Notification",
     "LlmProviders",
+    "TierAccess",
   ],
   endpoints: () => ({}),
 });

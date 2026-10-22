@@ -18,7 +18,7 @@ import {
   Info,
   History,
 } from "lucide-react";
-import { FeatureGate } from "@/components/saas/FeatureGate";
+import { DynamicTierGate } from "@/components/saas/DynamicTierGate";
 
 interface ActiveLlmInfo {
   id: string;
@@ -231,11 +231,7 @@ export default function AksharaPage() {
       <AppShell>
         <div className="max-w-5xl mx-auto h-[calc(100vh-116px)] flex flex-col">
           {/* Chat Messages & Input Container */}
-          <FeatureGate
-            requiredTier="ENTERPRISE"
-            featureName="Akshara AI Copilot"
-            description="Access grounded trade intelligence with autonomous GIR classification, real-time customs gazette citations, and verified tool-call audit trails."
-          >
+          <DynamicTierGate pageId="akshara">
             <div className="flex-1 flex flex-col min-h-0 space-y-3">
               {/* Scrollable Messages Container */}
               <div className="flex-1 min-h-0 bg-bg/40 border border-line rounded-2xl p-4 overflow-y-auto space-y-4 shadow-inner">
@@ -303,7 +299,7 @@ export default function AksharaPage() {
                 />
               </div>
             </div>
-          </FeatureGate>
+          </DynamicTierGate>
         </div>
 
         {/* Attached History Tab Button on Screen's Right Center */}

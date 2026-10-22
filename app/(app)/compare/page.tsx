@@ -20,7 +20,7 @@ import {
   CountryComparisonItem,
   CountryOption,
 } from "@/lib/types";
-import { FeatureGate } from "@/components/saas/FeatureGate";
+import { DynamicTierGate } from "@/components/saas/DynamicTierGate";
 import { getApiErrorMessage } from "@/lib/utils";
 import {
   Scale,
@@ -715,11 +715,7 @@ export default function ComparePage() {
   return (
     <AuthGuard>
       <AppShell>
-        <FeatureGate
-          requiredTier="PROFESSIONAL"
-          featureName="Multilateral Origin Sourcing Arbitrage"
-          description="Compare landed duty structures across multiple bilateral jurisdictions (USA MFN, UAE CEPA, Australia ECTA, ASEAN) in real-time."
-        >
+        <DynamicTierGate pageId="compare">
           <React.Suspense
             fallback={
               <div className="p-12 text-center text-xs font-mono text-muted">
@@ -729,7 +725,7 @@ export default function ComparePage() {
           >
             <CompareContent />
           </React.Suspense>
-        </FeatureGate>
+        </DynamicTierGate>
       </AppShell>
     </AuthGuard>
   );

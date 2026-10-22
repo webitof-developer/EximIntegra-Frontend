@@ -13,7 +13,7 @@ import { ContractRatesSection } from "@/components/settings/ContractRatesSection
 import { PlatformKeysSection } from "@/components/settings/PlatformKeysSection";
 import { SubscriptionBillingSection } from "@/components/settings/SubscriptionBillingSection";
 import { TeamWorkspaceSection } from "@/components/settings/TeamWorkspaceSection";
-import { FeatureGate } from "@/components/saas/FeatureGate";
+import { DynamicTierGate } from "@/components/saas/DynamicTierGate";
 import {
   Globe,
   Ship,
@@ -160,22 +160,14 @@ function SettingsContent() {
       {/* Active Tab Content Panel */}
       {activeTab === "gateways" && <CustomGatewaysSection />}
       {activeTab === "contracts" && (
-        <FeatureGate
-          requiredTier="ENTERPRISE"
-          featureName="Contract Rates & Smelter Yield BYOK"
-          description="Configure custom ocean carrier freight matrix, contracted destination terminal handling, and proprietary metallurgical recovery yields."
-        >
+        <DynamicTierGate pageId="settings_byok" fallbackMode="full">
           <ContractRatesSection />
-        </FeatureGate>
+        </DynamicTierGate>
       )}
       {activeTab === "platform" && (
-        <FeatureGate
-          requiredTier="ENTERPRISE"
-          featureName="Platform API Keys & Enterprise Webhooks"
-          description="Provision production API secret keys for ERP integration (SAP, Oracle) and register real-time CBIC tariff webhooks."
-        >
+        <DynamicTierGate pageId="settings_byok" fallbackMode="full">
           <PlatformKeysSection />
-        </FeatureGate>
+        </DynamicTierGate>
       )}
       {activeTab === "billing" && <SubscriptionBillingSection />}
       {activeTab === "team" && <TeamWorkspaceSection />}

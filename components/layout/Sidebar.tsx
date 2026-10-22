@@ -38,6 +38,7 @@ import { TierBadge } from "@/components/saas/TierBadge";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setMobileNavOpen } from "@/store/uiSlice";
 import { logout } from "@/store/authSlice";
+import { useGetTierAccessGatesQuery } from "@/store/adminApi";
 
 interface NavItem {
   id: string;
@@ -46,8 +47,9 @@ interface NavItem {
   icon: React.ReactNode;
   glyph?: string;
   badge?: "SOON" | "LIVE" | "DEV" | "BETA";
-  tierBadge?: "PRO" | "ENTERPRISE";
+  tierBadge?: "PRO" | "ENTERPRISE" | "STARTER";
   disabled?: boolean;
+  isTierLocked?: boolean;
 }
 
 interface NavSection {
@@ -200,6 +202,13 @@ const adminNavSections: NavSection[] = [
         icon: <Sliders className="w-4 h-4 text-purple-400" />,
         glyph: "RBC",
       },
+      {
+        id: "admin-tier-access",
+        title: "Tier Page Access",
+        href: "/admin/tier-access",
+        icon: <ShieldCheck className="w-4 h-4 text-amber-400" />,
+        glyph: "TIER",
+      },
     ],
   },
   {
@@ -243,7 +252,64 @@ function SidebarInner({
   }, []);
 
   const isAdminView = pathname.startsWith("/admin") || (mounted && user?.role === "ADMIN");
-  const activeSections: NavSection[] = isAdminView ? adminNavSections : navSections;
+  const { data: tierGatesData } = useGetTierAccessGatesQuery();
+
+  const activeSections: NavSection[] = React.useMemo(() => {
+    if (isAdminView) return adminNavSections;
+    const gates = tierGatesData?.gates || [];
+    const currentTier = (user?.tier || "STARTER").toUpperCase();
+
+    const tierWeights: Record<string, number> = {
+      ALL: 0,
+      FREE: 0,
+      STARTER: 1,
+      PROFESSIONAL: 2,
+      PRO: 2,
+      ENTERPRISE: 3,
+    };
+
+    // 1. Map existing navSections with dynamic tier badges & lock states
+    const updatedSections: NavSection[] = navSections.map((sec) => ({
+      ...sec,
+      items: sec.items.map((item) => {
+        const matchingGate = gates.find(
+          (g) =>
+            g.id.toLowerCase() === item.id.toLowerCase() ||
+            (!g.id.includes("_") && g.pagePath.toLowerCase() === item.href.toLowerCase())
+        );
+
+        if (!matchingGate || !matchingGate.isActive) {
+          if (matchingGate && (!matchingGate.isActive || matchingGate.requiredTier === "ALL")) {
+            return {
+              ...item,
+              tierBadge: undefined,
+              isTierLocked: false,
+            };
+          }
+          return item;
+        }
+
+        const requiredTier = matchingGate.requiredTier.toUpperCase();
+        let dynamicTierBadge: "PRO" | "ENTERPRISE" | undefined = undefined;
+        if (requiredTier === "ENTERPRISE") dynamicTierBadge = "ENTERPRISE";
+        else if (requiredTier === "PROFESSIONAL") dynamicTierBadge = "PRO";
+
+        const isTierLocked =
+          user?.role !== "ADMIN" &&
+          requiredTier !== "ALL" &&
+          (tierWeights[currentTier] ?? 1) < (tierWeights[requiredTier] ?? 2);
+
+        return {
+          ...item,
+          title: item.title,
+          tierBadge: dynamicTierBadge,
+          isTierLocked,
+        };
+      }),
+    }));
+
+    return updatedSections;
+  }, [isAdminView, tierGatesData, user?.tier, user?.role]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -447,8 +513,11 @@ function SidebarInner({
 
                       {!isCollapsed && (
                         <>
-                          <span className="whitespace-nowrap truncate ml-2.5 flex-1 text-left animate-in fade-in duration-150">
-                            {item.title}
+                          <span className="whitespace-nowrap truncate ml-2.5 flex-1 text-left animate-in fade-in duration-150 flex items-center gap-1.5">
+                            <span className="truncate">{item.title}</span>
+                            {item.isTierLocked && (
+                              <Lock className="w-2.5 h-2.5 text-amber-400 shrink-0" />
+                            )}
                           </span>
                           {item.tierBadge ? (
                             <TierBadge

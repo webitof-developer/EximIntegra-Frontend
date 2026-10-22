@@ -5,6 +5,7 @@ import {
   PricingPlan,
   RBACMatrixResponse,
   RolePermissionItem,
+  TierPageAccessGate,
 } from "@/lib/types";
 
 export interface UpdateAdminUserRequest {
@@ -129,6 +130,46 @@ export const adminApi = api.injectEndpoints({
         method: "POST",
       }),
     }),
+    getTierAccessGates: builder.query<{ gates: TierPageAccessGate[] }, void>({
+      query: () => "/tier-access",
+      providesTags: ["TierAccess"],
+    }),
+    getAdminTierAccessGates: builder.query<{ gates: TierPageAccessGate[] }, void>({
+      query: () => "/admin/tier-access",
+      providesTags: ["TierAccess"],
+    }),
+    updateTierAccessGates: builder.mutation<
+      { gates: TierPageAccessGate[]; message: string },
+      { gates: TierPageAccessGate[] }
+    >({
+      query: (body) => ({
+        url: "/admin/tier-access",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["TierAccess"],
+    }),
+    createTierAccessGate: builder.mutation<
+      { gate: TierPageAccessGate; gates: TierPageAccessGate[]; message: string },
+      TierPageAccessGate
+    >({
+      query: (body) => ({
+        url: "/admin/tier-access",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["TierAccess"],
+    }),
+    deleteTierAccessGate: builder.mutation<
+      { gates: TierPageAccessGate[]; message: string },
+      string
+    >({
+      query: (gateId) => ({
+        url: `/admin/tier-access/${gateId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["TierAccess"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -171,5 +212,10 @@ export const {
   useUpdateLlmProviderMutation,
   useBulkUpdateLlmProvidersMutation,
   useTestLlmProviderMutation,
+  useGetTierAccessGatesQuery,
+  useGetAdminTierAccessGatesQuery,
+  useCreateTierAccessGateMutation,
+  useUpdateTierAccessGatesMutation,
+  useDeleteTierAccessGateMutation,
 } = adminApi;
 

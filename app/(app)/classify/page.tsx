@@ -22,7 +22,7 @@ import {
   ClassificationResponse,
   ClassificationCandidate,
 } from "@/lib/types";
-import { FeatureGate } from "@/components/saas/FeatureGate";
+import { DynamicTierGate } from "@/components/saas/DynamicTierGate";
 import { getApiErrorMessage } from "@/lib/utils";
 import { Search, FileSpreadsheet, ShieldAlert, Sparkles } from "lucide-react";
 
@@ -197,13 +197,9 @@ export default function ClassifyPage() {
               )}
             </div>
           ) : (
-            <FeatureGate
-              requiredTier="PROFESSIONAL"
-              featureName="Bulk CSV Batch Manifest Engine"
-              description="Process and classify up to 500 line items simultaneously from customs declaration manifests with automated statutory GIR 1–6 sequencing."
-            >
+            <DynamicTierGate pageId="classify_bulk" fallbackMode="full">
               <BulkClassificationUploader />
-            </FeatureGate>
+            </DynamicTierGate>
           )}
         </div>
       </AppShell>
