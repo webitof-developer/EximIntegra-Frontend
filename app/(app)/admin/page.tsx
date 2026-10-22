@@ -21,8 +21,8 @@ import {
   UserDirectoryTab,
   DynamicPricingTab,
   RolePermissionsTab,
+  LlmProvidersSection,
 } from "./tabs";
-import { LlmProvidersSection } from "@/components/settings/LlmProvidersSection";
 import { ToastNotification } from "@/components/ui";
 import {
   ShieldCheck,
@@ -200,9 +200,9 @@ function AdminPageContent() {
             >
               <Sliders className="w-3.5 h-3.5" />
               <span>Role Permissions (RBAC Matrix)</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
+              {/* <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
                 4 ROLES
-              </span>
+              </span> */}
             </button>
             
             <button
@@ -229,9 +229,9 @@ function AdminPageContent() {
             >
               <Cpu className="w-3.5 h-3.5" />
               <span>AI / LLM Providers</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-blue-500/20 text-blue-300 font-bold border border-blue-400/30">
+              {/* <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-blue-500/20 text-blue-300 font-bold border border-blue-400/30">
                 ADMIN ONLY
-              </span>
+              </span> */}
             </button>
           </div>
 
