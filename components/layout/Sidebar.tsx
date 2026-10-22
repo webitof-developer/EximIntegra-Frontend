@@ -22,9 +22,15 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldAlert,
+  ShieldCheck,
   Lock,
   Bell,
   X,
+  Activity,
+  Users,
+  Sliders,
+  DollarSign,
+  Cpu,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
 import { TierBadge } from "@/components/saas/TierBadge";
@@ -161,6 +167,62 @@ const navSections: NavSection[] = [
   },
 ];
 
+const adminNavSections: NavSection[] = [
+  {
+    title: "SUPER ADMIN COCKPIT",
+    items: [
+      {
+        id: "admin-metrics",
+        title: "Platform Metrics",
+        href: "/admin",
+        icon: <Activity className="w-4 h-4 text-blue-400" />,
+        glyph: "MET",
+        badge: "LIVE" as const,
+      },
+      {
+        id: "admin-users",
+        title: "User Directory & Roles",
+        href: "/admin/users",
+        icon: <Users className="w-4 h-4 text-emerald-400" />,
+        glyph: "USR",
+      },
+      {
+        id: "admin-rbac",
+        title: "Role Permissions (RBAC)",
+        href: "/admin/rbac",
+        icon: <Sliders className="w-4 h-4 text-purple-400" />,
+        glyph: "RBC",
+      },
+      {
+        id: "admin-pricing",
+        title: "Dynamic Pricing Plans",
+        href: "/admin/pricing",
+        icon: <DollarSign className="w-4 h-4 text-amber-400" />,
+        glyph: "PRC",
+      },
+      {
+        id: "admin-llm",
+        title: "AI / LLM Providers",
+        href: "/admin/llm",
+        icon: <Cpu className="w-4 h-4 text-cyan-400" />,
+        glyph: "LLM",
+      },
+    ],
+  },
+  {
+    title: "SYSTEM & AUDIT",
+    items: [
+      {
+        id: "notifications",
+        title: "System Alerts",
+        href: "/notifications",
+        icon: <Bell className="w-4 h-4 text-rose-400" />,
+        glyph: "ALRT",
+      },
+    ],
+  },
+];
+
 function SidebarInner({
   onClose,
   isMobile = false,
@@ -173,26 +235,7 @@ function SidebarInner({
   const pathname = usePathname();
   const user = useAppSelector((state) => state.auth.user);
 
-  const activeSections: NavSection[] = [
-    ...navSections,
-    ...(user?.role === "ADMIN"
-      ? [
-          {
-            title: "SUPER ADMIN",
-            items: [
-              {
-                id: "admin-panel",
-                title: "Admin Command Center",
-                href: "/admin",
-                icon: <ShieldAlert className="w-4 h-4 text-purple-400" />,
-                glyph: "ADM",
-                badge: "LIVE" as const,
-              },
-            ],
-          },
-        ]
-      : []),
-  ];
+  const activeSections: NavSection[] = user?.role === "ADMIN" ? adminNavSections : navSections;
 
   return (
     <div className="flex flex-col h-full justify-between select-none">
@@ -207,7 +250,7 @@ function SidebarInner({
           )}
         >
           <Link
-            href="/dashboard"
+            href={user?.role === "ADMIN" ? "/admin" : "/dashboard"}
             onClick={onClose}
             className="flex items-center gap-3 group"
             title="EXIMINTEGRA — Trade Advisory OS"

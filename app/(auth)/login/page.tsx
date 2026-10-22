@@ -46,7 +46,7 @@ function LoginForm() {
       );
 
       const isAdmin = response.user?.role === "ADMIN";
-      let destination = "/dashboard";
+      let destination = isAdmin ? "/admin" : "/dashboard";
 
       // If user came with a specific returnUrl (other than root, dashboard, or auth pages)
       if (

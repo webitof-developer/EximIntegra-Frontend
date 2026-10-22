@@ -58,7 +58,7 @@ function SettingsContent() {
     } else if (currentTab === "llm" || currentTab === "ai") {
       // AI/LLM configuration has moved to the Super Admin Cockpit
       if (user?.role === "ADMIN") {
-        router.push("/admin?tab=llm");
+        router.push("/admin/llm");
       } else {
         setActiveTab("gateways");
       }

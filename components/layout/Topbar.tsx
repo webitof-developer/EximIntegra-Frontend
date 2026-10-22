@@ -24,8 +24,24 @@ import {
 
 const pageMeta: Record<string, { title: string; description: string }> = {
   "/admin": {
-    title: "Super Admin Command Center",
-    description: "Global user directory, subscription quotas, and dynamic SaaS pricing.",
+    title: "Super Admin — Platform Metrics",
+    description: "System overview, active users, tenant distribution, and database metrics.",
+  },
+  "/admin/users": {
+    title: "Super Admin — User Directory & Roles",
+    description: "Manage registered enterprise users, role assignments, and subscription tiers.",
+  },
+  "/admin/rbac": {
+    title: "Super Admin — Role Permissions (RBAC)",
+    description: "Granular access control policies, feature gating, and module permissions matrix.",
+  },
+  "/admin/pricing": {
+    title: "Super Admin — Dynamic SaaS Pricing",
+    description: "Configure tier definitions, feature quotas, regional currencies, and live plan limits.",
+  },
+  "/admin/llm": {
+    title: "Super Admin — AI & LLM Providers",
+    description: "Configure enterprise AI credentials, active models, and global Akshara copilot engine.",
   },
   "/dashboard": {
     title: "Trade Advisory Cockpit",

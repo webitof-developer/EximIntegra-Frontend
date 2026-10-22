@@ -41,7 +41,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (!isAuthenticated && !isAuthRoute) {
       router.replace(`/login?returnUrl=${encodeURIComponent(pathname)}`);
     } else if (isAuthenticated && isAuthRoute) {
-      router.replace("/dashboard");
+      if (user?.role === "ADMIN") {
+        router.replace("/admin");
+      } else {
+        router.replace("/dashboard");
+      }
     } else if (isAuthenticated && user?.role !== "ADMIN" && pathname.startsWith("/admin")) {
       router.replace("/dashboard");
     }

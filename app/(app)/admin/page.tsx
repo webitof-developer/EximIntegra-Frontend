@@ -2,85 +2,36 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAppSelector } from "@/store";
-import {
-  useGetAdminStatsQuery,
-  useGetAdminUsersQuery,
-  useUpdateAdminUserMutation,
-  useDeleteAdminUserMutation,
-  useGetPricingPlansQuery,
-  useUpdatePricingPlansMutation,
-  useGetRBACMatrixQuery,
-  useUpdateRBACMatrixMutation,
-} from "@/store/adminApi";
-import {
-  PlatformMetricsTab,
-  UserDirectoryTab,
-  DynamicPricingTab,
-  RolePermissionsTab,
-  LlmProvidersSection,
-} from "./tabs";
+import { useGetAdminStatsQuery } from "@/store/adminApi";
+import { AdminNav } from "./AdminNav";
+import { PlatformMetricsTab } from "./PlatformMetrics";
 import { ToastNotification } from "@/components/ui";
-import {
-  ShieldCheck,
-  ShieldAlert,
-  Users,
-  DollarSign,
-  Activity,
-  RefreshCw,
-  Sliders,
-  CheckCircle2,
-  Cpu,
-  Sparkles,
-} from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
-function AdminPageContent() {
-  const { user } = useAppSelector((state) => state.auth);
+function AdminMetricsContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "pricing" | "rbac" | "llm">("overview");
+  const { user } = useAppSelector((state) => state.auth);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Backward compatibility: redirect ?tab=... to its new dedicated route
   useEffect(() => {
     const tab = searchParams.get("tab")?.toLowerCase();
-    if (tab === "llm" || tab === "ai") {
-      setActiveTab("llm");
-    } else if (tab && ["overview", "users", "pricing", "rbac", "llm"].includes(tab)) {
-      setActiveTab(tab as any);
-    }
-  }, [searchParams]);
+    if (tab === "users") router.replace("/admin/users");
+    else if (tab === "rbac") router.replace("/admin/rbac");
+    else if (tab === "pricing") router.replace("/admin/pricing");
+    else if (tab === "llm" || tab === "ai") router.replace("/admin/llm");
+  }, [searchParams, router]);
 
-  // RTK Query Hooks
   const {
     data: stats,
     isLoading: statsLoading,
     refetch: refetchStats,
+    isFetching: statsFetching,
   } = useGetAdminStatsQuery(undefined, { skip: user?.role !== "ADMIN" });
-
-  const {
-    data: usersData,
-    isLoading: usersLoading,
-    refetch: refetchUsers,
-  } = useGetAdminUsersQuery(undefined, { skip: user?.role !== "ADMIN" });
-
-  const [updateUser] = useUpdateAdminUserMutation();
-  const [deleteUser] = useDeleteAdminUserMutation();
-
-  const {
-    data: pricingData,
-    isLoading: pricingLoading,
-    refetch: refetchPricing,
-  } = useGetPricingPlansQuery();
-  const [updatePricing] = useUpdatePricingPlansMutation();
-
-  const {
-    data: rbacData,
-    isLoading: rbacLoading,
-    refetch: refetchRBAC,
-  } = useGetRBACMatrixQuery(undefined, { skip: user?.role !== "ADMIN" });
-  const [updateRBAC] = useUpdateRBACMatrixMutation();
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -121,203 +72,41 @@ function AdminPageContent() {
   return (
     <AppShell>
       <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header Banner */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 bg-panel border border-line rounded-2xl shadow-xs">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded text-[10px] font-mono bg-purple-600 text-white uppercase tracking-wider font-bold inline-flex items-center gap-1.5">
-                  <ShieldCheck className="w-3 h-3" />
-                  SUPER ADMIN COCKPIT
-                </span>
-                <span className="text-xs text-[#9EB1D0] font-mono">v2026.03-GOVERNANCE</span>
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                Platform Administration & Dynamic Governance Control
-              </h1>
-              <p className="text-xs text-[#9EB1D0] max-w-2xl leading-relaxed">
-                Centralized authority to manage corporate user profiles, subscription quotas, live
-                B2B SaaS pricing, and RBAC permissions across all business roles.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 self-start md:self-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  refetchStats();
-                  refetchUsers();
-                  refetchPricing();
-                  refetchRBAC();
-                  showToast("Platform data refreshed from database.");
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-navy-active hover:bg-[#23355D] text-white border border-[#2B406B] text-xs font-semibold transition-all cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Sync DB</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Navigation Tabs */}
-          <div className="flex items-center gap-2 border-b border-line pb-2 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab("overview")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === "overview"
-                  ? "bg-blue text-white shadow-xs"
-                  : "text-muted hover:text-ink hover:bg-bg"
-              }`}
-            >
-              <Activity className="w-3.5 h-3.5" />
-              <span>Platform Metrics</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("users")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === "users"
-                  ? "bg-blue text-white shadow-xs"
-                  : "text-muted hover:text-ink hover:bg-bg"
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>User Directory & Roles</span>
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-white/20 text-white font-bold">
-                {usersData?.total || 0}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("rbac")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === "rbac"
-                  ? "bg-purple-600 text-white shadow-xs"
-                  : "text-muted hover:text-ink hover:bg-bg"
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Role Permissions (RBAC Matrix)</span>
-              {/* <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-purple-500/20 text-purple-300 font-bold border border-purple-400/30">
-                4 ROLES
-              </span> */}
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => setActiveTab("pricing")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === "pricing"
-                  ? "bg-blue text-white shadow-xs"
-                  : "text-muted hover:text-ink hover:bg-bg"
-              }`}
-            >
-              <DollarSign className="w-3.5 h-3.5" />
-              <span>Dynamic SaaS Pricing</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("llm")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === "llm"
-                  ? "bg-blue text-white shadow-xs"
-                  : "text-muted hover:text-ink hover:bg-bg"
-              }`}
-            >
-              <Cpu className="w-3.5 h-3.5" />
-              <span>AI / LLM Providers</span>
-              {/* <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-blue-500/20 text-blue-300 font-bold border border-blue-400/30">
-                ADMIN ONLY
-              </span> */}
-            </button>
-          </div>
-
-          {/* Tab 1: Platform Metrics */}
-          {activeTab === "overview" && (
-            <PlatformMetricsTab stats={stats} isLoading={statsLoading} />
-          )}
-
-          {/* Tab 2: User Directory & Roles */}
-          {activeTab === "users" && (
-            <UserDirectoryTab
-              users={usersData?.users || []}
-              isLoading={usersLoading}
-              onUpdateUser={async (params) => updateUser(params).unwrap()}
-              onDeleteUser={async (id) => deleteUser(id).unwrap()}
-              showToast={showToast}
-            />
-          )}
-
-          {/* Tab 3: Dynamic SaaS Pricing */}
-          {activeTab === "pricing" && (
-            <DynamicPricingTab
-              pricingPlans={pricingData?.plans || []}
-              isLoading={pricingLoading}
-              onSavePricing={async (plans) => updatePricing({ plans }).unwrap()}
-              showToast={showToast}
-            />
-          )}
-
-          {/* Tab 4: Role Permissions (RBAC Matrix) */}
-          {activeTab === "rbac" && (
-            <RolePermissionsTab
-              roles={rbacData?.roles || []}
-              modules={rbacData?.modules || []}
-              isLoading={rbacLoading}
-              onSaveRBAC={async (roles) => updateRBAC({ roles }).unwrap()}
-              showToast={showToast}
-            />
-          )}
-
-          {/* Tab 5: AI / LLM Providers (Admin Cockpit Governed) */}
-          {activeTab === "llm" && (
-            <div className="bg-panel border border-line rounded-2xl p-6 shadow-xs space-y-6">
-              <div className="space-y-1.5 pb-4 border-b border-line">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue font-bold uppercase tracking-wider inline-flex items-center gap-1.5">
-                    <Sparkles className="w-3 h-3" />
-                    SUPER ADMIN AI ORCHESTRATION
-                  </span>
-                </div>
-                <h2 className="text-lg font-bold text-ink">
-                  Enterprise AI & LLM Engine Configuration
-                </h2>
-                <p className="text-xs text-muted max-w-2xl leading-relaxed">
-                  Centrally configure corporate AI credentials (Anthropic Claude, OpenAI, Google Gemini, Groq, Private vLLM), manage active model dropdowns, and set the global default copilot engine for Akshara across your organization.
-                </p>
-              </div>
-
-              <LlmProvidersSection />
-            </div>
-          )}
-        </div>
-
-        {/* Global Toast Notification */}
-        <ToastNotification
-          isOpen={!!toastMessage}
-          variant="success"
-          message={toastMessage}
-          onClose={() => setToastMessage(null)}
+        <AdminNav
+          title="Platform Administration & Dynamic Governance Control"
+          description="Centralized authority to manage corporate user profiles, subscription quotas, live B2B SaaS pricing, and RBAC permissions across all business roles."
+          onRefresh={async () => {
+            await refetchStats();
+            showToast("Platform metrics synchronized from database.");
+          }}
+          isRefreshing={statsFetching}
         />
-      </AppShell>
+
+        <PlatformMetricsTab stats={stats} isLoading={statsLoading} />
+      </div>
+
+      <ToastNotification
+        isOpen={!!toastMessage}
+        variant="success"
+        message={toastMessage}
+        onClose={() => setToastMessage(null)}
+      />
+    </AppShell>
   );
 }
 
 export default function AdminPage() {
   return (
-    <AuthGuard>
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center min-h-[400px] text-xs font-mono text-muted">
-            Loading Admin Cockpit...
+    <Suspense
+      fallback={
+        <AppShell>
+          <div className="p-12 text-center text-muted font-mono text-xs">
+            Loading Super Admin Cockpit...
           </div>
-        }
-      >
-        <AdminPageContent />
-      </Suspense>
-    </AuthGuard>
+        </AppShell>
+      }
+    >
+      <AdminMetricsContent />
+    </Suspense>
   );
 }
