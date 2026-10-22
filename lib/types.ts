@@ -549,7 +549,9 @@ export interface HistoryResponse {
 export interface PricingPlan {
   id: string;
   name: string;
-  badge?: string;
+  badge?: string | null;
+  tierBadge?: string;
+  isActive?: boolean;
   isPopular?: boolean;
   tagline: string;
   priceMonthlyInr: number;

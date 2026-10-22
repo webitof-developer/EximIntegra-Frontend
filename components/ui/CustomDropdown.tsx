@@ -292,7 +292,7 @@ export function CustomDropdown<T extends string = string>({
         <div
           role="listbox"
           tabIndex={-1}
-          className={`absolute z-50 mt-1.5 w-full min-w-[200px] bg-white rounded-xl border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.16),0_4px_12px_rgba(15,23,42,0.08)] py-1.5 animate-in fade-in zoom-in-95 duration-150 ${
+          className={`absolute z-50 mt-1.5 min-w-full bg-white rounded-xl border border-slate-200/90 shadow-[0_12px_36px_-6px_rgba(15,23,42,0.16),0_4px_12px_rgba(15,23,42,0.08)] py-1.5 animate-in fade-in zoom-in-95 duration-150 ${
             align === "right" ? "right-0" : "left-0"
           } ${menuClassName}`}
         >

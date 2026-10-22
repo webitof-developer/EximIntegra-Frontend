@@ -58,6 +58,16 @@ export const adminApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Pricing"],
     }),
+    deletePricingPlan: builder.mutation<
+      { plans: PricingPlan[]; message: string },
+      string
+    >({
+      query: (planId) => ({
+        url: `/admin/pricing/${planId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Pricing"],
+    }),
     getRBACMatrix: builder.query<RBACMatrixResponse, void>({
       query: () => "/admin/rbac",
       providesTags: ["RBAC"],
@@ -153,6 +163,7 @@ export const {
   useDeleteAdminUserMutation,
   useGetPricingPlansQuery,
   useUpdatePricingPlansMutation,
+  useDeletePricingPlanMutation,
   useGetRBACMatrixQuery,
   useUpdateRBACMatrixMutation,
   useGetLlmProvidersQuery,

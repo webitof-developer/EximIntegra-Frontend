@@ -159,7 +159,7 @@ export function UserDirectoryTab({
 
           <div className="flex items-center gap-1.5 text-xs text-muted">
             <span className="shrink-0">Tier:</span>
-            <div className="w-32">
+            <div className="w-36">
               <CustomDropdown
                 value={tierFilter}
                 onChange={(val) => setTierFilter(val)}
@@ -170,6 +170,7 @@ export function UserDirectoryTab({
                   { value: "ENTERPRISE", label: "Enterprise" },
                 ]}
                 size="sm"
+                align="right"
                 buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-lg text-xs font-semibold text-ink"
               />
             </div>

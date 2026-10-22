@@ -7,6 +7,7 @@ import { useAppSelector } from "@/store";
 import {
   useGetPricingPlansQuery,
   useUpdatePricingPlansMutation,
+  useDeletePricingPlanMutation,
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { DynamicPricingTab } from "./DynamicPricingTab";
@@ -30,6 +31,7 @@ export default function AdminPricingPage() {
   } = useGetPricingPlansQuery(undefined, { skip: !mounted || user?.role !== "ADMIN" });
 
   const [updatePricing] = useUpdatePricingPlansMutation();
+  const [deletePricing] = useDeletePricingPlanMutation();
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -95,6 +97,11 @@ export default function AdminPricingPage() {
           onSavePricing={async (plans) => {
             const res = await updatePricing({ plans }).unwrap();
             showToast("B2B SaaS pricing plans updated and published.");
+            return res;
+          }}
+          onDeletePlan={async (planId) => {
+            const res = await deletePricing(planId).unwrap();
+            showToast(res?.message || `Plan ${planId} permanently deleted.`);
             return res;
           }}
           showToast={showToast}

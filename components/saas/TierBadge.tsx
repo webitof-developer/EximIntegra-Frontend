@@ -26,29 +26,10 @@ export function TierBadge({
   const normalizedTier = tier.toUpperCase();
   const isDark = variant === "dark";
 
-  const tierKey: TierType =
-    normalizedTier === "PRO" || normalizedTier === "PROFESSIONAL"
-      ? "PROFESSIONAL"
-      : normalizedTier === "ENT" || normalizedTier === "ENTERPRISE"
-      ? "ENTERPRISE"
-      : "STARTER";
+  let config: { label: string; icon: React.ReactNode; classes: string };
 
-  const config = {
-    STARTER: {
-      label: compact ? "Start" : "Starter",
-      icon: (
-        <Shield
-          className={cn(
-            "w-2.5 h-2.5 shrink-0",
-            isDark ? "text-slate-400" : "text-slate-500"
-          )}
-        />
-      ),
-      classes: isDark
-        ? "bg-slate-800 text-slate-300 border-slate-700"
-        : "bg-slate-100 text-slate-700 border-slate-200/80",
-    },
-    PROFESSIONAL: {
+  if (normalizedTier === "PRO" || normalizedTier === "PROFESSIONAL") {
+    config = {
       label: compact ? "Pro" : "Professional",
       icon: (
         <Zap
@@ -61,8 +42,9 @@ export function TierBadge({
       classes: isDark
         ? "bg-blue-950/70 text-[#93C5FD] border-blue-700/50"
         : "bg-blue-50 text-blue-700 border-blue-200/80",
-    },
-    ENTERPRISE: {
+    };
+  } else if (normalizedTier === "ENT" || normalizedTier === "ENTERPRISE") {
+    config = {
       label: compact ? "Ent" : "Enterprise",
       icon: (
         <Crown
@@ -75,8 +57,38 @@ export function TierBadge({
       classes: isDark
         ? "bg-amber-500/20 text-amber-300 border-amber-400/40 font-bold"
         : "bg-gradient-to-r from-amber-50 to-orange-50/70 text-amber-800 border-amber-300/70 shadow-2xs font-semibold",
-    },
-  }[tierKey];
+    };
+  } else if (normalizedTier === "START" || normalizedTier === "STARTER") {
+    config = {
+      label: compact ? "Start" : "Starter",
+      icon: (
+        <Shield
+          className={cn(
+            "w-2.5 h-2.5 shrink-0",
+            isDark ? "text-slate-400" : "text-slate-500"
+          )}
+        />
+      ),
+      classes: isDark
+        ? "bg-slate-800 text-slate-300 border-slate-700"
+        : "bg-slate-100 text-slate-700 border-slate-200/80",
+    };
+  } else {
+    config = {
+      label: tier.charAt(0).toUpperCase() + tier.slice(1).toLowerCase(),
+      icon: (
+        <Sparkles
+          className={cn(
+            "w-2.5 h-2.5 shrink-0",
+            isDark ? "text-purple-300" : "text-purple-600"
+          )}
+        />
+      ),
+      classes: isDark
+        ? "bg-purple-950/70 text-purple-300 border-purple-700/50"
+        : "bg-purple-50 text-purple-700 border-purple-200/80 font-medium",
+    };
+  }
 
   const sizeClasses = {
     xs: "text-[10px] px-1.5 py-0.5 gap-1 rounded-md",
