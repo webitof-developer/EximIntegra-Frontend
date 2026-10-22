@@ -1,17 +1,7 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  ShieldCheck,
-  Activity,
-  Users,
-  Sliders,
-  DollarSign,
-  Cpu,
-  RefreshCw,
-} from "lucide-react";
+import { ShieldCheck, RefreshCw } from "lucide-react";
 
 interface AdminNavProps {
   title?: string;
@@ -26,44 +16,7 @@ export function AdminNav({
   description = "Centralized authority to manage corporate user profiles, subscription quotas, live B2B SaaS pricing, and RBAC permissions across all business roles.",
   onRefresh,
   isRefreshing,
-  userCount,
 }: AdminNavProps) {
-  const pathname = usePathname();
-
-  const navLinks = [
-    {
-      href: "/admin",
-      label: "Platform Metrics",
-      icon: Activity,
-      isActive: pathname === "/admin",
-    },
-    {
-      href: "/admin/users",
-      label: "User Directory & Roles",
-      icon: Users,
-      badge: userCount !== undefined ? String(userCount) : undefined,
-      isActive: pathname === "/admin/users",
-    },
-    {
-      href: "/admin/rbac",
-      label: "Role Permissions (RBAC Matrix)",
-      icon: Sliders,
-      isActive: pathname === "/admin/rbac",
-    },
-    {
-      href: "/admin/pricing",
-      label: "Dynamic SaaS Pricing",
-      icon: DollarSign,
-      isActive: pathname === "/admin/pricing",
-    },
-    {
-      href: "/admin/llm",
-      label: "AI / LLM Providers",
-      icon: Cpu,
-      isActive: pathname === "/admin/llm",
-    },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Header Banner */}
@@ -97,32 +50,6 @@ export function AdminNav({
             </button>
           </div>
         )}
-      </div>
-
-      {/* Navigation Tabs Bar */}
-      <div className="flex items-center gap-2 border-b border-line pb-2 overflow-x-auto">
-        {navLinks.map((link) => {
-          const Icon = link.icon;
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap ${
-                link.isActive
-                  ? "bg-blue text-white shadow-xs"
-                  : "text-muted hover:text-ink hover:bg-bg"
-              }`}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{link.label}</span>
-              {link.badge && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-white/20 text-white font-bold">
-                  {link.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
       </div>
     </div>
   );

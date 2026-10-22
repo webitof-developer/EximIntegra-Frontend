@@ -17,6 +17,12 @@ function AdminMetricsContent() {
   const { user } = useAppSelector((state) => state.auth);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Backward compatibility: redirect ?tab=... to its new dedicated route
   useEffect(() => {
     const tab = searchParams.get("tab")?.toLowerCase();
@@ -31,12 +37,24 @@ function AdminMetricsContent() {
     isLoading: statsLoading,
     refetch: refetchStats,
     isFetching: statsFetching,
-  } = useGetAdminStatsQuery(undefined, { skip: user?.role !== "ADMIN" });
+  } = useGetAdminStatsQuery(undefined, { skip: !mounted || user?.role !== "ADMIN" });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // SSR Hydration guard
+  if (!mounted) {
+    return (
+      <AppShell>
+        <div className="p-12 text-center text-muted flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-navy/20 animate-pulse border border-line" />
+          <span className="text-xs font-mono">Initializing Super Admin Cockpit...</span>
+        </div>
+      </AppShell>
+    );
+  }
 
   // Guard against non-admin users
   if (user && user.role !== "ADMIN") {

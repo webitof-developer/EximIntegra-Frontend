@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -18,13 +18,18 @@ import { ShieldAlert } from "lucide-react";
 export default function AdminUsersPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const {
     data: usersData,
     isLoading: usersLoading,
     refetch: refetchUsers,
     isFetching: usersFetching,
-  } = useGetAdminUsersQuery();
+  } = useGetAdminUsersQuery(undefined, { skip: !mounted || user?.role !== "ADMIN" });
 
   const [updateUser] = useUpdateAdminUserMutation();
   const [deleteUser] = useDeleteAdminUserMutation();
@@ -33,6 +38,18 @@ export default function AdminUsersPage() {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
+
+  // SSR Hydration guard
+  if (!mounted) {
+    return (
+      <AppShell>
+        <div className="p-12 text-center text-muted flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-navy/20 animate-pulse border border-line" />
+          <span className="text-xs font-mono">Loading User Directory...</span>
+        </div>
+      </AppShell>
+    );
+  }
 
   // Guard against non-admin users
   if (user && user.role !== "ADMIN") {

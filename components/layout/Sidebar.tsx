@@ -234,8 +234,14 @@ function SidebarInner({
 }) {
   const pathname = usePathname();
   const user = useAppSelector((state) => state.auth.user);
+  const [mounted, setMounted] = React.useState(false);
 
-  const activeSections: NavSection[] = user?.role === "ADMIN" ? adminNavSections : navSections;
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isAdminView = pathname.startsWith("/admin") || (mounted && user?.role === "ADMIN");
+  const activeSections: NavSection[] = isAdminView ? adminNavSections : navSections;
 
   return (
     <div className="flex flex-col h-full justify-between select-none">
@@ -250,7 +256,7 @@ function SidebarInner({
           )}
         >
           <Link
-            href={user?.role === "ADMIN" ? "/admin" : "/dashboard"}
+            href={isAdminView ? "/admin" : "/dashboard"}
             onClick={onClose}
             className="flex items-center gap-3 group"
             title="EXIMINTEGRA — Trade Advisory OS"
@@ -449,49 +455,51 @@ function SidebarInner({
         </div>
       </div>
 
-      {/* Pinned Bottom Panel: Verified Datasets / Reliability State */}
-      <div
-        className={cn(
-          "border-t border-[#1B2A4A] bg-[#0B1426] transition-all",
-          isCollapsed ? "p-2 flex flex-col items-center justify-center" : "p-3"
-        )}
-      >
-        {isCollapsed ? (
-          <div
-            className="p-2 rounded-lg bg-[#142038] border border-[#1E2E4E] flex flex-col items-center gap-1 cursor-pointer hover:bg-[#182644] transition-colors"
-            title="CBIC Gateway v2026.3 Live Sync"
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-green animate-pulse" />
-            <span className="text-[9px] font-mono text-green font-bold">LIVE</span>
-          </div>
-        ) : (
-          <div className="p-3 rounded-lg bg-[#142038] border border-[#1E2E4E] space-y-2 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-white flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-green animate-pulse" />
-                CBIC Gateway
-              </span>
-              <span className="text-[9px] font-mono text-[#8EA0C0] bg-[#1C2C4C] px-1.5 py-0.5 rounded">
-                v2026.3
-              </span>
+      {/* Pinned Bottom Panel: Verified Datasets / Reliability State (Hidden in Admin Sidebar) */}
+      {!isAdminView && (
+        <div
+          className={cn(
+            "border-t border-[#1B2A4A] bg-[#0B1426] transition-all",
+            isCollapsed ? "p-2 flex flex-col items-center justify-center" : "p-3"
+          )}
+        >
+          {isCollapsed ? (
+            <div
+              className="p-2 rounded-lg bg-[#142038] border border-[#1E2E4E] flex flex-col items-center gap-1 cursor-pointer hover:bg-[#182644] transition-colors"
+              title="CBIC Gateway v2026.3 Live Sync"
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-green animate-pulse" />
+              <span className="text-[9px] font-mono text-green font-bold">LIVE</span>
             </div>
-            <p className="text-[10px] text-[#8EA0C0] leading-tight">
-              Tariffs synchronized with Customs Tariff Act 2026 & DGFT notices.
-            </p>
-            <div className="pt-1 flex items-center justify-between border-t border-[#1E2E4E]/80">
-              <Link
-                href="/reports"
-                onClick={onClose}
-                className="text-[10px] text-blue hover:underline flex items-center gap-1"
-              >
-                Verify Provenance
-                <ChevronRight className="w-2.5 h-2.5" />
-              </Link>
-              <span className="text-[10px] font-mono text-green">LIVE</span>
+          ) : (
+            <div className="p-3 rounded-lg bg-[#142038] border border-[#1E2E4E] space-y-2 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-white flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-green animate-pulse" />
+                  CBIC Gateway
+                </span>
+                <span className="text-[9px] font-mono text-[#8EA0C0] bg-[#1C2C4C] px-1.5 py-0.5 rounded">
+                  v2026.3
+                </span>
+              </div>
+              <p className="text-[10px] text-[#8EA0C0] leading-tight">
+                Tariffs synchronized with Customs Tariff Act 2026 & DGFT notices.
+              </p>
+              <div className="pt-1 flex items-center justify-between border-t border-[#1E2E4E]/80">
+                <Link
+                  href="/reports"
+                  onClick={onClose}
+                  className="text-[10px] text-blue hover:underline flex items-center gap-1"
+                >
+                  Verify Provenance
+                  <ChevronRight className="w-2.5 h-2.5" />
+                </Link>
+                <span className="text-[10px] font-mono text-green">LIVE</span>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

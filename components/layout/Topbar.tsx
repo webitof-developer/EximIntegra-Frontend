@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -99,6 +99,11 @@ export function Topbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const matchedPath =
     Object.keys(pageMeta).find((path) => pathname === path || pathname.startsWith(path + "/")) ||
@@ -165,17 +170,6 @@ export function Topbar() {
 
       {/* Right Action Bar */}
       <div className="flex items-center gap-3 shrink-0">
-        {/* Super Admin Quick Badge & Link */}
-        {isAuthenticated && user?.role === "ADMIN" && (
-          <Link
-            href="/admin"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-700 hover:bg-purple-800 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
-          >
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Admin Cockpit</span>
-          </Link>
-        )}
-
         {/* Akshara Quick Launcher */}
         <Link
           href="/akshara"
@@ -189,7 +183,9 @@ export function Topbar() {
         <NotificationDropdown />
 
         {/* User Profile / Auth State */}
-        {isAuthenticated && user ? (
+        {!mounted ? (
+          <div className="w-8 h-8 rounded-full bg-navy/20 animate-pulse border border-line" />
+        ) : isAuthenticated && user ? (
           <div className="relative">
             <button
               type="button"
