@@ -21,6 +21,7 @@ import {
   Ship,
   Sparkles,
   Info,
+  Check,
 } from "lucide-react";
 
 interface CountryComparisonMatrixProps {
@@ -34,8 +35,6 @@ export function CountryComparisonMatrix({
   onApplyCountry,
   selectedOrigin = "AE",
 }: CountryComparisonMatrixProps) {
-  const [activeCode, setActiveCode] = useState(selectedOrigin);
-
   const isOverallNotCovered = data.coverage === "NOT_COVERED";
   const bestCorridor = data.comparisons.find(
     (c) => c.country_code === data.best_arbitrage_country && c.coverage !== "NOT_COVERED"
@@ -459,31 +458,50 @@ export function CountryComparisonMatrix({
                 <td className="py-4 px-5 font-semibold text-muted text-[11px]">
                   Pipeline Action
                 </td>
-                {data.comparisons.map((c) => (
-                  <td
-                    key={c.country_code}
-                    className={`py-4 px-5 text-center ${
-                      c.is_recommended_arbitrage
-                        ? "border-x-2 border-green/30 bg-green-dim/10"
-                        : "border-r border-line"
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      disabled={c.coverage === "NOT_COVERED"}
-                      onClick={() => onApplyCountry(c)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                        c.coverage === "NOT_COVERED"
-                          ? "bg-bg text-muted border border-line cursor-not-allowed opacity-50"
-                          : c.is_recommended_arbitrage
-                          ? "bg-green text-white hover:bg-green-dark cursor-pointer"
-                          : "bg-bg text-ink border border-line hover:bg-line cursor-pointer"
+                {data.comparisons.map((c) => {
+                  const isSelected = c.country_code === selectedOrigin;
+                  const isNotCovered = c.coverage === "NOT_COVERED";
+
+                  return (
+                    <td
+                      key={c.country_code}
+                      className={`py-4 px-5 text-center ${
+                        c.is_recommended_arbitrage
+                          ? "border-x-2 border-green/30 bg-green-dim/10"
+                          : "border-r border-line"
                       }`}
                     >
-                      {c.coverage === "NOT_COVERED" ? "Not Covered" : "Select Origin"}
-                    </button>
-                  </td>
-                ))}
+                      <button
+                        type="button"
+                        disabled={isNotCovered}
+                        onClick={() => onApplyCountry(c)}
+                        title={
+                          isSelected
+                            ? `${c.country_name} is currently selected as your active pipeline origin`
+                            : `Set ${c.country_name} as primary origin in shared context`
+                        }
+                        className={`inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          isNotCovered
+                            ? "bg-bg text-muted border border-line cursor-not-allowed opacity-50"
+                            : isSelected
+                            ? "bg-green text-white border border-green-dark shadow-xs cursor-default ring-2 ring-green/20"
+                            : "bg-panel text-ink border border-line hover:bg-line hover:border-line-dark cursor-pointer shadow-2xs"
+                        }`}
+                      >
+                        {isNotCovered ? (
+                          "Not Covered"
+                        ) : isSelected ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 shrink-0" />
+                            <span>Active Origin</span>
+                          </>
+                        ) : (
+                          "Select Origin"
+                        )}
+                      </button>
+                    </td>
+                  );
+                })}
               </tr>
             </tbody>
           </Table>
