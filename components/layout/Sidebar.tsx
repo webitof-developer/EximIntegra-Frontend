@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -31,11 +31,13 @@ import {
   Sliders,
   DollarSign,
   Cpu,
+  LogOut,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
 import { TierBadge } from "@/components/saas/TierBadge";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setMobileNavOpen } from "@/store/uiSlice";
+import { logout } from "@/store/authSlice";
 
 interface NavItem {
   id: string;
@@ -169,7 +171,7 @@ const navSections: NavSection[] = [
 
 const adminNavSections: NavSection[] = [
   {
-    title: "SUPER ADMIN COCKPIT",
+    title: "SYSTEM OVERSIGHT",
     items: [
       {
         id: "admin-metrics",
@@ -179,6 +181,11 @@ const adminNavSections: NavSection[] = [
         glyph: "MET",
         badge: "LIVE" as const,
       },
+    ],
+  },
+  {
+    title: "ACCESS & IDENTITY",
+    items: [
       {
         id: "admin-users",
         title: "User Directory & Roles",
@@ -193,6 +200,11 @@ const adminNavSections: NavSection[] = [
         icon: <Sliders className="w-4 h-4 text-purple-400" />,
         glyph: "RBC",
       },
+    ],
+  },
+  {
+    title: "COMMERCIAL & AI ENGINE",
+    items: [
       {
         id: "admin-pricing",
         title: "Dynamic Pricing Plans",
@@ -221,6 +233,8 @@ function SidebarInner({
   isCollapsed?: boolean;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const [mounted, setMounted] = React.useState(false);
 
@@ -230,6 +244,33 @@ function SidebarInner({
 
   const isAdminView = pathname.startsWith("/admin") || (mounted && user?.role === "ADMIN");
   const activeSections: NavSection[] = isAdminView ? adminNavSections : navSections;
+
+  const handleLogout = () => {
+    dispatch(logout());
+    if (onClose) onClose();
+    router.push("/login");
+  };
+
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : isAdminView
+    ? "SA"
+    : "EI";
+
+  const displayName =
+    user?.name ||
+    (isAdminView ? "Super Admin" : user?.email?.split("@")[0] || "User");
+
+  const displayRole = isAdminView
+    ? "Platform Admin"
+    : user?.role
+    ? user.role.replace(/_/g, " ")
+    : "Trade Operator";
 
   return (
     <div className="flex flex-col h-full justify-between select-none">
@@ -443,51 +484,77 @@ function SidebarInner({
         </div>
       </div>
 
-      {/* Pinned Bottom Panel: Verified Datasets / Reliability State (Hidden in Admin Sidebar) */}
-      {!isAdminView && (
-        <div
-          className={cn(
-            "border-t border-[#1B2A4A] bg-[#0B1426] transition-all",
-            isCollapsed ? "p-2 flex flex-col items-center justify-center" : "p-3"
-          )}
-        >
-          {isCollapsed ? (
+      {/* Sticky Bottom Panel: User / Admin Profile with Sign Out (Replaces CBIC Gateway) */}
+      <div
+        className={cn(
+          "border-t border-[#1B2A4A] bg-[#0B1426] shrink-0 transition-all sticky bottom-0 z-10",
+          isCollapsed ? "p-2 flex flex-col items-center justify-center gap-2" : "p-3"
+        )}
+      >
+        {isCollapsed ? (
+          <div className="flex flex-col items-center gap-2">
             <div
-              className="p-2 rounded-lg bg-[#142038] border border-[#1E2E4E] flex flex-col items-center gap-1 cursor-pointer hover:bg-[#182644] transition-colors"
-              title="CBIC Gateway v2026.3 Live Sync"
+              className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-xs border",
+                isAdminView
+                  ? "bg-gradient-to-tr from-blue-700 to-indigo-600 border-indigo-400/30"
+                  : "bg-gradient-to-tr from-blue to-sky-500 border-blue-400/30"
+              )}
+              title={`${displayName} (${displayRole})`}
             >
-              <span className="w-2.5 h-2.5 rounded-full bg-green animate-pulse" />
-              <span className="text-[9px] font-mono text-green font-bold">LIVE</span>
+              {initials}
             </div>
-          ) : (
-            <div className="p-3 rounded-lg bg-[#142038] border border-[#1E2E4E] space-y-2 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-white flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green animate-pulse" />
-                  CBIC Gateway
-                </span>
-                <span className="text-[9px] font-mono text-[#8EA0C0] bg-[#1C2C4C] px-1.5 py-0.5 rounded">
-                  v2026.3
-                </span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Sign Out"
+              aria-label="Sign Out"
+              className="p-1.5 rounded-lg text-[#8EA0C0] hover:text-red-400 hover:bg-red-500/15 transition-all cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-2.5 p-2 rounded-xl bg-[#142038] border border-[#1E2E4E] animate-in fade-in duration-200">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div
+                className={cn(
+                  "w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shrink-0 shadow-xs border",
+                  isAdminView
+                    ? "bg-gradient-to-tr from-blue-700 to-indigo-600 border-indigo-400/30"
+                    : "bg-gradient-to-tr from-blue to-sky-500 border-blue-400/30"
+                )}
+              >
+                {initials}
               </div>
-              <p className="text-[10px] text-[#8EA0C0] leading-tight">
-                Tariffs synchronized with Customs Tariff Act 2026 & DGFT notices.
-              </p>
-              <div className="pt-1 flex items-center justify-between border-t border-[#1E2E4E]/80">
-                <Link
-                  href="/reports"
-                  onClick={onClose}
-                  className="text-[10px] text-blue hover:underline flex items-center gap-1"
-                >
-                  Verify Provenance
-                  <ChevronRight className="w-2.5 h-2.5" />
-                </Link>
-                <span className="text-[10px] font-mono text-green">LIVE</span>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-white truncate leading-tight">
+                  {displayName}
+                </div>
+                <div className="text-[10px] text-[#8EA0C0] font-mono truncate flex items-center gap-1.5 mt-0.5">
+                  <span
+                    className={cn(
+                      "w-1.5 h-1.5 rounded-full shrink-0",
+                      isAdminView ? "bg-amber-400" : "bg-emerald-400 animate-pulse"
+                    )}
+                  />
+                  <span className="truncate">{displayRole}</span>
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      )}
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Sign Out"
+              aria-label="Sign Out"
+              className="p-1.5 rounded-lg text-[#8EA0C0] hover:text-red-400 hover:bg-red-500/15 transition-all cursor-pointer shrink-0 group"
+            >
+              <LogOut className="w-4 h-4 group-hover:scale-105 transition-transform" />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
