@@ -44,7 +44,25 @@ function LoginForm() {
           user: response.user,
         })
       );
-      router.push(returnUrl);
+
+      const isAdmin = response.user?.role === "ADMIN";
+      let destination = "/dashboard";
+
+      // If user came with a specific returnUrl (other than root, dashboard, or auth pages)
+      if (
+        returnUrl &&
+        returnUrl !== "/" &&
+        returnUrl !== "/dashboard" &&
+        returnUrl !== "/login" &&
+        returnUrl !== "/register"
+      ) {
+        // Non-admin users are never routed to /admin pages
+        if (!returnUrl.startsWith("/admin") || isAdmin) {
+          destination = returnUrl;
+        }
+      }
+
+      router.push(destination);
     } catch (err: any) {
       setErrorMsg(
         getApiErrorMessage(err, "Invalid credentials. Please verify your email and password.")
