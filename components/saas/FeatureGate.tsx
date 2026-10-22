@@ -34,7 +34,7 @@ export function FeatureGate({
   const currentWeight = tierWeights[currentTier] || 1;
   const requiredWeight = tierWeights[requiredTier] || 2;
 
-  const isUnlocked = currentWeight >= requiredWeight;
+  const isUnlocked = user?.role === "ADMIN" || currentWeight >= requiredWeight;
 
   if (isUnlocked) {
     return <>{children}</>;

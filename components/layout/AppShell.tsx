@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
-import { usePathname } from "next/navigation";
+import React, { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useAppSelector } from "@/store";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
@@ -13,7 +14,19 @@ export interface AppShellProps {
 
 export function AppShell({ children, fullWidth = false }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const user = useAppSelector((state) => state.auth.user);
   const isFullWidth = fullWidth || pathname?.startsWith("/admin");
+
+  useEffect(() => {
+    if (user?.role === "ADMIN" && pathname && !pathname.startsWith("/admin")) {
+      router.replace("/admin");
+    }
+  }, [user?.role, pathname, router]);
+
+  if (user?.role === "ADMIN" && pathname && !pathname.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-bg antialiased text-ink font-sans">

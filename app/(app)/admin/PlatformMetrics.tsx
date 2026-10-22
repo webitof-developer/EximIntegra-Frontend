@@ -84,9 +84,9 @@ export function PlatformMetricsTab({
               <span className="text-ink font-semibold">Dashboard Overview</span>
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-blue" />
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/10 text-purple-700 font-bold border border-purple-500/20">
+            {/* <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/10 text-purple-700 font-bold border border-purple-500/20">
               v2026.03-LIVE
-            </span>
+            </span> */}
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-ink flex items-center gap-2">

@@ -48,16 +48,23 @@ function LoginForm() {
       const isAdmin = response.user?.role === "ADMIN";
       let destination = isAdmin ? "/admin" : "/dashboard";
 
-      // If user came with a specific returnUrl (other than root, dashboard, or auth pages)
-      if (
-        returnUrl &&
-        returnUrl !== "/" &&
-        returnUrl !== "/dashboard" &&
-        returnUrl !== "/login" &&
-        returnUrl !== "/register"
-      ) {
+      if (isAdmin) {
+        // Admin only goes to /admin or an /admin subpage
+        if (returnUrl && returnUrl.startsWith("/admin")) {
+          destination = returnUrl;
+        } else {
+          destination = "/admin";
+        }
+      } else {
         // Non-admin users are never routed to /admin pages
-        if (!returnUrl.startsWith("/admin") || isAdmin) {
+        if (
+          returnUrl &&
+          returnUrl !== "/" &&
+          returnUrl !== "/dashboard" &&
+          returnUrl !== "/login" &&
+          returnUrl !== "/register" &&
+          !returnUrl.startsWith("/admin")
+        ) {
           destination = returnUrl;
         }
       }

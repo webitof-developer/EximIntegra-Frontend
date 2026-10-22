@@ -86,10 +86,10 @@ export function LandingNavbar() {
         <div className="hidden md:flex items-center gap-3">
           {isAuthenticated ? (
             <Link
-              href="/dashboard"
+              href={user?.role === "ADMIN" ? "/admin" : "/dashboard"}
               className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue hover:bg-blue-dark text-white text-xs font-semibold shadow-xs transition-colors"
             >
-              <span>Go to Cockpit</span>
+              <span>{user?.role === "ADMIN" ? "Super Admin Cockpit" : "Go to Cockpit"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           ) : (
@@ -170,10 +170,10 @@ export function LandingNavbar() {
           <div className="pt-3 border-t border-line flex flex-col gap-2">
             {isAuthenticated ? (
               <Link
-                href="/dashboard"
+                href={user?.role === "ADMIN" ? "/admin" : "/dashboard"}
                 className="w-full py-2 text-center rounded-lg bg-blue text-white font-semibold shadow-xs"
               >
-                Go to Cockpit &rarr;
+                {user?.role === "ADMIN" ? "Super Admin Cockpit \u2192" : "Go to Cockpit \u2192"}
               </Link>
             ) : (
               <>

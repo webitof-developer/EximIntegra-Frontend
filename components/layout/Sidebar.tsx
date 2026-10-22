@@ -209,18 +209,6 @@ const adminNavSections: NavSection[] = [
       },
     ],
   },
-  {
-    title: "SYSTEM & AUDIT",
-    items: [
-      {
-        id: "notifications",
-        title: "System Alerts",
-        href: "/notifications",
-        icon: <Bell className="w-4 h-4 text-rose-400" />,
-        glyph: "ALRT",
-      },
-    ],
-  },
 ];
 
 function SidebarInner({

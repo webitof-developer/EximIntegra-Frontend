@@ -48,6 +48,8 @@ export function AuthGuard({ children }: AuthGuardProps) {
       }
     } else if (isAuthenticated && user?.role !== "ADMIN" && pathname.startsWith("/admin")) {
       router.replace("/dashboard");
+    } else if (isAuthenticated && user?.role === "ADMIN" && !pathname.startsWith("/admin")) {
+      router.replace("/admin");
     }
   }, [isAuthenticated, isInitialized, mounted, pathname, router, user?.role]);
 
@@ -67,6 +69,29 @@ export function AuthGuard({ children }: AuthGuardProps) {
           </div>
           <span className="text-xs text-muted font-mono">
             Verifying Session...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin cannot open user pages; immediately block render while redirecting to /admin
+  if (isAuthenticated && user?.role === "ADMIN" && !pathname.startsWith("/admin")) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-line bg-panel flex items-center justify-center animate-pulse">
+            <Image
+              src="/eximintegra-logo-mark.png"
+              alt="EximIntegra"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-xs text-muted font-mono">
+            Redirecting to Super Admin Cockpit...
           </span>
         </div>
       </div>
