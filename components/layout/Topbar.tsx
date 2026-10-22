@@ -94,6 +94,8 @@ export function Topbar() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
 
+  const isAdminRoute = pathname?.startsWith("/admin");
+
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
   const sidebarCollapsed = useAppSelector((state) => state.ui.sidebarCollapsed);
 
@@ -170,14 +172,16 @@ export function Topbar() {
 
       {/* Right Action Bar */}
       <div className="flex items-center gap-3 shrink-0">
-        {/* Akshara Quick Launcher */}
-        <Link
-          href="/akshara"
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue text-white text-xs font-semibold hover:bg-blue-dark transition-all shadow-xs shrink-0 whitespace-nowrap"
-        >
-          <Sparkles className="w-3.5 h-3.5 shrink-0" />
-          <span className="whitespace-nowrap">Ask Akshara</span>
-        </Link>
+        {/* Akshara Quick Launcher (Hidden on Admin Panel) */}
+        {!isAdminRoute && (
+          <Link
+            href="/akshara"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue text-white text-xs font-semibold hover:bg-blue-dark transition-all shadow-xs shrink-0 whitespace-nowrap"
+          >
+            <Sparkles className="w-3.5 h-3.5 shrink-0" />
+            <span className="whitespace-nowrap">Ask Akshara</span>
+          </Link>
+        )}
 
         {/* Notification Bell Dropdown */}
         <NotificationDropdown />

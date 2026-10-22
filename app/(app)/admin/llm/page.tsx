@@ -67,8 +67,9 @@ export default function AdminLlmPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <AdminNav
+          category="AI Providers"
           title="Enterprise AI & LLM Engine Configuration"
           description="Centrally configure corporate AI credentials (Anthropic Claude, OpenAI, Google Gemini, Groq, Private vLLM), manage active model dropdowns, and set the global default copilot engine for Akshara across your organization."
         />

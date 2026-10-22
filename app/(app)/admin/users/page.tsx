@@ -83,10 +83,11 @@ export default function AdminUsersPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <AdminNav
           title="Enterprise User Directory & Access Roles"
           description="Manage registered organization users, role assignments, subscription tiers, and corporate account access."
+          category="User Directory"
           onRefresh={refetchUsers}
           isRefreshing={usersFetching}
           userCount={usersData?.total}

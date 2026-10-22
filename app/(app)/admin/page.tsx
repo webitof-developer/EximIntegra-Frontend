@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppSelector } from "@/store";
-import { useGetAdminStatsQuery } from "@/store/adminApi";
-import { AdminNav } from "./AdminNav";
+import { useGetAdminStatsQuery, useGetAdminUsersQuery } from "@/store/adminApi";
 import { PlatformMetricsTab } from "./PlatformMetrics";
 import { ToastNotification } from "@/components/ui";
 import { ShieldAlert } from "lucide-react";
@@ -16,7 +15,6 @@ function AdminMetricsContent() {
   const searchParams = useSearchParams();
   const { user } = useAppSelector((state) => state.auth);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -38,6 +36,12 @@ function AdminMetricsContent() {
     refetch: refetchStats,
     isFetching: statsFetching,
   } = useGetAdminStatsQuery(undefined, { skip: !mounted || user?.role !== "ADMIN" });
+
+  const {
+    data: usersData,
+    refetch: refetchUsers,
+    isFetching: usersFetching,
+  } = useGetAdminUsersQuery(undefined, { skip: !mounted || user?.role !== "ADMIN" });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -87,20 +91,22 @@ function AdminMetricsContent() {
     );
   }
 
+  const isSyncing = statsFetching || usersFetching;
+
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-6">
-        <AdminNav
-          title="Platform Administration & Dynamic Governance Control"
-          description="Centralized authority to manage corporate user profiles, subscription quotas, live B2B SaaS pricing, and RBAC permissions across all business roles."
+      <div className="w-full space-y-6">
+        <PlatformMetricsTab
+          stats={stats}
+          recentUsers={usersData?.users || []}
+          isLoading={statsLoading}
+          adminName={user?.name || "Admin"}
           onRefresh={async () => {
-            await refetchStats();
-            showToast("Platform metrics synchronized from database.");
+            await Promise.all([refetchStats(), refetchUsers()]);
+            showToast("Platform data synchronized with PostgreSQL database.");
           }}
-          isRefreshing={statsFetching}
+          isRefreshing={isSyncing}
         />
-
-        <PlatformMetricsTab stats={stats} isLoading={statsLoading} />
       </div>
 
       <ToastNotification

@@ -80,8 +80,9 @@ export default function AdminRBACPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <AdminNav
+          category="Role Permissions"
           title="Role Permissions (RBAC Matrix) Governance"
           description="Configure granular module permissions and access-control policies across all organizational user roles."
           onRefresh={refetchRBAC}

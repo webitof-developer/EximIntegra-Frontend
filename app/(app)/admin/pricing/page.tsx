@@ -80,8 +80,9 @@ export default function AdminPricingPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <AdminNav
+          category="Dynamic Pricing"
           title="Dynamic B2B SaaS Tier Pricing & Feature Quotas"
           description="Centrally configure live plan limits, monthly/annual fees in INR and USD, and feature entitlements published to customer pricing tiers."
           onRefresh={refetchPricing}
