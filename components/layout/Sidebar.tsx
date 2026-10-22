@@ -345,8 +345,9 @@ function SidebarInner({
                   const isActive =
                     pathname === item.href ||
                     (item.href !== "/dashboard" &&
-                      pathname.startsWith(item.href) &&
-                      item.href !== "/");
+                      item.href !== "/admin" &&
+                      item.href !== "/" &&
+                      pathname.startsWith(item.href + "/"));
 
                   if (item.disabled) {
                     return (

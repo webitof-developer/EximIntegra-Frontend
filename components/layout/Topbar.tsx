@@ -15,7 +15,6 @@ import {
   ChevronDown,
   User as UserIcon,
   Shield,
-  ShieldAlert,
   CreditCard,
   Crown,
   Menu,
@@ -267,16 +266,7 @@ export function Topbar() {
                   </span>
                 </button>
 
-                {user.role === "ADMIN" ? (
-                  <Link
-                    href="/admin"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200"
-                  >
-                    <ShieldAlert className="w-3.5 h-3.5 text-purple-600" />
-                    <span>Super Admin Console</span>
-                  </Link>
-                ) : (
+                {user.role !== "ADMIN" && (
                   <>
                     <Link
                       href="/pricing"
