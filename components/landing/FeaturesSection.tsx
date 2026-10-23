@@ -111,7 +111,7 @@ const features: FeatureCardItem[] = [
     badge: "BYOK & ERP",
     title: "BYOK Integrations & Audit Trails",
     description:
-      "Bring your own API keys, connect customs gateways, and sync with ERP systems.",
+      "Bring your own API keys, configure private contract rates, and sync with ERP systems.",
     bullets: [
       "AES-256 client-side BYOK encryption",
       "Private carrier freight & smelter yield overrides",

@@ -22,6 +22,9 @@ import {
   Users,
 } from "lucide-react";
 
+// Toggle flag to easily re-enable Trade Gateways when official API integrations are ready
+const SHOW_TRADE_GATEWAYS = process.env.NEXT_PUBLIC_ENABLE_TRADE_GATEWAYS === "true";
+
 function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,17 +40,23 @@ function SettingsContent() {
     ) {
       return "billing";
     }
-    const validTabs = ["gateways", "contracts", "platform", "billing", "team"];
+    const validTabs = SHOW_TRADE_GATEWAYS
+      ? ["gateways", "contracts", "platform", "billing", "team"]
+      : ["contracts", "platform", "billing", "team"];
     if (tabParam && validTabs.includes(tabParam)) {
       return tabParam;
     }
-    return "gateways";
+    return SHOW_TRADE_GATEWAYS ? "gateways" : "contracts";
   };
 
   const [activeTab, setActiveTab] = useState<string>(getInitialTab);
 
   useEffect(() => {
     const currentTab = searchParams.get("tab")?.toLowerCase();
+    const validTabs = SHOW_TRADE_GATEWAYS
+      ? ["gateways", "contracts", "platform", "billing", "team"]
+      : ["contracts", "platform", "billing", "team"];
+
     if (
       currentTab === "billing" ||
       currentTab === "subscription" ||
@@ -60,23 +69,24 @@ function SettingsContent() {
       if (user?.role === "ADMIN") {
         router.push("/admin/llm");
       } else {
-        setActiveTab("gateways");
+        setActiveTab(SHOW_TRADE_GATEWAYS ? "gateways" : "contracts");
       }
-    } else if (
-      currentTab &&
-      ["gateways", "contracts", "platform", "billing", "team"].includes(currentTab)
-    ) {
+    } else if (currentTab && validTabs.includes(currentTab)) {
       setActiveTab(currentTab);
     }
   }, [searchParams, user, router]);
 
-  const tabsConfig = [
-    {
-      id: "gateways",
-      label: "Trade Gateways",
-      icon: <Globe className="w-3.5 h-3.5 text-green" />,
-      badge: "4",
-    },
+  const allTabsConfig = [
+    ...(SHOW_TRADE_GATEWAYS
+      ? [
+          {
+            id: "gateways",
+            label: "Trade Gateways",
+            icon: <Globe className="w-3.5 h-3.5 text-green" />,
+            badge: "4",
+          },
+        ]
+      : []),
     {
       id: "contracts",
       label: "Contract Rates & Yield",
@@ -107,18 +117,33 @@ function SettingsContent() {
     <div className="space-y-6 w-full pb-16">
       {/* Quick Status Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
-          <span className="text-[10px] font-mono uppercase text-muted block">
-            Customs Gateways
-          </span>
-          <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
-            <Globe className="w-3.5 h-3.5 text-green" />
-            <span>3 Connected</span>
+        {SHOW_TRADE_GATEWAYS ? (
+          <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+            <span className="text-[10px] font-mono uppercase text-muted block">
+              Customs Gateways
+            </span>
+            <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-green" />
+              <span>3 Connected</span>
+            </div>
+            <span className="text-[10px] text-muted font-mono block mt-0.5">
+              ICEGATE &bull; DGFT &bull; RBI
+            </span>
           </div>
-          <span className="text-[10px] text-muted font-mono block mt-0.5">
-            ICEGATE &bull; DGFT &bull; RBI
-          </span>
-        </div>
+        ) : (
+          <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+            <span className="text-[10px] font-mono uppercase text-muted block">
+              Workspace & Organization
+            </span>
+            <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-green" />
+              <span className="truncate">{user?.company || "Organization Workspace"}</span>
+            </div>
+            <span className="text-[10px] text-muted font-mono block mt-0.5">
+              Tier: {user?.tier || "STARTER"} &bull; Multi-User RBAC
+            </span>
+          </div>
+        )}
 
         <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
           <span className="text-[10px] font-mono uppercase text-muted block">
@@ -150,7 +175,7 @@ function SettingsContent() {
       {/* Tab Navigation Switcher */}
       <div className="w-full overflow-x-auto pb-1 scrollbar-none">
         <Tabs
-          tabs={tabsConfig}
+          tabs={allTabsConfig}
           activeTab={activeTab}
           onChange={(tabId) => setActiveTab(tabId)}
           className="w-full justify-between"
@@ -158,7 +183,7 @@ function SettingsContent() {
       </div>
 
       {/* Active Tab Content Panel */}
-      {activeTab === "gateways" && <CustomGatewaysSection />}
+      {SHOW_TRADE_GATEWAYS && activeTab === "gateways" && <CustomGatewaysSection />}
       {activeTab === "contracts" && (
         <DynamicTierGate pageId="settings_byok" fallbackMode="full">
           <ContractRatesSection />

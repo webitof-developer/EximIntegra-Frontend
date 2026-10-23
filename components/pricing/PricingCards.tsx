@@ -97,7 +97,7 @@ const fallbackPlans: PricingPlan[] = [
       "Akshara AI Trade Copilot with verifiable tool-call logs",
       "BYOK LLM Provider Integration (Claude, OpenAI, Gemini, vLLM)",
       "Custom carrier freight contract & smelter yield rate overrides",
-      "CBIC ICEGATE & DGFT Digital Token Gateways",
+      "Enterprise ERP Integration & Customs Compliance",
       "Developer Platform API Keys & ERP Webhooks (SAP, NetSuite)",
       "Permanent deterministic calculation reproducibility guarantee",
       "Multi-user Role-Based Access Control (RBAC)",
