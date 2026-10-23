@@ -186,8 +186,10 @@ export function Topbar() {
           </Link>
         )}
 
-        {/* Notification Bell Dropdown */}
-        <NotificationDropdown />
+        {/* Notification Bell Dropdown (Hidden on Admin Panel) */}
+        {!isAdminRoute && user?.role !== "ADMIN" && (
+          <NotificationDropdown />
+        )}
 
         {/* User Profile / Auth State */}
         {!mounted ? (
@@ -269,7 +271,7 @@ export function Topbar() {
                     Edit
                   </span>
                 </button>
-
+ 
                 {user.role !== "ADMIN" && (
                   <>
                     <Link
