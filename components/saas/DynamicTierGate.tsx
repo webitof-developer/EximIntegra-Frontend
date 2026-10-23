@@ -94,7 +94,7 @@ export function DynamicTierGate({
   if (fallbackMode === "overlay") {
     return (
       <div className="relative rounded-2xl overflow-hidden border border-line bg-panel">
-        <div className="filter blur-md opacity-30 pointer-events-none select-none max-h-[500px] overflow-hidden">
+        <div className="filter blur-[6px] opacity-60 pointer-events-none select-none max-h-[500px] overflow-hidden">
           {children}
         </div>
         <div className="absolute inset-0 z-10 flex items-center justify-center p-4 bg-navy/30 backdrop-blur-xs overflow-y-auto">

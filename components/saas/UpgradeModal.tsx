@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAppDispatch } from "@/store";
 import { setUserTier } from "@/store/authSlice";
@@ -53,8 +54,27 @@ export function UpgradeModal({
   benefits,
 }: UpgradeModalProps) {
   const dispatch = useAppDispatch();
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted || typeof window === "undefined") return null;
 
   const activeBenefits = benefits || defaultTierBenefits[requiredTier];
   const isEnterprise = requiredTier === "ENTERPRISE";
@@ -64,9 +84,11 @@ export function UpgradeModal({
     onClose();
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/80 backdrop-blur-sm animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-navy/80 backdrop-blur-md animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -184,6 +206,7 @@ export function UpgradeModal({
           </Link>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

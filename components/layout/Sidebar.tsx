@@ -268,15 +268,27 @@ function SidebarInner({
       ENTERPRISE: 3,
     };
 
+    const normalizePath = (p: string) =>
+      "/" + (p || "").trim().toLowerCase().replace(/^\/+|\/+$/g, "");
+
     // 1. Map existing navSections with dynamic tier badges & lock states
     const updatedSections: NavSection[] = navSections.map((sec) => ({
       ...sec,
       items: sec.items.map((item) => {
-        const matchingGate = gates.find(
-          (g) =>
-            g.id.toLowerCase() === item.id.toLowerCase() ||
-            (!g.id.includes("_") && g.pagePath.toLowerCase() === item.href.toLowerCase())
-        );
+        const itemPath = normalizePath(item.href);
+
+        // Match gate by exact ID or by normalized route path (excluding sub-features)
+        const matchingGate =
+          gates.find(
+            (g) => g.id.toLowerCase() === item.id.toLowerCase()
+          ) ||
+          gates.find(
+            (g) =>
+              g.pagePath &&
+              normalizePath(g.pagePath) === itemPath &&
+              g.id.toLowerCase() !== "classify_bulk" &&
+              g.id.toLowerCase() !== "settings_byok"
+          );
 
         if (!matchingGate || !matchingGate.isActive) {
           if (matchingGate && (!matchingGate.isActive || matchingGate.requiredTier === "ALL")) {
@@ -290,9 +302,10 @@ function SidebarInner({
         }
 
         const requiredTier = matchingGate.requiredTier.toUpperCase();
-        let dynamicTierBadge: "PRO" | "ENTERPRISE" | undefined = undefined;
+        let dynamicTierBadge: "PRO" | "ENTERPRISE" | "STARTER" | undefined = undefined;
         if (requiredTier === "ENTERPRISE") dynamicTierBadge = "ENTERPRISE";
-        else if (requiredTier === "PROFESSIONAL") dynamicTierBadge = "PRO";
+        else if (requiredTier === "PROFESSIONAL" || requiredTier === "PRO") dynamicTierBadge = "PRO";
+        else if (requiredTier === "STARTER") dynamicTierBadge = "STARTER";
 
         const isTierLocked =
           user?.role !== "ADMIN" &&
@@ -302,7 +315,7 @@ function SidebarInner({
         return {
           ...item,
           title: item.title,
-          tierBadge: dynamicTierBadge,
+          tierBadge: dynamicTierBadge ?? item.tierBadge,
           isTierLocked,
         };
       }),
@@ -515,9 +528,9 @@ function SidebarInner({
                         <>
                           <span className="whitespace-nowrap truncate ml-2.5 flex-1 text-left animate-in fade-in duration-150 flex items-center gap-1.5">
                             <span className="truncate">{item.title}</span>
-                            {item.isTierLocked && (
+                            {/* {item.isTierLocked && (
                               <Lock className="w-2.5 h-2.5 text-amber-400 shrink-0" />
-                            )}
+                            )} */}
                           </span>
                           {item.tierBadge ? (
                             <TierBadge

@@ -20,7 +20,6 @@ import {
   CountryComparisonItem,
   CountryOption,
 } from "@/lib/types";
-import { DynamicTierGate } from "@/components/saas/DynamicTierGate";
 import { getApiErrorMessage } from "@/lib/utils";
 import {
   Scale,
@@ -715,17 +714,15 @@ export default function ComparePage() {
   return (
     <AuthGuard>
       <AppShell>
-        <DynamicTierGate pageId="compare">
-          <React.Suspense
-            fallback={
-              <div className="p-12 text-center text-xs font-mono text-muted">
-                Loading Country Comparison Engine...
-              </div>
-            }
-          >
-            <CompareContent />
-          </React.Suspense>
-        </DynamicTierGate>
+        <React.Suspense
+          fallback={
+            <div className="p-12 text-center text-xs font-mono text-muted">
+              Loading Country Comparison Engine...
+            </div>
+          }
+        >
+          <CompareContent />
+        </React.Suspense>
       </AppShell>
     </AuthGuard>
   );

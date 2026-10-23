@@ -18,7 +18,6 @@ import {
   Info,
   History,
 } from "lucide-react";
-import { DynamicTierGate } from "@/components/saas/DynamicTierGate";
 
 interface ActiveLlmInfo {
   id: string;
@@ -231,75 +230,73 @@ export default function AksharaPage() {
       <AppShell>
         <div className="max-w-5xl mx-auto h-[calc(100vh-116px)] flex flex-col">
           {/* Chat Messages & Input Container */}
-          <DynamicTierGate pageId="akshara">
-            <div className="flex-1 flex flex-col min-h-0 space-y-3">
-              {/* Scrollable Messages Container */}
-              <div className="flex-1 min-h-0 bg-bg/40 border border-line rounded-2xl p-4 overflow-y-auto space-y-4 shadow-inner">
-                {messages.map((msg) => (
-                  <ChatMessageItem
-                    key={msg.id}
-                    message={msg}
-                    onApplyContext={handleApplyContext}
-                  />
-                ))}
-
-                {isLoading && (
-                  <div className="flex items-center gap-3 p-4 bg-panel border border-line rounded-2xl animate-pulse">
-                    <div className="w-8 h-8 rounded-xl bg-blue/10 text-blue flex items-center justify-center shrink-0">
-                      <Sparkles className="w-4 h-4 animate-spin text-blue" />
-                    </div>
-                    <div className="space-y-1.5 flex-1">
-                      <div className="h-3 bg-line/80 rounded w-1/3"></div>
-                      <div className="h-2 bg-line/50 rounded w-2/3"></div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* Sticky Chat Field Attached at Screen Bottom Center */}
-              <div className="sticky bottom-0 z-20 pt-1 pb-0 bg-bg/95 backdrop-blur-xs space-y-2">
-                {!isLlmConfigured && (
-                  <div className="p-2.5 bg-blue/5 border border-blue/20 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2 animate-in fade-in duration-200">
-                    <div className="flex items-center gap-2 text-ink">
-                      <Info className="w-4 h-4 text-blue shrink-0" />
-                      <span>
-                        {isAdmin ? (
-                          <>
-                            <strong>Super Admin Notice:</strong> Enterprise AI model credentials are not yet configured. Set up API keys in the Admin Cockpit to enable live advisory.
-                          </>
-                        ) : (
-                          <>
-                            <strong>Notice:</strong> Akshara Copilot is operating in baseline statutory mode. Enterprise AI intelligence is managed centrally by your administrator.
-                          </>
-                        )}
-                      </span>
-                    </div>
-                    {isAdmin && (
-                      <Link
-                        href="/admin?tab=llm"
-                        className="px-2.5 py-1 rounded-lg bg-blue hover:bg-blue-dark text-white text-xs font-semibold transition-colors shrink-0 shadow-xs flex items-center gap-1"
-                      >
-                        <span>Admin Cockpit</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    )}
-                  </div>
-                )}
-
-                {/* Chat Input */}
-                <ChatInput
-                  onSendMessage={handleSendMessage}
-                  isLoading={isLoading}
-                  activeHs={currentContext.hsCode}
-                  activeOrigin={currentContext.countryOfOrigin}
-                  onNewChat={handleStartNewChat}
-                  onOpenHistory={() => setIsHistoryOpen(true)}
+          <div className="flex-1 flex flex-col min-h-0 space-y-3">
+            {/* Scrollable Messages Container */}
+            <div className="flex-1 min-h-0 bg-bg/40 border border-line rounded-2xl p-4 overflow-y-auto space-y-4 shadow-inner">
+              {messages.map((msg) => (
+                <ChatMessageItem
+                  key={msg.id}
+                  message={msg}
+                  onApplyContext={handleApplyContext}
                 />
-              </div>
+              ))}
+
+              {isLoading && (
+                <div className="flex items-center gap-3 p-4 bg-panel border border-line rounded-2xl animate-pulse">
+                  <div className="w-8 h-8 rounded-xl bg-blue/10 text-blue flex items-center justify-center shrink-0">
+                    <Sparkles className="w-4 h-4 animate-spin text-blue" />
+                  </div>
+                  <div className="space-y-1.5 flex-1">
+                    <div className="h-3 bg-line/80 rounded w-1/3"></div>
+                    <div className="h-2 bg-line/50 rounded w-2/3"></div>
+                  </div>
+                </div>
+              )}
+
+              <div ref={messagesEndRef} />
             </div>
-          </DynamicTierGate>
+
+            {/* Sticky Chat Field Attached at Screen Bottom Center */}
+            <div className="sticky bottom-0 z-20 pt-1 pb-0 bg-bg/95 backdrop-blur-xs space-y-2">
+              {!isLlmConfigured && (
+                <div className="p-2.5 bg-blue/5 border border-blue/20 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2 animate-in fade-in duration-200">
+                  <div className="flex items-center gap-2 text-ink">
+                    <Info className="w-4 h-4 text-blue shrink-0" />
+                    <span>
+                      {isAdmin ? (
+                        <>
+                          <strong>Super Admin Notice:</strong> Enterprise AI model credentials are not yet configured. Set up API keys in the Admin Cockpit to enable live advisory.
+                        </>
+                      ) : (
+                        <>
+                          <strong>Notice:</strong> Akshara Copilot is operating in baseline statutory mode. Enterprise AI intelligence is managed centrally by your administrator.
+                        </>
+                      )}
+                    </span>
+                  </div>
+                  {isAdmin && (
+                    <Link
+                      href="/admin?tab=llm"
+                      className="px-2.5 py-1 rounded-lg bg-blue hover:bg-blue-dark text-white text-xs font-semibold transition-colors shrink-0 shadow-xs flex items-center gap-1"
+                    >
+                      <span>Admin Cockpit</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  )}
+                </div>
+              )}
+
+              {/* Chat Input */}
+              <ChatInput
+                onSendMessage={handleSendMessage}
+                isLoading={isLoading}
+                activeHs={currentContext.hsCode}
+                activeOrigin={currentContext.countryOfOrigin}
+                onNewChat={handleStartNewChat}
+                onOpenHistory={() => setIsHistoryOpen(true)}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Attached History Tab Button on Screen's Right Center */}

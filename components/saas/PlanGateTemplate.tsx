@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setUserTier } from "@/store/authSlice";
@@ -72,6 +73,31 @@ export function PlanGateTemplate({
   const currentTier = (user?.tier || "STARTER") as TierType;
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll and close on Escape when modal is open
+  useEffect(() => {
+    if (!isModalOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsModalOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isModalOpen]);
 
   // Fetch live pricing plans from DB to show real dynamic benefits & prices
   const { data: pricingData } = useGetPricingPlansQuery();
@@ -107,56 +133,16 @@ export function PlanGateTemplate({
     }, 400);
   };
 
-  // 1. BANNER MODE (compact inline bar)
-  if (fallbackMode === "banner") {
-    return (
-      <div className="p-4 bg-blue/5 border border-blue/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue/10 text-blue flex items-center justify-center shrink-0 border border-blue/20">
-            <Lock className="w-5 h-5" />
-          </div>
-          <div className="space-y-0.5">
-            <div className="text-xs font-bold text-ink flex items-center gap-2">
-              <span>{featureName}</span>
-              <TierBadge tier={normalizedRequiredTier as TierType} size="xs" />
-            </div>
-            <p className="text-[11px] text-muted">
-              {description ||
-                `Your current plan is ${currentTier}. This feature requires ${normalizedRequiredTier} plan subscription.`}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleSimulateUpgrade}
-            disabled={isUpgrading}
-            className="px-3.5 py-2 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-60"
-          >
-            {isUpgrading ? "Unlocking..." : `Unlock with ${normalizedRequiredTier}`}
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="px-3 py-2 rounded-xl border border-line text-xs font-semibold text-ink hover:bg-bg transition-colors cursor-pointer"
-          >
-            View Benefits
-          </button>
-        </div>
-
-        {/* Benefits Modal */}
-        {renderModal()}
-      </div>
-    );
-  }
-
-  // 2. FULL / OVERLAY MODE: Clean Compact Card (Image 1) with Modal (Image 2)
+  // 1. Full-screen Modal portal (mounted directly to document.body to blur Sidebar, Topbar, and entire screen)
   function renderModal() {
-    if (!isModalOpen) return null;
+    if (!isModalOpen || !mounted || typeof window === "undefined") return null;
 
-    return (
+    return createPortal(
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/80 backdrop-blur-sm animate-in fade-in duration-200"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="plan-gate-modal-title"
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-navy/80 backdrop-blur-md animate-in fade-in duration-200"
         onClick={() => setIsModalOpen(false)}
       >
         <div
@@ -191,7 +177,10 @@ export function PlanGateTemplate({
               </span>
             </div>
 
-            <h3 className="text-xl font-bold text-ink flex items-center gap-2">
+            <h3
+              id="plan-gate-modal-title"
+              className="text-xl font-bold text-ink flex items-center gap-2"
+            >
               {isEnterprise ? (
                 <Crown className="w-5 h-5 text-amber shrink-0" />
               ) : (
@@ -285,10 +274,55 @@ export function PlanGateTemplate({
             </Link>
           </div>
         </div>
+      </div>,
+      document.body
+    );
+  }
+
+  // 2. BANNER MODE (compact inline bar)
+  if (fallbackMode === "banner") {
+    return (
+      <div className="p-4 bg-blue/5 border border-blue/20 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue/10 text-blue flex items-center justify-center shrink-0 border border-blue/20">
+            <Lock className="w-5 h-5" />
+          </div>
+          <div className="space-y-0.5">
+            <div className="text-xs font-bold text-ink flex items-center gap-2">
+              <span>{featureName}</span>
+              <TierBadge tier={normalizedRequiredTier as TierType} size="xs" />
+            </div>
+            <p className="text-[11px] text-muted">
+              {description ||
+                `Your current plan is ${currentTier}. This feature requires ${normalizedRequiredTier} plan subscription.`}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={handleSimulateUpgrade}
+            disabled={isUpgrading}
+            className="px-3.5 py-2 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-60"
+          >
+            {isUpgrading ? "Unlocking..." : `Unlock with ${normalizedRequiredTier}`}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="px-3 py-2 rounded-xl border border-line text-xs font-semibold text-ink hover:bg-bg transition-colors cursor-pointer"
+          >
+            View Benefits
+          </button>
+        </div>
+
+        {/* Full-screen Portal Modal */}
+        {renderModal()}
       </div>
     );
   }
 
+  // 3. FULL / OVERLAY MODE: Clean Compact Card (Image 1) with Full-screen Portal Modal (Image 2)
   return (
     <>
       {/* Clean Compact Locked Card matching Image 1 exactly */}
@@ -344,7 +378,7 @@ export function PlanGateTemplate({
         </div>
       </div>
 
-      {/* Render Plan Card Modal when View Benefits is clicked (Image 2) */}
+      {/* Render Full-screen Plan Card Modal when View Benefits is clicked (covers entire screen including Sidebar and Topbar) */}
       {renderModal()}
     </>
   );

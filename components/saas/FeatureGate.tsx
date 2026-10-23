@@ -47,8 +47,8 @@ export function FeatureGate({
   if (fallbackMode === "overlay") {
     return (
       <div className="relative rounded-2xl overflow-hidden border border-line bg-panel">
-        {/* Blurred background preview of the actual content */}
-        <div className="filter blur-md opacity-30 pointer-events-none select-none max-h-[500px] overflow-hidden">
+        {/* Subtle blurred background preview of the actual content */}
+        <div className="filter blur-[2px] opacity-60 pointer-events-none select-none max-h-[500px] overflow-hidden">
           {children}
         </div>
 

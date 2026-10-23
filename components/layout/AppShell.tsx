@@ -44,13 +44,15 @@ export function AppShell({ children, fullWidth = false }: AppShellProps) {
 
   // Check if current route has an active page-level gate for non-admin users
   const isUserView = user?.role !== "ADMIN" && !pathname?.startsWith("/admin");
+  const normCurrentPath = (pathname || "").trim().toLowerCase().replace(/^\/+|\/+$/g, "");
   const matchingGate =
     isUserView && pathname
       ? tierGatesData?.gates?.find((g) => {
           if (!g.isActive) return false;
           // Sub-tabs like bulk manifest or BYOK keys are handled inside those specific tab views
           if (g.id === "classify_bulk" || g.id === "settings_byok") return false;
-          return g.pagePath.toLowerCase() === pathname.toLowerCase();
+          const gatePath = (g.pagePath || "").trim().toLowerCase().replace(/^\/+|\/+$/g, "");
+          return gatePath === normCurrentPath;
         })
       : null;
 
@@ -80,8 +82,8 @@ export function AppShell({ children, fullWidth = false }: AppShellProps) {
         >
           {isPageGated ? (
             <div className="relative min-h-[75vh] flex items-center justify-center">
-              {/* Blurred background preview of the page content */}
-              <div className="filter blur-md opacity-25 pointer-events-none select-none w-full max-h-[75vh] overflow-hidden">
+              {/* Subtle blurred background preview of the page content */}
+              <div className="filter blur-[6px] opacity-60 pointer-events-none select-none w-full max-h-[75vh] overflow-hidden">
                 {children}
               </div>
               <div className="absolute inset-0 flex items-center justify-center p-4 z-10">
