@@ -46,6 +46,10 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     title: "Super Admin — AI & LLM Providers",
     description: "Configure enterprise AI credentials, active models, and global Akshara copilot engine.",
   },
+  "/admin/payments": {
+    title: "Super Admin — Razorpay Gateway",
+    description: "Configure Razorpay credentials, Webhooks, multi-currency (INR & USD) processing, and transactions.",
+  },
   "/dashboard": {
     title: "Trade Advisory Cockpit",
     description: "Multi-jurisdiction trade compliance, tariff estimation, and AI intelligence overview.",

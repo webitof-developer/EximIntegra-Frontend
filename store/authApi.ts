@@ -25,7 +25,14 @@ export const authApi = api.injectEndpoints({
     }),
     updateProfile: builder.mutation<
       UserProfile,
-      { name?: string; company?: string; email?: string }
+      {
+        name?: string;
+        company?: string;
+        email?: string;
+        gstin?: string;
+        billingEmail?: string;
+        tier?: "ENTERPRISE" | "PROFESSIONAL" | "STARTER";
+      }
     >({
       query: (data) => ({
         url: "/auth/me",

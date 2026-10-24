@@ -31,6 +31,7 @@ import {
   Sliders,
   DollarSign,
   Cpu,
+  CreditCard,
   LogOut,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
@@ -227,6 +228,13 @@ const adminNavSections: NavSection[] = [
         href: "/admin/llm",
         icon: <Cpu className="w-4 h-4 text-cyan-400" />,
         glyph: "LLM",
+      },
+      {
+        id: "admin-payments",
+        title: "Razorpay Gateway",
+        href: "/admin/payments",
+        icon: <CreditCard className="w-4 h-4 text-emerald-400" />,
+        glyph: "PAY",
       },
     ],
   },

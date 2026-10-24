@@ -28,6 +28,7 @@ function AdminMetricsContent() {
     else if (tab === "rbac") router.replace("/admin/rbac");
     else if (tab === "pricing") router.replace("/admin/pricing");
     else if (tab === "llm" || tab === "ai") router.replace("/admin/llm");
+    else if (tab === "payments" || tab === "razorpay") router.replace("/admin/payments");
   }, [searchParams, router]);
 
   const {

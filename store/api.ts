@@ -84,6 +84,7 @@ export const api = createApi({
     "LlmProviders",
     "TierAccess",
     "Contracts",
+    "Payments",
   ],
   endpoints: () => ({}),
 });

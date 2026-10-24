@@ -164,7 +164,7 @@ function SettingsContent() {
           </span>
           <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
             <Ship className="w-3.5 h-3.5 text-amber" />
-            <span>6 BYOK Rates</span>
+            <span>BYOK Rates</span>
           </div>
           <span className="text-[10px] text-muted font-mono block mt-0.5">
             Ocean Freight & Yield

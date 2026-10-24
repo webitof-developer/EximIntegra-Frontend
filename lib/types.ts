@@ -52,6 +52,9 @@ export interface UserProfile {
   company: string;
   role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR" | "ADMIN";
   tier: "ENTERPRISE" | "PROFESSIONAL" | "STARTER";
+  tierBadge?: string;
+  gstin?: string | null;
+  billingEmail?: string | null;
   permissions?: Record<string, boolean>;
   createdAt: string;
 }
