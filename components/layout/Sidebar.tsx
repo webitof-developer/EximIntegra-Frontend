@@ -290,33 +290,35 @@ function SidebarInner({
               g.id.toLowerCase() !== "settings_byok"
           );
 
-        if (!matchingGate || !matchingGate.isActive) {
-          if (matchingGate && (!matchingGate.isActive || matchingGate.requiredTier === "ALL")) {
-            return {
-              ...item,
-              tierBadge: undefined,
-              isTierLocked: false,
-            };
-          }
-          return item;
+        // Determine required tier from gate if active, else from static item definition
+        let requiredTier = "ALL";
+        if (matchingGate && matchingGate.isActive) {
+          requiredTier = matchingGate.requiredTier.toUpperCase();
+        } else if (!matchingGate && item.tierBadge) {
+          requiredTier = item.tierBadge.toUpperCase();
         }
 
-        const requiredTier = matchingGate.requiredTier.toUpperCase();
-        let dynamicTierBadge: "PRO" | "ENTERPRISE" | "STARTER" | undefined = undefined;
-        if (requiredTier === "ENTERPRISE") dynamicTierBadge = "ENTERPRISE";
-        else if (requiredTier === "PROFESSIONAL" || requiredTier === "PRO") dynamicTierBadge = "PRO";
-        else if (requiredTier === "STARTER") dynamicTierBadge = "STARTER";
+        const requiredTierWeight = tierWeights[requiredTier] ?? 0;
+        const userTierWeight = user?.role === "ADMIN" ? 99 : (tierWeights[currentTier] ?? 1);
 
-        const isTierLocked =
+        // A tier badge is an upgrade indicator: ONLY show it if the required plan is HIGHER than user's current plan!
+        const isHigherTier =
           user?.role !== "ADMIN" &&
           requiredTier !== "ALL" &&
-          (tierWeights[currentTier] ?? 1) < (tierWeights[requiredTier] ?? 2);
+          requiredTierWeight > userTierWeight;
+
+        let dynamicTierBadge: "PRO" | "ENTERPRISE" | "STARTER" | undefined = undefined;
+        if (isHigherTier) {
+          if (requiredTier === "ENTERPRISE") dynamicTierBadge = "ENTERPRISE";
+          else if (requiredTier === "PROFESSIONAL" || requiredTier === "PRO") dynamicTierBadge = "PRO";
+          else if (requiredTier === "STARTER") dynamicTierBadge = "STARTER";
+        }
 
         return {
           ...item,
           title: item.title,
-          tierBadge: dynamicTierBadge ?? item.tierBadge,
-          isTierLocked,
+          tierBadge: dynamicTierBadge,
+          isTierLocked: isHigherTier,
         };
       }),
     }));
@@ -482,9 +484,9 @@ function SidebarInner({
                             <span className="whitespace-nowrap truncate line-through decoration-[#52637F]/60 ml-2.5 flex-1">
                               {item.title}
                             </span>
-                            <span className="flex items-center gap-1 text-[9px] font-mono uppercase text-amber-400/90 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                            <span className="flex items-center gap-1 text-[9px] uppercase text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/80">
                               <Lock className="w-2.5 h-2.5" />
-                              Restricted
+                              Res
                             </span>
                           </>
                         )}

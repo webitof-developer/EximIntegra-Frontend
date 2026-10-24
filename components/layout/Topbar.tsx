@@ -84,7 +84,7 @@ const pageMeta: Record<string, { title: string; description: string }> = {
   },
   "/settings": {
     title: "Settings & Integrations",
-    description: "Configure contract rates, platform API keys, subscription, and team members.",
+    description: "Configure contract rates, subscription, and team members.",
   },
   "/notifications": {
     title: "Statutory Alerts & Notifications",

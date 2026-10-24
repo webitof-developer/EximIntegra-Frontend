@@ -34,11 +34,11 @@ const faqs: FaqItem[] = [
     answer:
       "Yes. All INR subscriptions include formal tax invoices detailing your company's GSTIN and state code, allowing you to claim full Input Tax Credit (ITC) on software services under SAC 998314.",
   },
-  {
-    question: "Can EximIntegra connect to our ERP (SAP S/4HANA, NetSuite, Tally)?",
-    answer:
-      "Yes. Enterprise customers have access to our RESTful developer platform APIs and outgoing event webhooks. Whenever a duty calculation or landed cost assessment is finalized, an automated webhook payload can be pushed directly into your ERP warehouse or inventory accounting queue.",
-  },
+  // {
+  //   question: "Can EximIntegra connect to our ERP (SAP S/4HANA, NetSuite, Tally)?",
+  //   answer:
+  //     "Yes. Enterprise customers have access to our RESTful developer platform APIs and outgoing event webhooks. Whenever a duty calculation or landed cost assessment is finalized, an automated webhook payload can be pushed directly into your ERP warehouse or inventory accounting queue.",
+  // },
 ];
 
 export function PricingFaq() {

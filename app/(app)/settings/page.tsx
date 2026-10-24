@@ -22,8 +22,9 @@ import {
   Users,
 } from "lucide-react";
 
-// Toggle flag to easily re-enable Trade Gateways when official API integrations are ready
+// Toggle flags to easily re-enable tabs when official integrations are ready
 const SHOW_TRADE_GATEWAYS = process.env.NEXT_PUBLIC_ENABLE_TRADE_GATEWAYS === "true";
+const SHOW_API_KEYS = process.env.NEXT_PUBLIC_ENABLE_API_KEYS === "true";
 
 function SettingsContent() {
   const router = useRouter();
@@ -40,9 +41,13 @@ function SettingsContent() {
     ) {
       return "billing";
     }
-    const validTabs = SHOW_TRADE_GATEWAYS
-      ? ["gateways", "contracts", "platform", "billing", "team"]
-      : ["contracts", "platform", "billing", "team"];
+    const validTabs = [
+      ...(SHOW_TRADE_GATEWAYS ? ["gateways"] : []),
+      "contracts",
+      ...(SHOW_API_KEYS ? ["platform"] : []),
+      "billing",
+      "team",
+    ];
     if (tabParam && validTabs.includes(tabParam)) {
       return tabParam;
     }
@@ -53,9 +58,13 @@ function SettingsContent() {
 
   useEffect(() => {
     const currentTab = searchParams.get("tab")?.toLowerCase();
-    const validTabs = SHOW_TRADE_GATEWAYS
-      ? ["gateways", "contracts", "platform", "billing", "team"]
-      : ["contracts", "platform", "billing", "team"];
+    const validTabs = [
+      ...(SHOW_TRADE_GATEWAYS ? ["gateways"] : []),
+      "contracts",
+      ...(SHOW_API_KEYS ? ["platform"] : []),
+      "billing",
+      "team",
+    ];
 
     if (
       currentTab === "billing" ||
@@ -93,12 +102,16 @@ function SettingsContent() {
       icon: <Ship className="w-3.5 h-3.5 text-amber" />,
       badge: "ENT",
     },
-    {
-      id: "platform",
-      label: "API Keys & Webhooks",
-      icon: <Key className="w-3.5 h-3.5 text-ink" />,
-      badge: "ENT",
-    },
+    ...(SHOW_API_KEYS
+      ? [
+          {
+            id: "platform",
+            label: "API Keys & Webhooks",
+            icon: <Key className="w-3.5 h-3.5 text-ink" />,
+            badge: "ENT",
+          },
+        ]
+      : []),
     {
       id: "billing",
       label: "Subscription & Billing",
@@ -158,18 +171,33 @@ function SettingsContent() {
           </span>
         </div>
 
-        <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
-          <span className="text-[10px] font-mono uppercase text-muted block">
-            Enterprise Integration
-          </span>
-          <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
-            <Key className="w-3.5 h-3.5 text-blue" />
-            <span>2 Active Keys</span>
+        {SHOW_API_KEYS ? (
+          <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+            <span className="text-[10px] font-mono uppercase text-muted block">
+              Enterprise Integration
+            </span>
+            <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
+              <Key className="w-3.5 h-3.5 text-blue" />
+              <span>2 Active Keys</span>
+            </div>
+            <span className="text-[10px] text-green font-mono block mt-0.5">
+              Webhooks Synced
+            </span>
           </div>
-          <span className="text-[10px] text-green font-mono block mt-0.5">
-            Webhooks Synced
-          </span>
-        </div>
+        ) : (
+          <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+            <span className="text-[10px] font-mono uppercase text-muted block">
+              Plan & Billing
+            </span>
+            <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
+              <CreditCard className="w-3.5 h-3.5 text-blue" />
+              <span>{user?.tier || "STARTER"} Tier</span>
+            </div>
+            <span className="text-[10px] text-green font-mono block mt-0.5">
+              Subscription Active
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Tab Navigation Switcher */}
@@ -189,7 +217,7 @@ function SettingsContent() {
           <ContractRatesSection />
         </DynamicTierGate>
       )}
-      {activeTab === "platform" && (
+      {SHOW_API_KEYS && activeTab === "platform" && (
         <DynamicTierGate pageId="settings_byok" fallbackMode="full">
           <PlatformKeysSection />
         </DynamicTierGate>
