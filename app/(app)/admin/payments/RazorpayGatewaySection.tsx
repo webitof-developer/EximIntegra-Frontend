@@ -72,6 +72,8 @@ export function RazorpayGatewaySection({
   useEffect(() => {
     if (config) {
       setKeyId(config.keyId || "");
+      setKeySecret(config.keySecret || "");
+      setWebhookSecret(config.webhookSecret || "");
       setIsActive(config.isActive ?? true);
       setIsTestMode(config.isTestMode ?? true);
       setCurrencyInrEnabled(config.currencyInrEnabled ?? true);
@@ -100,8 +102,6 @@ export function RazorpayGatewaySection({
       }).unwrap();
 
       onSuccess("Razorpay Gateway settings saved successfully to PostgreSQL database!");
-      setKeySecret("");
-      setWebhookSecret("");
       refetchConfig();
     } catch (err: unknown) {
       const errorObj = err as { data?: { error?: string } };
@@ -348,9 +348,9 @@ export function RazorpayGatewaySection({
             <div className="space-y-2">
               <label className="text-xs font-semibold text-ink flex items-center justify-between">
                 <span>Razorpay Key Secret *</span>
-                {config?.keySecretMasked && (
+                {Boolean(config?.keySecret || config?.hasKeySecret) && (
                   <span className="text-[10px] font-mono text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                    Saved: {config.keySecretMasked}
+                    Saved in DB
                   </span>
                 )}
               </label>
@@ -359,17 +359,15 @@ export function RazorpayGatewaySection({
                   type={showSecret ? "text" : "password"}
                   value={keySecret}
                   onChange={(e) => setKeySecret(e.target.value)}
-                  placeholder={
-                    config?.keySecretMasked
-                      ? "Leave blank to keep existing secret"
-                      : "Enter Razorpay Secret Key"
-                  }
+                  placeholder="Enter Razorpay Secret Key"
                   className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-panel border border-line text-ink text-xs font-mono focus:outline-hidden focus:border-blue"
+                  required
                 />
                 <button
                   type="button"
                   onClick={() => setShowSecret(!showSecret)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors cursor-pointer"
+                  title={showSecret ? "Hide secret" : "Show secret"}
                 >
                   {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -386,9 +384,9 @@ export function RazorpayGatewaySection({
             <div className="space-y-2">
               <label className="text-xs font-semibold text-ink flex items-center justify-between">
                 <span>Webhook Secret (Optional)</span>
-                {config?.webhookSecretMasked && (
+                {Boolean(config?.webhookSecret || config?.hasWebhookSecret) && (
                   <span className="text-[10px] font-mono text-purple-600 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
-                    Saved: {config.webhookSecretMasked}
+                    Saved in DB
                   </span>
                 )}
               </label>
@@ -397,17 +395,14 @@ export function RazorpayGatewaySection({
                   type={showWebhookSecret ? "text" : "password"}
                   value={webhookSecret}
                   onChange={(e) => setWebhookSecret(e.target.value)}
-                  placeholder={
-                    config?.webhookSecretMasked
-                      ? "Leave blank to keep existing webhook secret"
-                      : "Optional Webhook Secret from Razorpay Dashboard"
-                  }
+                  placeholder="Optional Webhook Secret from Razorpay Dashboard"
                   className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-panel border border-line text-ink text-xs font-mono focus:outline-hidden focus:border-blue"
                 />
                 <button
                   type="button"
                   onClick={() => setShowWebhookSecret(!showWebhookSecret)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors cursor-pointer"
+                  title={showWebhookSecret ? "Hide webhook secret" : "Show webhook secret"}
                 >
                   {showWebhookSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>

@@ -58,8 +58,12 @@ export interface InvoiceItem {
 export interface AdminPaymentConfig {
   id?: string;
   keyId: string;
-  keySecretMasked: string;
-  webhookSecretMasked: string;
+  keySecret?: string;
+  keySecretMasked?: string;
+  hasKeySecret?: boolean;
+  webhookSecret?: string;
+  webhookSecretMasked?: string;
+  hasWebhookSecret?: boolean;
   isActive: boolean;
   isTestMode: boolean;
   currencyInrEnabled: boolean;
