@@ -43,6 +43,8 @@ import {
   Mail,
   Lock,
   CreditCard,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 
 // Fallback plans if database plans are still loading or network is offline
@@ -158,6 +160,7 @@ export function SubscriptionBillingSection() {
   useEffect(() => {
     if (user) {
       if (user.tier) setCurrentPlan(user.tier);
+      if (user.billingCycle) setIsAnnual(user.billingCycle === "annual");
       setEditGstin(user.gstin || "");
       setEditBillingEmail(user.billingEmail || user.email || "");
     }
@@ -178,6 +181,33 @@ export function SubscriptionBillingSection() {
     plansList.find((p) => (p.tierBadge || p.id).toUpperCase() === currentPlan.toUpperCase()) ||
     plansList.find((p) => p.id.toLowerCase() === currentPlan.toLowerCase()) ||
     plansList[0];
+
+  // Subscription Lifecycle & Expiry Calculation
+  const subStarted = user?.subscriptionStartedAt
+    ? new Date(user.subscriptionStartedAt)
+    : user?.createdAt
+    ? new Date(user.createdAt)
+    : new Date();
+  const subExpires = user?.subscriptionExpiresAt
+    ? new Date(user.subscriptionExpiresAt)
+    : new Date(subStarted.getTime() + (isAnnual ? 365 : 30) * 24 * 60 * 60 * 1000);
+
+  const formattedStarted = subStarted.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  const formattedExpiry = subExpires.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const nowTime = Date.now();
+  const diffMs = subExpires.getTime() - nowTime;
+  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const isExpired = user?.isSubscriptionExpired || daysLeft <= 0;
+  const isExpiringSoon = !isExpired && daysLeft <= 7 && daysLeft >= 0;
 
   // Pricing calculations
   const displayedPriceInr = isAnnual
@@ -402,6 +432,61 @@ export function SubscriptionBillingSection() {
         onClose={() => setToastMessage(null)}
       />
 
+      {/* Expiration Notification Alert Banners */}
+      {isExpired && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-red-800 shadow-2xs">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-red-900">
+                Subscription Expired ({formattedExpiry})
+              </h4>
+              <p className="text-xs text-red-700 mt-0.5">
+                Your organization&apos;s {currentPlan} plan expired on {formattedExpiry}. Renew or upgrade below to restore access to customs classification and logistics engines.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setModalCurrency(currency);
+              setModalBillingCycle(isAnnual ? "annual" : "monthly");
+              setIsChangePlanOpen(true);
+            }}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-xs"
+          >
+            Renew Plan
+          </button>
+        </div>
+      )}
+
+      {isExpiringSoon && (
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 shadow-2xs">
+          <div className="flex items-start gap-2.5">
+            <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-amber-900">
+                Subscription Expiring Soon ({daysLeft === 0 ? "Today" : `in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`})
+              </h4>
+              <p className="text-xs text-amber-800 mt-0.5">
+                Your organization&apos;s {currentPlan} subscription expires on {formattedExpiry}. Renew in advance to ensure uninterrupted quota access and team seat availability.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setModalCurrency(currency);
+              setModalBillingCycle(isAnnual ? "annual" : "monthly");
+              setIsChangePlanOpen(true);
+            }}
+            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-xs"
+          >
+            Renew Subscription
+          </button>
+        </div>
+      )}
+
       {/* 1. Active Plan Overview Card */}
       <div className="p-6 bg-panel border border-line rounded-2xl shadow-xs space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -410,7 +495,18 @@ export function SubscriptionBillingSection() {
               <span className="text-[10px] font-mono uppercase bg-blue text-white px-2.5 py-0.5 rounded font-bold tracking-wider">
                 CURRENT PLAN
               </span>
-              <StatusPill label="ACTIVE SUBSCRIPTION" variant="success" size="xs" dot />
+              {isExpired ? (
+                <StatusPill label="SUBSCRIPTION EXPIRED" variant="danger" size="xs" dot />
+              ) : isExpiringSoon ? (
+                <StatusPill
+                  label={`EXPIRES IN ${daysLeft === 0 ? "TODAY" : `${daysLeft}D`}`}
+                  variant="warning"
+                  size="xs"
+                  dot
+                />
+              ) : (
+                <StatusPill label="ACTIVE SUBSCRIPTION" variant="success" size="xs" dot />
+              )}
             </div>
 
             <div className="flex items-baseline gap-2">
@@ -446,7 +542,7 @@ export function SubscriptionBillingSection() {
                 <span className="text-xs text-muted font-normal"> / mo</span>
               </div>
               <span className="text-[10px] font-mono text-muted block">
-                {isAnnual ? "Billed annually" : "Billed monthly"} • Next renewal: Oct 28, 2026
+                {isAnnual ? "Billed annually" : "Billed monthly"} • Start: {formattedStarted} • Renews: {formattedExpiry}
               </span>
             </div>
 
@@ -502,37 +598,54 @@ export function SubscriptionBillingSection() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Meter 1: HS Classifications */}
-            <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted font-mono">HS Classifications</span>
-                <span className="font-bold text-ink font-mono">
-                  {currentPlan === "STARTER" ? "68 / 100" : "342 / Unlimited"}
-                </span>
-              </div>
-              <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-blue h-1.5 rounded-full"
-                  style={{ width: currentPlan === "STARTER" ? "68%" : "100%" }}
-                />
-              </div>
-              <span className="text-[10px] text-muted block">
-                {currentPlan === "STARTER" ? "32 remaining this period" : "Uncapped batch & single lookup"}
-              </span>
-            </div>
+            {(() => {
+              const isUnlimited = activePlanInfo?.hsClassificationLimit === -1;
+              const limit = isUnlimited ? "Unlimited" : (activePlanInfo?.hsClassificationLimit ?? (currentPlan === "STARTER" ? 100 : 1000));
+              return (
+                <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted font-mono">HS Classifications</span>
+                    <span className={`font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-ink"}`}>
+                      {isUnlimited ? "342 / ∞ Unlimited" : `68 / ${limit}`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-1.5 rounded-full ${isUnlimited ? "bg-purple-600" : "bg-blue"}`}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted block">
+                    {isUnlimited ? "Uncapped batch & single lookup" : "Tracked monthly consumption"}
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Meter 2: Landed Cost Runs */}
-            <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted font-mono">Landed Cost Runs</span>
-                <span className="font-bold text-green font-mono">84 / Unlimited</span>
-              </div>
-              <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
-                <div className="bg-green h-1.5 rounded-full" style={{ width: "100%" }} />
-              </div>
-              <span className="text-[10px] text-muted block">
-                Smelter yield & port CFS calculations
-              </span>
-            </div>
+            {(() => {
+              const isUnlimited = activePlanInfo?.landedCostLimit === -1;
+              const limit = isUnlimited ? "Unlimited" : (activePlanInfo?.landedCostLimit ?? (currentPlan === "STARTER" ? 50 : 500));
+              return (
+                <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted font-mono">Landed Cost Runs</span>
+                    <span className={`font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-green"}`}>
+                      {isUnlimited ? "84 / ∞ Unlimited" : `84 / ${limit}`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-1.5 rounded-full ${isUnlimited ? "bg-purple-600" : "bg-green"}`}
+                      style={{ width: "100%" }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted block">
+                    {isUnlimited ? "Uncapped Landed Cost & port runs" : "Smelter yield & port CFS calculations"}
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Meter 3: Akshara AI Inquiries */}
             <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
@@ -556,18 +669,29 @@ export function SubscriptionBillingSection() {
             </div>
 
             {/* Meter 4: Team Seats */}
-            <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted font-mono">Workspace Seats</span>
-                <span className="font-bold text-ink font-mono">4 / 10 Active</span>
-              </div>
-              <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
-                <div className="bg-blue h-1.5 rounded-full" style={{ width: "40%" }} />
-              </div>
-              <span className="text-[10px] text-muted block">
-                6 available seats for customs brokers
-              </span>
-            </div>
+            {(() => {
+              const isUnlimited = activePlanInfo?.maxTeamMembers === -1;
+              const limit = isUnlimited ? "Unlimited" : (activePlanInfo?.maxTeamMembers ?? (currentPlan === "ENTERPRISE" ? 10 : 5));
+              return (
+                <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted font-mono">Workspace Seats</span>
+                    <span className={`font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-ink"}`}>
+                      {isUnlimited ? "4 / ∞ Unlimited Active" : `4 / ${limit} Active`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-1.5 rounded-full ${isUnlimited ? "bg-purple-600" : "bg-blue"}`}
+                      style={{ width: isUnlimited ? "100%" : "40%" }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-muted block">
+                    {isUnlimited ? "Unlimited team seats permitted" : "Available seats for customs brokers"}
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -1042,6 +1166,37 @@ export function SubscriptionBillingSection() {
                         </div>
 
                         <p className="text-[11px] text-muted mt-1.5 line-clamp-2">{plan.tagline}</p>
+
+                        {/* Quota & Limit Badges */}
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                          <span
+                            className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold border ${
+                              plan.maxTeamMembers === -1
+                                ? "bg-purple-100 text-purple-700 border-purple-200"
+                                : "bg-bg text-muted border-line"
+                            }`}
+                          >
+                            {plan.maxTeamMembers === -1 ? "∞ Unlimited Seats" : `${plan.maxTeamMembers ?? 5} Seats`}
+                          </span>
+                          <span
+                            className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold border ${
+                              plan.hsClassificationLimit === -1
+                                ? "bg-purple-100 text-purple-700 border-purple-200"
+                                : "bg-bg text-muted border-line"
+                            }`}
+                          >
+                            {plan.hsClassificationLimit === -1 ? "∞ Unlimited HS" : `${(plan.hsClassificationLimit ?? 1000).toLocaleString()} HS`}
+                          </span>
+                          <span
+                            className={`text-[10px] font-mono px-2 py-0.5 rounded-md font-bold border ${
+                              plan.landedCostLimit === -1
+                                ? "bg-purple-100 text-purple-700 border-purple-200"
+                                : "bg-bg text-muted border-line"
+                            }`}
+                          >
+                            {plan.landedCostLimit === -1 ? "∞ Unlimited LC" : `${(plan.landedCostLimit ?? 500).toLocaleString()} LC`}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Features list loaded from DB with max height scroll */}

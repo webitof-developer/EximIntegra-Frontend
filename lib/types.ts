@@ -53,6 +53,10 @@ export interface UserProfile {
   role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR" | "ADMIN";
   tier: "ENTERPRISE" | "PROFESSIONAL" | "STARTER";
   tierBadge?: string;
+  billingCycle?: "monthly" | "annual";
+  subscriptionStartedAt?: string | null;
+  subscriptionExpiresAt?: string | null;
+  isSubscriptionExpired?: boolean;
   gstin?: string | null;
   billingEmail?: string | null;
   permissions?: Record<string, boolean>;
@@ -564,6 +568,9 @@ export interface PricingPlan {
   features: string[];
   ctaLabel: string;
   ctaHref: string;
+  maxTeamMembers?: number;
+  hsClassificationLimit?: number;
+  landedCostLimit?: number;
   updatedAt?: string;
 }
 

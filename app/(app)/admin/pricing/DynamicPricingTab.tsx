@@ -27,6 +27,8 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Users,
+  Activity,
 } from "lucide-react";
 
 interface DynamicPricingTabProps {
@@ -79,6 +81,9 @@ export function DynamicPricingTab({
   const [newPlanPriceAnnualInr, setNewPlanPriceAnnualInr] = useState(11999);
   const [newPlanPriceMonthlyUsd, setNewPlanPriceMonthlyUsd] = useState(199);
   const [newPlanPriceAnnualUsd, setNewPlanPriceAnnualUsd] = useState(159);
+  const [newPlanMaxTeamMembers, setNewPlanMaxTeamMembers] = useState(5);
+  const [newPlanHsLimit, setNewPlanHsLimit] = useState(1000);
+  const [newPlanLcLmit, setNewPlanLcLmit] = useState(500);
   const [newPlanFeatures, setNewPlanFeatures] = useState<string[]>([
     "Custom HS classifications per month",
     "Statutory duty & tariff calculator",
@@ -218,11 +223,14 @@ export function DynamicPricingTab({
       features: newPlanFeatures.filter((f) => f.trim().length > 0),
       ctaLabel: newPlanCtaLabel.trim() || "Get Started",
       ctaHref: newPlanCtaHref.trim() || `/register?plan=${cleanId}`,
+      maxTeamMembers: newPlanMaxTeamMembers === -1 ? -1 : (Number(newPlanMaxTeamMembers) > 0 ? Number(newPlanMaxTeamMembers) : 5),
+      hsClassificationLimit: newPlanHsLimit === -1 ? -1 : (isNaN(Number(newPlanHsLimit)) ? 1000 : Number(newPlanHsLimit)),
+      landedCostLimit: newPlanLcLmit === -1 ? -1 : (isNaN(Number(newPlanLcLmit)) ? 500 : Number(newPlanLcLmit)),
     };
 
     const nextList = [...editablePlans, createdPlan];
-    setEditablePlans(nextList);
     setSelectedPlanId(cleanId);
+    setEditablePlans(nextList);
     setIsCreateModalOpen(false);
 
     // Reset create modal fields
@@ -233,6 +241,9 @@ export function DynamicPricingTab({
     setNewPlanTierBadge("PROFESSIONAL");
     setNewPlanIsActive(true);
     setNewPlanIsPopular(false);
+    setNewPlanMaxTeamMembers(5);
+    setNewPlanHsLimit(1000);
+    setNewPlanLcLmit(500);
 
     showToast(
       `New plan "${createdPlan.name}" added to editor! Click "Save Pricing Changes" to publish it live.`
@@ -711,6 +722,150 @@ export function DynamicPricingTab({
                         </div>
                       </div>
                     </div>
+
+                    {/* Quotas & Expiration Policy */}
+                    <div className="p-3 bg-bg border border-line rounded-xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-mono font-bold text-ink uppercase tracking-wider flex items-center gap-1">
+                          <Users className="w-3 h-3 text-blue" />
+                          <span>Platform Quotas & Limits</span>
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* Team Seats */}
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-muted block">Seats</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handlePlanFieldChange(
+                                  planIdx,
+                                  "maxTeamMembers",
+                                  plan.maxTeamMembers === -1 ? 5 : -1
+                                )
+                              }
+                              className="text-[9px] text-blue hover:underline cursor-pointer"
+                            >
+                              {plan.maxTeamMembers === -1 ? "Num" : "∞"}
+                            </button>
+                          </div>
+                          {plan.maxTeamMembers === -1 ? (
+                            <button
+                              type="button"
+                              onClick={() => handlePlanFieldChange(planIdx, "maxTeamMembers", 5)}
+                              className="w-full px-1.5 py-1 rounded bg-purple-50 text-purple-700 text-[11px] font-mono font-bold border border-purple-200 text-center cursor-pointer hover:bg-purple-100"
+                              title="Click to set numeric limit"
+                            >
+                              ∞ Unltd
+                            </button>
+                          ) : (
+                            <input
+                              type="number"
+                              min={1}
+                              value={plan.maxTeamMembers ?? 5}
+                              onChange={(e) =>
+                                handlePlanFieldChange(
+                                  planIdx,
+                                  "maxTeamMembers",
+                                  parseInt(e.target.value) || 1
+                                )
+                              }
+                              className="w-full px-1.5 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                            />
+                          )}
+                        </div>
+
+                        {/* HS Classify */}
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-muted block">HS Lookups</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handlePlanFieldChange(
+                                  planIdx,
+                                  "hsClassificationLimit",
+                                  plan.hsClassificationLimit === -1 ? 1000 : -1
+                                )
+                              }
+                              className="text-[9px] text-blue hover:underline cursor-pointer"
+                            >
+                              {plan.hsClassificationLimit === -1 ? "Num" : "∞"}
+                            </button>
+                          </div>
+                          {plan.hsClassificationLimit === -1 ? (
+                            <button
+                              type="button"
+                              onClick={() => handlePlanFieldChange(planIdx, "hsClassificationLimit", 1000)}
+                              className="w-full px-1.5 py-1 rounded bg-purple-50 text-purple-700 text-[11px] font-mono font-bold border border-purple-200 text-center cursor-pointer hover:bg-purple-100"
+                              title="Click to set numeric limit"
+                            >
+                              ∞ Unltd
+                            </button>
+                          ) : (
+                            <input
+                              type="number"
+                              min={0}
+                              value={plan.hsClassificationLimit ?? 1000}
+                              onChange={(e) =>
+                                handlePlanFieldChange(
+                                  planIdx,
+                                  "hsClassificationLimit",
+                                  parseInt(e.target.value) || 0
+                                )
+                              }
+                              className="w-full px-1.5 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                            />
+                          )}
+                        </div>
+
+                        {/* Landed Cost */}
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] text-muted block">Landed Cost</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handlePlanFieldChange(
+                                  planIdx,
+                                  "landedCostLimit",
+                                  plan.landedCostLimit === -1 ? 500 : -1
+                                )
+                              }
+                              className="text-[9px] text-blue hover:underline cursor-pointer"
+                            >
+                              {plan.landedCostLimit === -1 ? "Num" : "∞"}
+                            </button>
+                          </div>
+                          {plan.landedCostLimit === -1 ? (
+                            <button
+                              type="button"
+                              onClick={() => handlePlanFieldChange(planIdx, "landedCostLimit", 500)}
+                              className="w-full px-1.5 py-1 rounded bg-purple-50 text-purple-700 text-[11px] font-mono font-bold border border-purple-200 text-center cursor-pointer hover:bg-purple-100"
+                              title="Click to set numeric limit"
+                            >
+                              ∞ Unltd
+                            </button>
+                          ) : (
+                            <input
+                              type="number"
+                              min={0}
+                              value={plan.landedCostLimit ?? 500}
+                              onChange={(e) =>
+                                handlePlanFieldChange(
+                                  planIdx,
+                                  "landedCostLimit",
+                                  parseInt(e.target.value) || 0
+                                )
+                              }
+                              className="w-full px-1.5 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="pt-3 border-t border-line flex items-center justify-between">
@@ -1052,7 +1207,205 @@ export function DynamicPricingTab({
                 </div>
               </div>
 
-              {/* Card 4: Call-to-Action (CTA) Config */}
+              {/* Card 4: Quotas & Workspace Usage Limits */}
+              <div className="p-5 bg-panel border border-line rounded-2xl shadow-xs space-y-4">
+                <div className="flex items-center justify-between border-b border-line pb-3">
+                  <h3 className="text-xs font-bold text-ink uppercase tracking-wider font-mono flex items-center gap-2">
+                    <Users className="w-3.5 h-3.5 text-blue" />
+                    <span>Quotas & Workspace Usage Limits</span>
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Team Member Limit */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-muted flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-blue" />
+                        <span>Team Members (Seats)</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handlePlanFieldChange(
+                            activePlanIndex,
+                            "maxTeamMembers",
+                            activePlan.maxTeamMembers === -1 ? 5 : -1
+                          )
+                        }
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                          activePlan.maxTeamMembers === -1
+                            ? "bg-purple-100 text-purple-700 border-purple-300"
+                            : "bg-panel text-muted hover:text-ink border-line"
+                        }`}
+                      >
+                        {activePlan.maxTeamMembers === -1 ? "✓ Unlimited (∞)" : "Set Unlimited"}
+                      </button>
+                    </div>
+
+                    {activePlan.maxTeamMembers === -1 ? (
+                      <div className="flex items-center justify-between px-3 py-2 bg-purple-50/70 border border-purple-200 rounded-xl text-xs font-mono font-bold text-purple-700">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-base font-bold">∞</span>
+                          <span>Unlimited Workspace Seats</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handlePlanFieldChange(activePlanIndex, "maxTeamMembers", 5)}
+                          className="text-[10px] text-purple-600 hover:text-purple-800 underline cursor-pointer"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        min={1}
+                        value={activePlan.maxTeamMembers ?? 5}
+                        onChange={(e) =>
+                          handlePlanFieldChange(
+                            activePlanIndex,
+                            "maxTeamMembers",
+                            parseInt(e.target.value) || 1
+                          )
+                        }
+                        className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    )}
+                    <p className="text-[10px] text-muted">
+                      {activePlan.maxTeamMembers === -1
+                        ? "Organizations on this plan can invite unlimited team members."
+                        : "Max user seats allowed in an organization workspace on this plan."}
+                    </p>
+                  </div>
+
+                  {/* HS Classification Usage Limit */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-muted flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 text-indigo-500" />
+                        <span>HS Classification Limit</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handlePlanFieldChange(
+                            activePlanIndex,
+                            "hsClassificationLimit",
+                            activePlan.hsClassificationLimit === -1 ? 1000 : -1
+                          )
+                        }
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                          activePlan.hsClassificationLimit === -1
+                            ? "bg-purple-100 text-purple-700 border-purple-300"
+                            : "bg-panel text-muted hover:text-ink border-line"
+                        }`}
+                      >
+                        {activePlan.hsClassificationLimit === -1 ? "✓ Unlimited (∞)" : "Set Unlimited"}
+                      </button>
+                    </div>
+
+                    {activePlan.hsClassificationLimit === -1 ? (
+                      <div className="flex items-center justify-between px-3 py-2 bg-purple-50/70 border border-purple-200 rounded-xl text-xs font-mono font-bold text-purple-700">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-base font-bold">∞</span>
+                          <span>Unlimited Classifications</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handlePlanFieldChange(activePlanIndex, "hsClassificationLimit", 1000)}
+                          className="text-[10px] text-purple-600 hover:text-purple-800 underline cursor-pointer"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        min={0}
+                        value={activePlan.hsClassificationLimit ?? 1000}
+                        onChange={(e) =>
+                          handlePlanFieldChange(
+                            activePlanIndex,
+                            "hsClassificationLimit",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    )}
+                    <p className="text-[10px] text-muted">
+                      {activePlan.hsClassificationLimit === -1
+                        ? "Subscribed users can run unlimited HS queries without quotas."
+                        : "Max HS classification queries permitted per billing period."}
+                    </p>
+                  </div>
+
+                  {/* Landed Cost Usage Limit */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold text-muted flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>Landed Cost Usage Limit</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handlePlanFieldChange(
+                            activePlanIndex,
+                            "landedCostLimit",
+                            activePlan.landedCostLimit === -1 ? 500 : -1
+                          )
+                        }
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                          activePlan.landedCostLimit === -1
+                            ? "bg-purple-100 text-purple-700 border-purple-300"
+                            : "bg-panel text-muted hover:text-ink border-line"
+                        }`}
+                      >
+                        {activePlan.landedCostLimit === -1 ? "✓ Unlimited (∞)" : "Set Unlimited"}
+                      </button>
+                    </div>
+
+                    {activePlan.landedCostLimit === -1 ? (
+                      <div className="flex items-center justify-between px-3 py-2 bg-purple-50/70 border border-purple-200 rounded-xl text-xs font-mono font-bold text-purple-700">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-base font-bold">∞</span>
+                          <span>Unlimited Landed Cost</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handlePlanFieldChange(activePlanIndex, "landedCostLimit", 500)}
+                          className="text-[10px] text-purple-600 hover:text-purple-800 underline cursor-pointer"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        min={0}
+                        value={activePlan.landedCostLimit ?? 500}
+                        onChange={(e) =>
+                          handlePlanFieldChange(
+                            activePlanIndex,
+                            "landedCostLimit",
+                            parseInt(e.target.value) || 0
+                          )
+                        }
+                        className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    )}
+                    <p className="text-[10px] text-muted">
+                      {activePlan.landedCostLimit === -1
+                        ? "Subscribed organizations can run unlimited calculations."
+                        : "Max multimodal landed cost computations permitted per period."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 5: Call-to-Action (CTA) Config */}
               <div className="p-5 bg-panel border border-line rounded-2xl shadow-xs space-y-3">
                 <h3 className="text-xs font-bold text-ink uppercase tracking-wider font-mono flex items-center gap-2 border-b border-line pb-3">
                   <ArrowRight className="w-3.5 h-3.5 text-blue" />
@@ -1477,6 +1830,171 @@ export function DynamicPricingTab({
                       onChange={(e) => setNewPlanPriceAnnualUsd(parseInt(e.target.value) || 0)}
                       className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Plan Quotas & Workspace Usage Limits */}
+              <div className="p-4 bg-bg border border-line rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-ink font-mono uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-blue" />
+                    <span>Quotas & Workspace Usage Limits</span>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Seats */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-ink flex items-center gap-1">
+                        <Users className="w-3 h-3 text-blue" />
+                        <span>Team Seats *</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setNewPlanMaxTeamMembers(newPlanMaxTeamMembers === -1 ? 5 : -1)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                          newPlanMaxTeamMembers === -1
+                            ? "bg-purple-100 text-purple-700 border-purple-300"
+                            : "bg-panel text-muted hover:text-ink border-line"
+                        }`}
+                      >
+                        {newPlanMaxTeamMembers === -1 ? "✓ Unlimited" : "Set Unlimited"}
+                      </button>
+                    </div>
+
+                    {newPlanMaxTeamMembers === -1 ? (
+                      <div className="flex items-center justify-between px-2.5 py-1.5 bg-purple-50/70 border border-purple-200 rounded-lg text-xs font-mono font-bold text-purple-700">
+                        <span className="flex items-center gap-1">
+                          <span className="text-sm">∞</span>
+                          <span>Unlimited Seats</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setNewPlanMaxTeamMembers(5)}
+                          className="text-[10px] text-purple-600 hover:text-purple-800 underline cursor-pointer"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        value={newPlanMaxTeamMembers}
+                        onChange={(e) => setNewPlanMaxTeamMembers(parseInt(e.target.value) || 1)}
+                        className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    )}
+                    <span className="text-[10px] text-muted block">
+                      {newPlanMaxTeamMembers === -1
+                        ? "Organizations can invite unlimited members."
+                        : "Max user accounts permitted in organization."}
+                    </span>
+                  </div>
+
+                  {/* HS Classification Usage Limit */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-ink flex items-center gap-1">
+                        <Activity className="w-3 h-3 text-indigo-500" />
+                        <span>HS Lookups *</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setNewPlanHsLimit(newPlanHsLimit === -1 ? 1000 : -1)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                          newPlanHsLimit === -1
+                            ? "bg-purple-100 text-purple-700 border-purple-300"
+                            : "bg-panel text-muted hover:text-ink border-line"
+                        }`}
+                      >
+                        {newPlanHsLimit === -1 ? "✓ Unlimited" : "Set Unlimited"}
+                      </button>
+                    </div>
+
+                    {newPlanHsLimit === -1 ? (
+                      <div className="flex items-center justify-between px-2.5 py-1.5 bg-purple-50/70 border border-purple-200 rounded-lg text-xs font-mono font-bold text-purple-700">
+                        <span className="flex items-center gap-1">
+                          <span className="text-sm">∞</span>
+                          <span>Unlimited HS</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setNewPlanHsLimit(1000)}
+                          className="text-[10px] text-purple-600 hover:text-purple-800 underline cursor-pointer"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        required
+                        min={0}
+                        value={newPlanHsLimit}
+                        onChange={(e) => setNewPlanHsLimit(parseInt(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    )}
+                    <span className="text-[10px] text-muted block">
+                      {newPlanHsLimit === -1
+                        ? "Subscribers can run unlimited HS queries."
+                        : "Allowed HS queries per billing cycle."}
+                    </span>
+                  </div>
+
+                  {/* Landed Cost Usage Limit */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-ink flex items-center gap-1">
+                        <Activity className="w-3 h-3 text-emerald-500" />
+                        <span>Landed Cost *</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setNewPlanLcLmit(newPlanLcLmit === -1 ? 500 : -1)}
+                        className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border transition-colors cursor-pointer ${
+                          newPlanLcLmit === -1
+                            ? "bg-purple-100 text-purple-700 border-purple-300"
+                            : "bg-panel text-muted hover:text-ink border-line"
+                        }`}
+                      >
+                        {newPlanLcLmit === -1 ? "✓ Unlimited" : "Set Unlimited"}
+                      </button>
+                    </div>
+
+                    {newPlanLcLmit === -1 ? (
+                      <div className="flex items-center justify-between px-2.5 py-1.5 bg-purple-50/70 border border-purple-200 rounded-lg text-xs font-mono font-bold text-purple-700">
+                        <span className="flex items-center gap-1">
+                          <span className="text-sm">∞</span>
+                          <span>Unlimited LC</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setNewPlanLcLmit(500)}
+                          className="text-[10px] text-purple-600 hover:text-purple-800 underline cursor-pointer"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        required
+                        min={0}
+                        value={newPlanLcLmit}
+                        onChange={(e) => setNewPlanLcLmit(parseInt(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    )}
+                    <span className="text-[10px] text-muted block">
+                      {newPlanLcLmit === -1
+                        ? "Subscribers can run unlimited LC runs."
+                        : "Allowed Landed Cost calculations per cycle."}
+                    </span>
                   </div>
                 </div>
               </div>
