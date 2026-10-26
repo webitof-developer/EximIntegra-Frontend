@@ -6,20 +6,24 @@ export interface PublicPaymentConfig {
   keyId: string;
   currencyInrEnabled: boolean;
   currencyUsdEnabled: boolean;
+  adminCompany?: string;
+  adminEmail?: string;
 }
 
 export interface CreateOrderPayload {
   planId: string;
-  billingCycle: "monthly" | "yearly";
+  billingCycle: "monthly" | "yearly" | "annual";
   currency: "INR" | "USD";
 }
 
 export interface CreateOrderResponse {
   orderId: string;
   amount: number;
+  amountFormatted?: string;
   currency: string;
   keyId: string;
   planName: string;
+  billingCycle?: string;
   organizationName: string;
   userEmail: string;
   userName: string;
@@ -51,6 +55,8 @@ export interface InvoiceItem {
   status: string;
   billingCycle: string;
   planId: string;
+  issuedByCompany?: string;
+  issuedByEmail?: string;
   createdAt: string;
   receiptUrl?: string;
 }

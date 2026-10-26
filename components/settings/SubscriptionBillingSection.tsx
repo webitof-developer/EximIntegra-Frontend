@@ -6,6 +6,7 @@ import { updateUser } from "@/store/authSlice";
 import { useUpdateProfileMutation } from "@/store/authApi";
 import { useGetPricingPlansQuery } from "@/store/adminApi";
 import {
+  useGetPublicPaymentConfigQuery,
   useCreateSubscriptionOrderMutation,
   useVerifyPaymentMutation,
   useGetInvoicesQuery,
@@ -17,6 +18,7 @@ import {
   RazorpayCheckoutOptions,
   RazorpayPaymentSuccessResponse,
 } from "@/lib/razorpay";
+import { generateInvoicePdf } from "@/lib/invoicePdf";
 import { PricingPlan } from "@/lib/types";
 import {
   StatusPill,
@@ -134,6 +136,7 @@ export function SubscriptionBillingSection() {
   const [updateProfileMutation, { isLoading: isUpdatingProfile }] = useUpdateProfileMutation();
   const [createOrderMutation, { isLoading: isCreatingOrder }] = useCreateSubscriptionOrderMutation();
   const [verifyPaymentMutation, { isLoading: isVerifyingPayment }] = useVerifyPaymentMutation();
+  const { data: publicPaymentConfig } = useGetPublicPaymentConfigQuery();
   const { data: rawInvoicesData, refetch: refetchInvoices } = useGetInvoicesQuery();
   const invoicesData: InvoiceItem[] = Array.isArray(rawInvoicesData)
     ? rawInvoicesData
@@ -189,12 +192,45 @@ export function SubscriptionBillingSection() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleDownloadInvoice = (inv: { invoiceNumber: string; amount: number; currency: string }) => {
-    showNotice(
-      `Downloaded tax invoice ${inv.invoiceNumber} (${
-        inv.currency === "INR" ? "₹" : "$"
-      }${inv.amount.toLocaleString()}) with GST breakdown.`
-    );
+  const handleDownloadInvoice = async (inv: InvoiceItem) => {
+    try {
+      const adminComp =
+        inv.issuedByCompany ||
+        publicPaymentConfig?.adminCompany ||
+        (user?.role === "ADMIN" ? user?.company : undefined) ||
+        "EximIntegra HQ";
+      const adminMail =
+        inv.issuedByEmail ||
+        publicPaymentConfig?.adminEmail ||
+        (user?.role === "ADMIN" ? user?.email : undefined) ||
+        "admin@eximintegra.co";
+
+      await generateInvoicePdf({
+        invoiceNumber: inv.invoiceNumber,
+        amount: inv.amount,
+        currency: inv.currency,
+        createdAt: inv.createdAt,
+        planId: inv.planId,
+        billingCycle: inv.billingCycle,
+        customerName: user?.name,
+        customerEmail: user?.email,
+        organizationName: user?.company || undefined,
+        gstin: user?.gstin || undefined,
+        billingEmail: user?.billingEmail || user?.email || undefined,
+        adminCompany: adminComp,
+        adminEmail: adminMail,
+        paymentGateway: "Razorpay",
+        paymentStatus: inv.status === "SUCCESS" || inv.status === "PAID" ? "PAID" : inv.status,
+      });
+      showNotice(
+        `Downloaded GST tax invoice ${inv.invoiceNumber} (${
+          inv.currency === "INR" ? "₹" : "$"
+        }${Number(inv.amount).toLocaleString()}).`
+      );
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      showNotice(`Failed to generate PDF for invoice ${inv.invoiceNumber}.`);
+    }
   };
 
   // Switch Plan from Modal with Razorpay multi-currency (INR & USD) payment flow
@@ -216,7 +252,7 @@ export function SubscriptionBillingSection() {
       await loadRazorpayScript();
 
       // 2. Create Razorpay Order on Backend (Supports both INR in paise & USD in cents)
-      const cycle = modalBillingCycle === "annual" ? "yearly" : "monthly";
+      const cycle = modalBillingCycle === "annual" ? "annual" : "monthly";
       const orderData = await createOrderMutation({
         planId: plan.id,
         billingCycle: cycle,
@@ -230,9 +266,9 @@ export function SubscriptionBillingSection() {
           amount: orderData.amount,
           currency: orderData.currency,
           name: "EximIntegra Enterprise",
-          description: `${orderData.planName} Subscription (${
+          description: `${orderData.planName} ${
             modalBillingCycle === "annual" ? "Annual" : "Monthly"
-          })`,
+          } Subscription (${orderData.amountFormatted || (modalCurrency === "INR" ? `₹${(orderData.amount / 100).toLocaleString("en-IN")}` : `$${(orderData.amount / 100).toLocaleString("en-US")}`)})`,
           order_id: orderData.orderId,
           prefill: {
             name: user?.name || user?.email || "Trader",
@@ -781,6 +817,12 @@ export function SubscriptionBillingSection() {
                     month: "short",
                     day: "numeric",
                   });
+                  const rawAmount = Number(inv.amount) || 0;
+                  const totalAmount = rawAmount > 100000 ? Math.round(rawAmount / 100) : rawAmount;
+                  const taxableAmount = inv.currency === "INR"
+                    ? Math.round(totalAmount / 1.18)
+                    : Math.round(totalAmount * 0.9);
+
                   return (
                     <TableRow key={inv.id}>
                       <TableCell className="font-mono font-bold text-ink">
@@ -792,25 +834,23 @@ export function SubscriptionBillingSection() {
                       </TableCell>
                       <TableCell align="right" className="font-mono text-muted tabular-nums">
                         {symbol}
-                        {inv.currency === "INR"
-                          ? Math.round(Number(inv.amount) / 1.18).toLocaleString("en-IN")
-                          : Math.round(Number(inv.amount) * 0.9).toLocaleString("en-US")}
+                        {taxableAmount.toLocaleString(inv.currency === "INR" ? "en-IN" : "en-US")}
                       </TableCell>
                       <TableCell align="right" className="font-mono font-bold text-ink tabular-nums">
                         {symbol}
-                        {Number(inv.amount).toLocaleString(inv.currency === "INR" ? "en-IN" : "en-US")}
+                        {totalAmount.toLocaleString(inv.currency === "INR" ? "en-IN" : "en-US")}
                       </TableCell>
                       <TableCell align="center">
                         <StatusPill
                           label={inv.status}
-                          variant={inv.status === "PAID" ? "success" : "neutral"}
+                          variant={inv.status === "PAID" || inv.status === "SUCCESS" ? "success" : "neutral"}
                           size="xs"
                         />
                       </TableCell>
                       <TableCell align="center">
                         <button
                           type="button"
-                          onClick={() => handleDownloadInvoice({ invoiceNumber: inv.invoiceNumber, amount: inv.amount, currency: inv.currency })}
+                          onClick={() => handleDownloadInvoice({ ...inv, amount: totalAmount })}
                           className="p-1.5 rounded-md hover:bg-bg text-muted hover:text-blue transition-colors cursor-pointer inline-flex items-center gap-1"
                           title="Download GST Tax Invoice"
                         >
@@ -944,7 +984,7 @@ export function SubscriptionBillingSection() {
                   const isAnnualCycle = modalBillingCycle === "annual";
 
                   // Dynamic price calculation from real DB plan fields
-                  const pricePerMonth =
+                  const planPrice =
                     modalCurrency === "INR"
                       ? isAnnualCycle
                         ? plan.priceAnnualInr
@@ -952,11 +992,6 @@ export function SubscriptionBillingSection() {
                       : isAnnualCycle
                       ? plan.priceAnnualUsd
                       : plan.priceMonthlyUsd;
-
-                  const annualTotal =
-                    modalCurrency === "INR"
-                      ? (plan.priceAnnualInr || 0) * 12
-                      : (plan.priceAnnualUsd || 0) * 12;
 
                   return (
                     <div
@@ -988,16 +1023,18 @@ export function SubscriptionBillingSection() {
                         <div className="flex items-baseline gap-1">
                           <span className="text-xl font-bold font-data text-ink">
                             {modalCurrency === "INR"
-                              ? `₹${(pricePerMonth || 0).toLocaleString("en-IN")}`
-                              : `$${(pricePerMonth || 0).toLocaleString("en-US")}`}
+                              ? `₹${(planPrice || 0).toLocaleString("en-IN")}`
+                              : `$${(planPrice || 0).toLocaleString("en-US")}`}
                           </span>
-                          <span className="text-xs text-muted">/ month</span>
+                          <span className="text-xs text-muted">
+                            {isAnnualCycle ? "/ year" : "/ month"}
+                          </span>
                         </div>
 
                         <div className="text-[10px] text-muted font-mono mt-0.5">
                           {isAnnualCycle ? (
                             <span className="text-green font-medium">
-                              Billed {modalCurrency === "INR" ? `₹${annualTotal.toLocaleString("en-IN")}` : `$${annualTotal}`}/yr (Save 20%)
+                              Annual Subscription (Save 20%)
                             </span>
                           ) : (
                             <span>Billed month-to-month</span>
@@ -1051,7 +1088,10 @@ export function SubscriptionBillingSection() {
                         ) : (
                           <>
                             <CreditCard className="w-3.5 h-3.5" />
-                            <span>Pay & Switch ({modalCurrency === "INR" ? "₹" : "$"})</span>
+                            <span>
+                              Pay & Switch ({modalCurrency === "INR" ? "₹" : "$"}
+                              {(planPrice || 0).toLocaleString(modalCurrency === "INR" ? "en-IN" : "en-US")})
+                            </span>
                           </>
                         )}
                       </button>

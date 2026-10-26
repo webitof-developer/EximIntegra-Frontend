@@ -571,14 +571,14 @@ export function RazorpayGatewaySection({
                     <td className="py-3 px-3">
                       <span className="font-bold text-ink">
                         {tx.currency === "INR" ? "₹" : "$"}
-                        {Number(tx.amount).toLocaleString()}
+                        {(Number(tx.amount) > 100000 ? Math.round(Number(tx.amount) / 100) : Number(tx.amount)).toLocaleString()}
                       </span>
                       <span className="text-[10px] text-muted ml-1 uppercase">{tx.currency}</span>
                     </td>
                     <td className="py-3 px-3 font-sans">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
-                          tx.status === "PAID"
+                          tx.status === "PAID" || tx.status === "SUCCESS"
                             ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                             : tx.status === "FAILED"
                             ? "bg-red/10 text-red border border-red/20"
