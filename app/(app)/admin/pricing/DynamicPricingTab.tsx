@@ -29,6 +29,7 @@ import {
   ChevronRight,
   Users,
   Activity,
+  LucideInfinity,
 } from "lucide-react";
 
 interface DynamicPricingTabProps {
@@ -1239,15 +1240,15 @@ export function DynamicPricingTab({
                             : "bg-panel text-muted hover:text-ink border-line"
                         }`}
                       >
-                        {activePlan.maxTeamMembers === -1 ? "✓ Unlimited (∞)" : "Set Unlimited"}
+                        {activePlan.maxTeamMembers === -1 ? "Unlimited" : "Set Unlimited"}
                       </button>
                     </div>
 
                     {activePlan.maxTeamMembers === -1 ? (
                       <div className="flex items-center justify-between px-3 py-2 bg-purple-50/70 border border-purple-200 rounded-xl text-xs font-mono font-bold text-purple-700">
                         <span className="flex items-center gap-1.5">
-                          <span className="text-base font-bold">∞</span>
-                          <span>Unlimited Workspace Seats</span>
+                          <span className="text-base font-bold"><LucideInfinity className="w-4 h-4"/></span>
+                          <span>Unlimited</span>
                         </span>
                         <button
                           type="button"
@@ -1301,15 +1302,15 @@ export function DynamicPricingTab({
                             : "bg-panel text-muted hover:text-ink border-line"
                         }`}
                       >
-                        {activePlan.hsClassificationLimit === -1 ? "✓ Unlimited (∞)" : "Set Unlimited"}
+                        {activePlan.hsClassificationLimit === -1 ? "Unlimited" : "Set Unlimited"}
                       </button>
                     </div>
 
                     {activePlan.hsClassificationLimit === -1 ? (
                       <div className="flex items-center justify-between px-3 py-2 bg-purple-50/70 border border-purple-200 rounded-xl text-xs font-mono font-bold text-purple-700">
                         <span className="flex items-center gap-1.5">
-                          <span className="text-base font-bold">∞</span>
-                          <span>Unlimited Classifications</span>
+                          <span className="text-base font-bold"><LucideInfinity className="w-4 h-4"/></span>
+                          <span>Unlimited</span>
                         </span>
                         <button
                           type="button"
@@ -1363,15 +1364,15 @@ export function DynamicPricingTab({
                             : "bg-panel text-muted hover:text-ink border-line"
                         }`}
                       >
-                        {activePlan.landedCostLimit === -1 ? "✓ Unlimited (∞)" : "Set Unlimited"}
+                        {activePlan.landedCostLimit === -1 ? "Unlimited" : "Set Unlimited"}
                       </button>
                     </div>
 
                     {activePlan.landedCostLimit === -1 ? (
                       <div className="flex items-center justify-between px-3 py-2 bg-purple-50/70 border border-purple-200 rounded-xl text-xs font-mono font-bold text-purple-700">
                         <span className="flex items-center gap-1.5">
-                          <span className="text-base font-bold">∞</span>
-                          <span>Unlimited Landed Cost</span>
+                          <span className="text-base font-bold"><LucideInfinity className="w-4 h-4"/></span>
+                          <span>Unlimited</span>
                         </span>
                         <button
                           type="button"
