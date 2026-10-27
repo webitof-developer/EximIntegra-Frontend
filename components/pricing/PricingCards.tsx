@@ -34,6 +34,9 @@ interface PricingPlan {
   features: string[];
   ctaLabel: string;
   ctaHref: string;
+  planType?: "subscription" | "trial";
+  isDefaultTrial?: boolean;
+  trialDays?: number;
 }
 
 const fallbackPlans: PricingPlan[] = [
@@ -116,12 +119,13 @@ export function PricingCards() {
     useState<PresentationMode>("spotlight");
 
   const { data: pricingData } = useGetPricingPlansQuery();
+  const trialDays = pricingData?.trialDays ?? 14;
   const rawPlans =
     pricingData?.plans && pricingData.plans.length > 0
       ? pricingData.plans
       : fallbackPlans;
   const displayPlans = useMemo(
-    () => rawPlans.filter((p) => p.isActive !== false),
+    () => rawPlans.filter((p) => p.isActive !== false && p.planType !== "trial"),
     [rawPlans]
   );
 
@@ -465,7 +469,9 @@ export function PricingCards() {
                             }`}
                           >
                             <span>
-                              {isCenter ? p.ctaLabel : "Select & Focus"}
+                              {isCenter
+                                ? p.ctaLabel.replace(/14[-\s]day/gi, `${trialDays}-Day`)
+                                : "Select & Focus"}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5" />
                           </Link>
@@ -497,7 +503,7 @@ export function PricingCards() {
                         <div className="pt-2.5 border-t border-line text-center">
                           <span className="text-[11px] text-muted font-mono flex items-center justify-center gap-1.5">
                             <ShieldCheck className="w-3.5 h-3.5 text-green" />
-                            <span>14-day free trial &bull; Cancel anytime</span>
+                            <span>{trialDays}-day free trial &bull; Cancel anytime</span>
                           </span>
                         </div>
                       </div>
@@ -639,7 +645,7 @@ export function PricingCards() {
                         : "bg-bg hover:bg-line border border-line text-ink"
                     }`}
                   >
-                    <span>{p.ctaLabel}</span>
+                    <span>{p.ctaLabel.replace(/14[-\s]day/gi, `${trialDays}-Day`)}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
 
@@ -665,7 +671,7 @@ export function PricingCards() {
                 <div className="pt-3 border-t border-line text-center">
                   <span className="text-[11px] text-muted font-mono flex items-center justify-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5 text-green" />
-                    <span>14-day free trial &bull; Cancel anytime</span>
+                    <span>{trialDays}-day free trial &bull; Cancel anytime</span>
                   </span>
                 </div>
               </div>

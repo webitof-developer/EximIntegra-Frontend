@@ -12,8 +12,12 @@ import {
   Award,
   ArrowRight,
 } from "lucide-react";
+import { useGetPricingPlansQuery } from "@/store/adminApi";
 
 export function SocialProofAndCompliance() {
+  const { data: pricingData } = useGetPricingPlansQuery();
+  const trialDays = pricingData?.trialDays ?? 14;
+
   return (
     <section id="security" className="py-20 bg-panel border-b border-line">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -89,7 +93,7 @@ export function SocialProofAndCompliance() {
               Ready to streamline your cross-border trade operations?
             </h4>
             <p className="text-xs text-muted">
-              Start your 14-day free trial today. Full access to all six engines, no credit card needed.
+              Start your {trialDays}-day free trial today. Full access to all six engines, no credit card needed.
             </p>
           </div>
 

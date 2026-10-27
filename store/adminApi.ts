@@ -44,7 +44,10 @@ export const adminApi = api.injectEndpoints({
       }),
       invalidatesTags: ["AdminUsers", "Admin"],
     }),
-    getPricingPlans: builder.query<{ plans: PricingPlan[] }, void>({
+    getPricingPlans: builder.query<
+      { plans: PricingPlan[]; defaultTrialPlan?: PricingPlan; trialDays?: number },
+      void
+    >({
       query: () => "/pricing",
       providesTags: ["Pricing"],
     }),

@@ -18,8 +18,12 @@ import {
   Cpu,
   Layers,
 } from "lucide-react";
+import { useGetPricingPlansQuery } from "@/store/adminApi";
 
 export function HeroSection() {
+  const { data: pricingData } = useGetPricingPlansQuery();
+  const trialDays = pricingData?.trialDays ?? 14;
+
   return (
     <section className="relative overflow-hidden pt-12 pb-16 md:pt-16 md:pb-24 border-b border-line bg-bg/40">
       {/* High-End Modern Animated Background (Interactive Grid, Flowing Packets & Fluid Glows) */}
@@ -52,7 +56,7 @@ export function HeroSection() {
             href="/register"
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-blue hover:bg-blue-dark text-white text-sm font-semibold shadow-xs hover:shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            <span>Start 14-Day Free Trial</span>
+            <span>Start {trialDays}-Day Free Trial</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
 

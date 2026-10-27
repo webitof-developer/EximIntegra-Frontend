@@ -4,8 +4,12 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShieldCheck, Scale, Globe, Lock } from "lucide-react";
+import { useGetPricingPlansQuery } from "@/store/adminApi";
 
 export function LandingFooter() {
+  const { data: pricingData } = useGetPricingPlansQuery();
+  const trialDays = pricingData?.trialDays ?? 14;
+
   return (
     <footer className="bg-panel border-t border-line text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 space-y-12">
@@ -105,7 +109,7 @@ export function LandingFooter() {
               </li>
               <li>
                 <Link href="/register" className="hover:text-ink transition-colors">
-                  14-Day Free Trial
+                  {trialDays}-Day Free Trial
                 </Link>
               </li>
             </ul>

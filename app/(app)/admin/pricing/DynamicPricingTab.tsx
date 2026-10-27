@@ -27,9 +27,13 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Users,
   Activity,
   LucideInfinity,
+  Users,
+  Gift,
+  Calendar,
+  Clock,
+  CreditCard,
 } from "lucide-react";
 
 interface DynamicPricingTabProps {
@@ -49,6 +53,23 @@ const TIER_BADGE_PRESETS = [
   "SCALE",
 ];
 
+// Helper functions for date & days synchronization
+const calculateDateFromDays = (days: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + (Number(days) || 0));
+  return d.toISOString().split("T")[0];
+};
+
+const calculateDaysFromDate = (dateStr: string): number => {
+  if (!dateStr) return 14;
+  const target = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  const diff = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(1, diff);
+};
+
 export function DynamicPricingTab({
   pricingPlans,
   isLoading,
@@ -59,6 +80,7 @@ export function DynamicPricingTab({
   const [editablePlans, setEditablePlans] = useState<PricingPlan[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState<string>("professional");
   const [viewMode, setViewMode] = useState<"focused" | "grid">("grid");
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | "SUBSCRIPTION" | "TRIAL">("ALL");
   const [pricingNotice, setPricingNotice] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -71,6 +93,10 @@ export function DynamicPricingTab({
 
   // Create Plan Modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newPlanType, setNewPlanType] = useState<"subscription" | "trial">("subscription");
+  const [newPlanIsDefaultTrial, setNewPlanIsDefaultTrial] = useState<boolean>(true);
+  const [newPlanTrialDays, setNewPlanTrialDays] = useState<number>(14);
+  const [newPlanTrialExpiryDate, setNewPlanTrialExpiryDate] = useState<string>(calculateDateFromDays(14));
   const [newPlanId, setNewPlanId] = useState("");
   const [newPlanName, setNewPlanName] = useState("");
   const [newPlanTagline, setNewPlanTagline] = useState("");
@@ -133,6 +159,36 @@ export function DynamicPricingTab({
         nextState ? "ACTIVE (visible on Frontend)" : "INACTIVE (hidden from Frontend)"
       }. Click "Save Pricing Changes" to publish.`
     );
+  };
+
+  // Toggle default trial status (ensures only one plan is active default trial)
+  const handleToggleDefaultTrial = (planIndex: number) => {
+    const isCurrentlyDefault = editablePlans[planIndex].isDefaultTrial;
+    const nextList = editablePlans.map((p, idx) => {
+      if (idx === planIndex) {
+        return { ...p, isDefaultTrial: !isCurrentlyDefault };
+      }
+      if (!isCurrentlyDefault) {
+        return { ...p, isDefaultTrial: false };
+      }
+      return p;
+    });
+    setEditablePlans(nextList);
+    showToast(
+      !isCurrentlyDefault
+        ? `"${editablePlans[planIndex].name}" is now the active DEFAULT TRIAL for new organizations.`
+        : `Disabled default trial status for "${editablePlans[planIndex].name}".`
+    );
+  };
+
+  const handleTrialDaysChange = (planIndex: number, days: number) => {
+    const validDays = Math.max(1, days || 1);
+    handlePlanFieldChange(planIndex, "trialDays", validDays);
+  };
+
+  const handleTrialDateChange = (planIndex: number, dateStr: string) => {
+    const days = calculateDaysFromDate(dateStr);
+    handlePlanFieldChange(planIndex, "trialDays", days);
   };
 
   const handleScroll = (ref: React.RefObject<HTMLDivElement | null>, direction: "left" | "right") => {
@@ -209,32 +265,46 @@ export function DynamicPricingTab({
       return;
     }
 
+    const isTrial = newPlanType === "trial";
     const createdPlan: PricingPlan = {
       id: cleanId,
       name: newPlanName.trim() || cleanId.toUpperCase(),
-      tagline: newPlanTagline.trim() || "Enterprise subscription tier.",
-      badge: newPlanBadge.trim() || null,
-      tierBadge: newPlanTierBadge.trim() || "PROFESSIONAL",
+      tagline: newPlanTagline.trim() || (isTrial ? "Complimentary access for newly registered organizations." : "Enterprise subscription tier."),
+      badge: newPlanBadge.trim() || (isTrial ? "FREE TRIAL" : null),
+      tierBadge: newPlanTierBadge.trim() || (isTrial ? "STARTER" : "PROFESSIONAL"),
       isActive: newPlanIsActive,
       isPopular: newPlanIsPopular,
-      priceMonthlyInr: Number(newPlanPriceMonthlyInr) || 0,
-      priceAnnualInr: Number(newPlanPriceAnnualInr) || 0,
-      priceMonthlyUsd: Number(newPlanPriceMonthlyUsd) || 0,
-      priceAnnualUsd: Number(newPlanPriceAnnualUsd) || 0,
+      priceMonthlyInr: isTrial ? 0 : (Number(newPlanPriceMonthlyInr) || 0),
+      priceAnnualInr: isTrial ? 0 : (Number(newPlanPriceAnnualInr) || 0),
+      priceMonthlyUsd: isTrial ? 0 : (Number(newPlanPriceMonthlyUsd) || 0),
+      priceAnnualUsd: isTrial ? 0 : (Number(newPlanPriceAnnualUsd) || 0),
       features: newPlanFeatures.filter((f) => f.trim().length > 0),
-      ctaLabel: newPlanCtaLabel.trim() || "Get Started",
+      ctaLabel: newPlanCtaLabel.trim() || (isTrial ? "Start Free Trial" : "Get Started"),
       ctaHref: newPlanCtaHref.trim() || `/register?plan=${cleanId}`,
       maxTeamMembers: newPlanMaxTeamMembers === -1 ? -1 : (Number(newPlanMaxTeamMembers) > 0 ? Number(newPlanMaxTeamMembers) : 5),
       hsClassificationLimit: newPlanHsLimit === -1 ? -1 : (isNaN(Number(newPlanHsLimit)) ? 1000 : Number(newPlanHsLimit)),
       landedCostLimit: newPlanLcLmit === -1 ? -1 : (isNaN(Number(newPlanLcLmit)) ? 500 : Number(newPlanLcLmit)),
+      planType: newPlanType,
+      isDefaultTrial: isTrial ? newPlanIsDefaultTrial : false,
+      trialDays: isTrial ? newPlanTrialDays : undefined,
     };
 
-    const nextList = [...editablePlans, createdPlan];
+    let nextList = editablePlans.map((p) => {
+      if (createdPlan.isDefaultTrial && p.planType === "trial") {
+        return { ...p, isDefaultTrial: false };
+      }
+      return p;
+    });
+    nextList = [...nextList, createdPlan];
     setSelectedPlanId(cleanId);
     setEditablePlans(nextList);
     setIsCreateModalOpen(false);
 
     // Reset create modal fields
+    setNewPlanType("subscription");
+    setNewPlanIsDefaultTrial(true);
+    setNewPlanTrialDays(14);
+    setNewPlanTrialExpiryDate(calculateDateFromDays(14));
     setNewPlanId("");
     setNewPlanName("");
     setNewPlanTagline("");
@@ -402,13 +472,80 @@ export function DynamicPricingTab({
         </div>
       )}
 
+
+      {/* Plan Category Filter Bar */}
+      {(() => {
+        const subCount = editablePlans.filter((p) => p.planType !== "trial").length;
+        const trialCount = editablePlans.filter((p) => p.planType === "trial").length;
+
+        return (
+          <div className="flex items-center justify-between gap-3 flex-wrap border-b border-line pb-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-ink font-mono uppercase tracking-wider">
+                Filter View:
+              </span>
+              <div className="flex items-center bg-bg border border-line rounded-xl p-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter("ALL")}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    categoryFilter === "ALL"
+                      ? "bg-ink text-white shadow-xs"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  All Plans ({editablePlans.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter("SUBSCRIPTION")}
+                  className={`flex items-center gap-1 px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    categoryFilter === "SUBSCRIPTION"
+                      ? "bg-blue text-white shadow-xs"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  <CreditCard className="w-3 h-3" />
+                  <span>User Subscriptions ({subCount})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter("TRIAL")}
+                  className={`flex items-center gap-1 px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    categoryFilter === "TRIAL"
+                      ? "bg-emerald-600 text-white shadow-xs"
+                      : "text-muted hover:text-ink"
+                  }`}
+                >
+                  <Gift className="w-3 h-3" />
+                  <span>Free Default Trial ({trialCount})</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ========================================================================= */}
       {/* QUICK SELECT PLAN OVERVIEW (NO HORIZONTAL SCROLL) */}
       {/* ========================================================================= */}
       <div className="space-y-2 w-full">
         <div className="flex items-center justify-between text-xs px-1">
           <span className="font-mono text-muted text-[11px] flex items-center gap-1.5">
-            <span className="font-semibold text-ink">Configured Plans ({editablePlans.length})</span>
+            <span className="font-semibold text-ink">
+              {categoryFilter === "TRIAL"
+                ? "Free Trial Plans"
+                : categoryFilter === "SUBSCRIPTION"
+                ? "User Subscription Plans"
+                : "All Plans"}{" "}
+              ({
+                editablePlans.filter((p) => {
+                  if (categoryFilter === "SUBSCRIPTION") return p.planType !== "trial";
+                  if (categoryFilter === "TRIAL") return p.planType === "trial";
+                  return true;
+                }).length
+              })
+            </span>
             <span className="text-muted/60">&bull; Click any plan to select for deep editing</span>
           </span>
 
@@ -423,9 +560,16 @@ export function DynamicPricingTab({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-          {editablePlans.map((plan) => {
-            const isSelected = plan.id === selectedPlanId;
-            const isActive = plan.isActive !== false;
+          {editablePlans
+            .filter((p) => {
+              if (categoryFilter === "SUBSCRIPTION") return p.planType !== "trial";
+              if (categoryFilter === "TRIAL") return p.planType === "trial";
+              return true;
+            })
+            .map((plan) => {
+              const isSelected = plan.id === selectedPlanId;
+              const isActive = plan.isActive !== false;
+              const isTrial = plan.planType === "trial";
 
             return (
               <div
@@ -437,7 +581,13 @@ export function DynamicPricingTab({
                     : "bg-panel/70 border-line hover:border-line-hover hover:bg-panel"
                 } ${!isActive ? "opacity-75 bg-slate-50/50" : ""}`}
               >
-                {plan.isPopular && (
+                {plan.isDefaultTrial && (
+                  <div className="absolute top-0 right-0 bg-emerald-600 text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-wider flex items-center gap-1">
+                    <CheckCircle2 className="w-2.5 h-2.5" />
+                    <span>Default Trial</span>
+                  </div>
+                )}
+                {!plan.isDefaultTrial && plan.isPopular && (
                   <div className="absolute top-0 right-0 bg-blue text-white text-[9px] font-mono font-bold px-2 py-0.5 rounded-bl-lg uppercase tracking-wider">
                     Featured
                   </div>
@@ -446,10 +596,17 @@ export function DynamicPricingTab({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <div className="w-8 h-8 rounded-lg bg-bg border border-line flex items-center justify-center shrink-0">
-                      {getTierIcon(plan.tierBadge || plan.id)}
+                      {isTrial ? <Gift className="w-4 h-4 text-emerald-600" /> : getTierIcon(plan.tierBadge || plan.id)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-bold text-ink truncate">{plan.name}</div>
+                      <div className="text-sm font-bold text-ink truncate flex items-center gap-1.5">
+                        <span>{plan.name}</span>
+                        {isTrial && (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                            TRIAL
+                          </span>
+                        )}
+                      </div>
                       <div className="text-[10px] text-muted font-mono uppercase truncate">
                         {plan.id}
                       </div>
@@ -508,10 +665,17 @@ export function DynamicPricingTab({
 
                 {/* Price & Features count */}
                 <div className="flex items-baseline justify-between text-xs font-mono text-muted">
-                  <span className="font-bold text-ink font-data text-sm">
-                    ₹{plan.priceMonthlyInr.toLocaleString()}{" "}
-                    <span className="text-[10px] font-normal text-muted">/mo</span>
-                  </span>
+                  {isTrial ? (
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400 font-data text-xs flex items-center gap-1">
+                      <Gift className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{plan.trialDays || 14} Days Free</span>
+                    </span>
+                  ) : (
+                    <span className="font-bold text-ink font-data text-sm">
+                      ₹{plan.priceMonthlyInr.toLocaleString()}{" "}
+                      <span className="text-[10px] font-normal text-muted">/mo</span>
+                    </span>
+                  )}
                   <span className="text-[10px]">{plan.features.length} features</span>
                 </div>
               </div>
@@ -556,173 +720,278 @@ export function DynamicPricingTab({
             ref={gridScrollRef}
             className="flex gap-6 overflow-x-auto pb-6 pt-2 w-full scrollbar-thin scroll-smooth"
           >
-            {editablePlans.map((plan, planIdx) => {
-              const isActive = plan.isActive !== false;
-              return (
-                <div
-                  key={plan.id}
-                  className={`w-[350px] shrink-0 p-6 bg-panel border rounded-2xl shadow-xs space-y-5 flex flex-col justify-between transition-all overflow-hidden relative ${
-                    plan.isPopular ? "border-blue ring-2 ring-blue/20" : "border-line"
-                  } ${!isActive ? "opacity-80 bg-slate-50/50" : ""}`}
-                >
-                  <div className="space-y-4">
-                    {/* Header with Title & Tier Badge */}
-                    <div className="flex items-center justify-between border-b border-line pb-3 gap-2">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <div className="w-8 h-8 rounded-lg bg-bg border border-line flex items-center justify-center shrink-0">
-                          {getTierIcon(plan.tierBadge || plan.id)}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <span className="text-[10px] font-mono text-muted uppercase block truncate">
-                            {plan.id}
+            {editablePlans
+              .filter((p) => {
+                if (categoryFilter === "SUBSCRIPTION") return p.planType !== "trial";
+                if (categoryFilter === "TRIAL") return p.planType === "trial";
+                return true;
+              })
+              .map((plan) => {
+                const planIdx = editablePlans.findIndex((p) => p.id === plan.id);
+                const isActive = plan.isActive !== false;
+                const isTrial = plan.planType === "trial";
+
+                return (
+                  <div
+                    key={plan.id}
+                    className={`w-[350px] shrink-0 p-6 bg-panel border rounded-2xl shadow-xs space-y-5 flex flex-col justify-between transition-all overflow-hidden relative ${
+                      isTrial
+                        ? "border-emerald-500/40 ring-1 ring-emerald-500/20"
+                        : plan.isPopular
+                        ? "border-blue ring-2 ring-blue/20"
+                        : "border-line"
+                    } ${!isActive ? "opacity-80 bg-slate-50/50" : ""}`}
+                  >
+                    <div className="space-y-4">
+                      {/* Top Badges */}
+                      <div className="flex items-center justify-between gap-1 text-[10px] font-mono font-bold">
+                        {isTrial ? (
+                          <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 flex items-center gap-1">
+                            <Gift className="w-3 h-3" />
+                            <span>FREE TRIAL PLAN</span>
                           </span>
-                          <input
-                            type="text"
-                            value={plan.name}
-                            onChange={(e) => handlePlanFieldChange(planIdx, "name", e.target.value)}
-                            className="text-base font-bold text-ink bg-transparent focus:border-b focus:border-blue focus:outline-hidden w-full truncate"
-                          />
+                        ) : (
+                          <span className="px-2 py-0.5 rounded bg-blue/10 text-blue flex items-center gap-1">
+                            <CreditCard className="w-3 h-3" />
+                            <span>SUBSCRIPTION</span>
+                          </span>
+                        )}
+
+                        {plan.isDefaultTrial && (
+                          <span className="px-2 py-0.5 rounded bg-emerald-600 text-white flex items-center gap-1">
+                            <CheckCircle2 className="w-2.5 h-2.5" />
+                            <span>DEFAULT FOR NEW SIGNUPS</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Header with Title & Tier Badge */}
+                      <div className="flex items-center justify-between border-b border-line pb-3 gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-lg bg-bg border border-line flex items-center justify-center shrink-0">
+                            {isTrial ? <Gift className="w-4 h-4 text-emerald-600" /> : getTierIcon(plan.tierBadge || plan.id)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-[10px] font-mono text-muted uppercase block truncate">
+                              {plan.id}
+                            </span>
+                            <input
+                              type="text"
+                              value={plan.name}
+                              onChange={(e) => handlePlanFieldChange(planIdx, "name", e.target.value)}
+                              className="text-base font-bold text-ink bg-transparent focus:border-b focus:border-blue focus:outline-hidden w-full truncate"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="shrink-0">
+                          <TierBadge tier={plan.tierBadge || plan.id} size="xs" />
                         </div>
                       </div>
 
-                      <div className="shrink-0">
-                        <TierBadge tier={plan.tierBadge || plan.id} size="xs" />
-                      </div>
-                    </div>
-
-                    {/* Active / Inactive Toggle Bar */}
-                    <div className="p-2.5 rounded-xl bg-bg border border-line flex items-center justify-between">
-                      <span className="text-[11px] font-mono font-semibold flex items-center gap-1.5">
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
-                          }`}
-                        />
-                        <span className={isActive ? "text-emerald-700" : "text-slate-500"}>
-                          {isActive ? "ACTIVE (PUBLIC)" : "INACTIVE (HIDDEN)"}
+                      {/* Active / Inactive Toggle Bar */}
+                      <div className="p-2.5 rounded-xl bg-bg border border-line flex items-center justify-between">
+                        <span className="text-[11px] font-mono font-semibold flex items-center gap-1.5">
+                          <span
+                            className={`w-2 h-2 rounded-full ${
+                              isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                            }`}
+                          />
+                          <span className={isActive ? "text-emerald-700" : "text-slate-500"}>
+                            {isActive ? "ACTIVE (PUBLIC)" : "INACTIVE (HIDDEN)"}
+                          </span>
                         </span>
-                      </span>
 
-                      <button
-                        type="button"
-                        onClick={() => handleTogglePlanActive(plan.id)}
-                        className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold cursor-pointer border transition-colors ${
-                          isActive
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                            : "bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200"
-                        }`}
-                      >
-                        {isActive ? "Active" : "Inactive"}
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePlanActive(plan.id)}
+                          className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold cursor-pointer border transition-colors ${
+                            isActive
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                              : "bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200"
+                          }`}
+                        >
+                          {isActive ? "Active" : "Inactive"}
+                        </button>
+                      </div>
 
-                    {/* Tier Badge Picker */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
+                      {/* Tier Badge Picker */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+                            Tier Badge
+                          </label>
+                          <TierBadge tier={plan.tierBadge || plan.id} size="xs" />
+                        </div>
+                        <CustomDropdown
+                          value={
+                            TIER_BADGE_PRESETS.includes((plan.tierBadge || plan.id).toUpperCase())
+                              ? (plan.tierBadge || plan.id).toUpperCase()
+                              : "CUSTOM"
+                          }
+                          onChange={(val) =>
+                            handlePlanFieldChange(planIdx, "tierBadge", val)
+                          }
+                          options={TIER_BADGE_PRESETS.map((t) => ({ value: t, label: t }))}
+                          size="sm"
+                        />
+                      </div>
+
+                      {/* Tagline */}
+                      <div className="space-y-1">
                         <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
-                          Tier Badge
+                          Tagline
                         </label>
-                        <TierBadge tier={plan.tierBadge || plan.id} size="xs" />
-                      </div>
-                      <CustomDropdown
-                        value={
-                          TIER_BADGE_PRESETS.includes((plan.tierBadge || plan.id).toUpperCase())
-                            ? (plan.tierBadge || plan.id).toUpperCase()
-                            : "CUSTOM"
-                        }
-                        onChange={(val) =>
-                          handlePlanFieldChange(planIdx, "tierBadge", val)
-                        }
-                        options={TIER_BADGE_PRESETS.map((t) => ({ value: t, label: t }))}
-                        size="sm"
-                      />
-                    </div>
-
-                    {/* Tagline */}
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
-                        Tagline
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={plan.tagline}
-                        onChange={(e) => handlePlanFieldChange(planIdx, "tagline", e.target.value)}
-                        className="w-full p-2 bg-bg border border-line rounded-xl text-xs text-ink focus:border-blue focus:outline-hidden resize-none leading-relaxed"
-                      />
-                    </div>
-
-                    {/* Pricing Grid */}
-                    <div className="p-3 bg-bg border border-line rounded-xl space-y-2.5">
-                      <span className="text-[10px] font-mono font-bold text-ink uppercase tracking-wider block">
-                        Pricing (Monthly / Annual)
-                      </span>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <span className="text-[10px] text-muted block">INR Monthly (₹)</span>
-                          <input
-                            type="number"
-                            value={plan.priceMonthlyInr}
-                            onChange={(e) =>
-                              handlePlanFieldChange(
-                                planIdx,
-                                "priceMonthlyInr",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="w-full px-2 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                          />
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-muted block">INR Annual (₹)</span>
-                          <input
-                            type="number"
-                            value={plan.priceAnnualInr}
-                            onChange={(e) =>
-                              handlePlanFieldChange(
-                                planIdx,
-                                "priceAnnualInr",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="w-full px-2 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                          />
-                        </div>
+                        <textarea
+                          rows={2}
+                          value={plan.tagline}
+                          onChange={(e) => handlePlanFieldChange(planIdx, "tagline", e.target.value)}
+                          className="w-full p-2 bg-bg border border-line rounded-xl text-xs text-ink focus:border-blue focus:outline-hidden resize-none leading-relaxed"
+                        />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-line/50">
-                        <div>
-                          <span className="text-[10px] text-muted block">USD Monthly ($)</span>
-                          <input
-                            type="number"
-                            value={plan.priceMonthlyUsd}
-                            onChange={(e) =>
-                              handlePlanFieldChange(
-                                planIdx,
-                                "priceMonthlyUsd",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="w-full px-2 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                          />
+                      {/* Pricing Grid OR Free Trial Configuration */}
+                      {isTrial ? (
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-2.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider flex items-center gap-1">
+                              <Gift className="w-3 h-3 text-emerald-600" />
+                              <span>Free Trial Settings</span>
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const nextList = editablePlans.map((p, i) => {
+                                  if (i === planIdx) return { ...p, isDefaultTrial: true, planType: "trial" as const };
+                                  if (p.planType === "trial") return { ...p, isDefaultTrial: false };
+                                  return p;
+                                });
+                                setEditablePlans(nextList);
+                                showToast(`"${plan.name}" set as the default trial plan for new registrations.`);
+                              }}
+                              className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold cursor-pointer border transition-colors ${
+                                plan.isDefaultTrial
+                                  ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
+                                  : "bg-panel text-muted hover:text-ink border-line"
+                              }`}
+                            >
+                              {plan.isDefaultTrial ? "Default Active" : "Set as Default"}
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <span className="text-[10px] text-muted block flex items-center gap-1">
+                                <Clock className="w-2.5 h-2.5" />
+                                <span>Duration (Days)</span>
+                              </span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={365}
+                                value={plan.trialDays || 14}
+                                onChange={(e) => {
+                                  const days = Math.max(1, parseInt(e.target.value) || 1);
+                                  handlePlanFieldChange(planIdx, "trialDays", days);
+                                }}
+                                className="w-full px-2 py-1 bg-panel border border-emerald-500/30 rounded text-xs font-mono font-bold text-ink focus:border-emerald-500 focus:outline-hidden"
+                              />
+                            </div>
+
+                            <div>
+                              <span className="text-[10px] text-muted block flex items-center gap-1">
+                                <Calendar className="w-2.5 h-2.5" />
+                                <span>Expiry from Today</span>
+                              </span>
+                              <input
+                                type="date"
+                                value={calculateDateFromDays(plan.trialDays || 14)}
+                                min={calculateDateFromDays(1)}
+                                onChange={(e) => {
+                                  const days = calculateDaysFromDate(e.target.value);
+                                  handlePlanFieldChange(planIdx, "trialDays", days);
+                                }}
+                                className="w-full px-2 py-1 bg-panel border border-emerald-500/30 rounded text-xs font-mono font-bold text-ink focus:border-emerald-500 focus:outline-hidden"
+                              />
+                            </div>
+                          </div>
+                          <span className="text-[9px] text-muted block italic">
+                            Valid for {plan.trialDays || 14} days from registration (until {calculateDateFromDays(plan.trialDays || 14)} for today&apos;s signups).
+                          </span>
                         </div>
-                        <div>
-                          <span className="text-[10px] text-muted block">USD Annual ($)</span>
-                          <input
-                            type="number"
-                            value={plan.priceAnnualUsd}
-                            onChange={(e) =>
-                              handlePlanFieldChange(
-                                planIdx,
-                                "priceAnnualUsd",
-                                parseInt(e.target.value) || 0
-                              )
-                            }
-                            className="w-full px-2 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                          />
+                      ) : (
+                        <div className="p-3 bg-bg border border-line rounded-xl space-y-2.5">
+                          <span className="text-[10px] font-mono font-bold text-ink uppercase tracking-wider block">
+                            Pricing (Monthly / Annual)
+                          </span>
+
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <span className="text-[10px] text-muted block">INR Monthly (₹)</span>
+                              <input
+                                type="number"
+                                value={plan.priceMonthlyInr}
+                                onChange={(e) =>
+                                  handlePlanFieldChange(
+                                    planIdx,
+                                    "priceMonthlyInr",
+                                    parseInt(e.target.value) || 0
+                                  )
+                                }
+                                className="w-full px-2 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-muted block">INR Annual (₹)</span>
+                              <input
+                                type="number"
+                                value={plan.priceAnnualInr}
+                                onChange={(e) =>
+                                  handlePlanFieldChange(
+                                    planIdx,
+                                    "priceAnnualInr",
+                                    parseInt(e.target.value) || 0
+                                  )
+                                }
+                                className="w-full px-2 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 pt-1 border-t border-line/50">
+                            <div>
+                              <span className="text-[10px] text-muted block">USD Monthly ($)</span>
+                              <input
+                                type="number"
+                                value={plan.priceMonthlyUsd}
+                                onChange={(e) =>
+                                  handlePlanFieldChange(
+                                    planIdx,
+                                    "priceMonthlyUsd",
+                                    parseInt(e.target.value) || 0
+                                  )
+                                }
+                                className="w-full px-2 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-muted block">USD Annual ($)</span>
+                              <input
+                                type="number"
+                                value={plan.priceAnnualUsd}
+                                onChange={(e) =>
+                                  handlePlanFieldChange(
+                                    planIdx,
+                                    "priceAnnualUsd",
+                                    parseInt(e.target.value) || 0
+                                  )
+                                }
+                                className="w-full px-2 py-1 bg-panel border border-line rounded text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      )}
 
                     {/* Quotas & Expiration Policy */}
                     <div className="p-3 bg-bg border border-line rounded-xl space-y-2">
@@ -982,6 +1251,67 @@ export function DynamicPricingTab({
                   <span>Plan Identity & Tier Badge</span>
                 </h3>
 
+                {/* Plan Category Indicator & Switch */}
+                <div className="p-3 bg-bg border border-line rounded-xl flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-xs font-bold text-ink block flex items-center gap-1.5">
+                      {activePlan.planType === "trial" ? (
+                        <>
+                          <Gift className="w-4 h-4 text-emerald-600" />
+                          <span>Plan Category: Free Default Trial Plan</span>
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="w-4 h-4 text-blue" />
+                          <span>Plan Category: User Subscription Plan</span>
+                        </>
+                      )}
+                    </span>
+                    <span className="text-[11px] text-muted block mt-0.5">
+                      {activePlan.planType === "trial"
+                        ? "Free onboarding tier for new organizations with custom duration."
+                        : "Paid subscription tier with recurring monthly & annual rates."}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1 bg-panel border border-line p-1 rounded-lg text-[11px] shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handlePlanFieldChange(activePlanIndex, "planType", "subscription");
+                        handlePlanFieldChange(activePlanIndex, "isDefaultTrial", false);
+                      }}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
+                        activePlan.planType !== "trial"
+                          ? "bg-blue text-white shadow-xs font-bold"
+                          : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      Subscription
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handlePlanFieldChange(activePlanIndex, "planType", "trial");
+                        handlePlanFieldChange(activePlanIndex, "priceMonthlyInr", 0);
+                        handlePlanFieldChange(activePlanIndex, "priceAnnualInr", 0);
+                        handlePlanFieldChange(activePlanIndex, "priceMonthlyUsd", 0);
+                        handlePlanFieldChange(activePlanIndex, "priceAnnualUsd", 0);
+                        if (!activePlan.trialDays) {
+                          handlePlanFieldChange(activePlanIndex, "trialDays", 14);
+                        }
+                      }}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-colors cursor-pointer ${
+                        activePlan.planType === "trial"
+                          ? "bg-emerald-600 text-white shadow-xs font-bold"
+                          : "text-muted hover:text-ink"
+                      }`}
+                    >
+                      Free Trial
+                    </button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted">Plan Display Name</label>
@@ -1096,117 +1426,246 @@ export function DynamicPricingTab({
                 </div>
               </div>
 
-              {/* Card 3: Dual-Currency Pricing Matrix Card */}
-              <div className="p-5 bg-panel border border-line rounded-2xl shadow-xs space-y-4">
-                <h3 className="text-xs font-bold text-ink uppercase tracking-wider font-mono flex items-center gap-2 border-b border-line pb-3">
-                  <IndianRupee className="w-3.5 h-3.5 text-green" />
-                  <span>Pricing Matrix (INR ₹ & USD $)</span>
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* INR Section */}
-                  <div className="p-4 bg-bg border border-line rounded-xl space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-ink flex items-center gap-1">
-                        <IndianRupee className="w-3.5 h-3.5 text-blue" />
-                        INR (Indian Rupee)
-                      </span>
-                      {activePlan.priceMonthlyInr > 0 && activePlan.priceAnnualInr > 0 && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-green/15 text-green-dark border border-green/20">
-                          -
-                          {Math.round(
-                            (1 - activePlan.priceAnnualInr / activePlan.priceMonthlyInr) * 100
-                          )}
-                          % Annual
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-muted">Monthly Billed (₹)</label>
-                      <input
-                        type="number"
-                        value={activePlan.priceMonthlyInr}
-                        onChange={(e) =>
-                          handlePlanFieldChange(
-                            activePlanIndex,
-                            "priceMonthlyInr",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-muted">Annual Billed /mo (₹)</label>
-                      <input
-                        type="number"
-                        value={activePlan.priceAnnualInr}
-                        onChange={(e) =>
-                          handlePlanFieldChange(
-                            activePlanIndex,
-                            "priceAnnualInr",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                      />
-                    </div>
+              {/* Card 3: Dual-Currency Pricing Matrix (Subscription) OR Free Trial Configuration (Trial) */}
+              {activePlan.planType === "trial" ? (
+                <div className="p-5 bg-panel border-2 border-emerald-500/30 rounded-2xl shadow-xs space-y-4">
+                  <div className="flex items-center justify-between border-b border-line pb-3">
+                    <h3 className="text-xs font-bold text-ink uppercase tracking-wider font-mono flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-emerald-600" />
+                      <span>Free Default Trial Configuration</span>
+                    </h3>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                      Zero-Fee Evaluation Plan
+                    </span>
                   </div>
 
-                  {/* USD Section */}
+                  {/* Logic 1: Toggle to make it default use */}
+                  <div className="flex items-center justify-between p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-xl">
+                    <div className="pr-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-ink">
+                          Default Trial for New Organizations
+                        </span>
+                        {activePlan.isDefaultTrial && (
+                          <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-emerald-600 text-white font-bold">
+                            ACTIVE DEFAULT
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted block mt-0.5">
+                        When toggled active, any new organization registering at <code>/register</code> instantly gets this plan activated with full platform access.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleDefaultTrial(activePlanIndex)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                        activePlan.isDefaultTrial ? "bg-emerald-600" : "bg-line"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          activePlan.isDefaultTrial ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Logic 2: Plan's expiration date select picker with days input */}
                   <div className="p-4 bg-bg border border-line rounded-xl space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-ink flex items-center gap-1">
-                        <DollarSign className="w-3.5 h-3.5 text-blue" />
-                        USD (Global)
+                      <span className="text-xs font-bold text-ink flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Plan Expiration Duration & Calendar End Date</span>
                       </span>
-                      {activePlan.priceMonthlyUsd > 0 && activePlan.priceAnnualUsd > 0 && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-green/15 text-green-dark border border-green/20">
-                          -
-                          {Math.round(
-                            (1 - activePlan.priceAnnualUsd / activePlan.priceMonthlyUsd) * 100
-                          )}
-                          % Annual
+                      <span className="text-[10px] font-mono text-muted">
+                        Two-way synchronized
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                      {/* Days Input */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-muted flex items-center justify-between">
+                          <span>Trial Duration (Days)</span>
+                          <span className="text-[10px] font-mono text-emerald-600 font-bold">
+                            {activePlan.trialDays || 14} Days
+                          </span>
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={365}
+                          value={activePlan.trialDays || 14}
+                          onChange={(e) =>
+                            handleTrialDaysChange(
+                              activePlanIndex,
+                              parseInt(e.target.value) || 1
+                            )
+                          }
+                          className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                        />
+                        <span className="text-[10px] text-muted block">
+                          Changing days auto-advances the expiration calendar date from today.
                         </span>
-                      )}
+                      </div>
+
+                      {/* Expiration Date Select Picker */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-semibold text-muted flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-emerald-600" />
+                            <span>Plan Expiration Date Picker</span>
+                          </span>
+                          <span className="text-[10px] font-mono text-emerald-600 font-bold">
+                            {calculateDateFromDays(activePlan.trialDays || 14)}
+                          </span>
+                        </label>
+                        <input
+                          type="date"
+                          min={calculateDateFromDays(1)}
+                          value={calculateDateFromDays(activePlan.trialDays || 14)}
+                          onChange={(e) =>
+                            handleTrialDateChange(activePlanIndex, e.target.value)
+                          }
+                          className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                        />
+                        <span className="text-[10px] text-muted block">
+                          Auto-selects ending date from today so this plan only works up to that date.
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-muted">Monthly Billed ($)</label>
-                      <input
-                        type="number"
-                        value={activePlan.priceMonthlyUsd}
-                        onChange={(e) =>
-                          handlePlanFieldChange(
-                            activePlanIndex,
-                            "priceMonthlyUsd",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-[11px] text-muted">Annual Billed /mo ($)</label>
-                      <input
-                        type="number"
-                        value={activePlan.priceAnnualUsd}
-                        onChange={(e) =>
-                          handlePlanFieldChange(
-                            activePlanIndex,
-                            "priceAnnualUsd",
-                            parseInt(e.target.value) || 0
-                          )
-                        }
-                        className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                      />
+                    {/* Dynamic Public Messaging Preview */}
+                    <div className="p-3 bg-panel border border-emerald-500/20 rounded-xl space-y-1.5 mt-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Landing Page & Public Pricing Message:</span>
+                        </span>
+                        <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md font-mono">
+                          "{activePlan.trialDays || 14} days free trial"
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted leading-relaxed">
+                        Organizations registering today will be enrolled in <strong>{activePlan.name}</strong> until{" "}
+                        <strong className="text-ink">{calculateDateFromDays(activePlan.trialDays || 14)}</strong>. Upon trial expiration, access will pause and an automated banner will guide them to subscribe to a paid plan.
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-5 bg-panel border border-line rounded-2xl shadow-xs space-y-4">
+                  <h3 className="text-xs font-bold text-ink uppercase tracking-wider font-mono flex items-center gap-2 border-b border-line pb-3">
+                    <IndianRupee className="w-3.5 h-3.5 text-green" />
+                    <span>Pricing Matrix (INR ₹ & USD $)</span>
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* INR Section */}
+                    <div className="p-4 bg-bg border border-line rounded-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-ink flex items-center gap-1">
+                          <IndianRupee className="w-3.5 h-3.5 text-blue" />
+                          INR (Indian Rupee)
+                        </span>
+                        {activePlan.priceMonthlyInr > 0 && activePlan.priceAnnualInr > 0 && (
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-green/15 text-green-dark border border-green/20">
+                            -
+                            {Math.round(
+                              (1 - activePlan.priceAnnualInr / activePlan.priceMonthlyInr) * 100
+                            )}
+                            % Annual
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-muted">Monthly Billed (₹)</label>
+                        <input
+                          type="number"
+                          value={activePlan.priceMonthlyInr}
+                          onChange={(e) =>
+                            handlePlanFieldChange(
+                              activePlanIndex,
+                              "priceMonthlyInr",
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-muted">Annual Billed /mo (₹)</label>
+                        <input
+                          type="number"
+                          value={activePlan.priceAnnualInr}
+                          onChange={(e) =>
+                            handlePlanFieldChange(
+                              activePlanIndex,
+                              "priceAnnualInr",
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                        />
+                      </div>
+                    </div>
+
+                    {/* USD Section */}
+                    <div className="p-4 bg-bg border border-line rounded-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-ink flex items-center gap-1">
+                          <DollarSign className="w-3.5 h-3.5 text-blue" />
+                          USD (Global)
+                        </span>
+                        {activePlan.priceMonthlyUsd > 0 && activePlan.priceAnnualUsd > 0 && (
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-green/15 text-green-dark border border-green/20">
+                            -
+                            {Math.round(
+                              (1 - activePlan.priceAnnualUsd / activePlan.priceMonthlyUsd) * 100
+                            )}
+                            % Annual
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-muted">Monthly Billed ($)</label>
+                        <input
+                          type="number"
+                          value={activePlan.priceMonthlyUsd}
+                          onChange={(e) =>
+                            handlePlanFieldChange(
+                              activePlanIndex,
+                              "priceMonthlyUsd",
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[11px] text-muted">Annual Billed /mo ($)</label>
+                        <input
+                          type="number"
+                          value={activePlan.priceAnnualUsd}
+                          onChange={(e) =>
+                            handlePlanFieldChange(
+                              activePlanIndex,
+                              "priceAnnualUsd",
+                              parseInt(e.target.value) || 0
+                            )
+                          }
+                          className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Card 4: Quotas & Workspace Usage Limits */}
               <div className="p-5 bg-panel border border-line rounded-2xl shadow-xs space-y-4">
@@ -1616,17 +2075,23 @@ export function DynamicPricingTab({
       {/* MODAL: CREATE NEW PRICING PLAN */}
       {/* ========================================================================= */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-panel border border-line rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl space-y-6 my-8 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-line pb-4">
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-hidden"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsCreateModalOpen(false);
+          }}
+        >
+          <div className="bg-panel border border-line rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl animate-in zoom-in-95 duration-150 overflow-hidden">
+            {/* Modal Header (Fixed) */}
+            <div className="flex items-center justify-between border-b border-line px-6 py-4 shrink-0 bg-panel">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
                   <Plus className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-ink">Create New Pricing Plan</h3>
+                  <h3 className="text-base sm:text-lg font-bold text-ink">Create New Pricing Plan</h3>
                   <p className="text-xs text-muted">
-                    Configure a new dynamic subscription tier with custom badge & pricing.
+                    Configure a new dynamic subscription tier or free trial plan.
                   </p>
                 </div>
               </div>
@@ -1634,12 +2099,99 @@ export function DynamicPricingTab({
                 type="button"
                 onClick={() => setIsCreateModalOpen(false)}
                 className="p-1.5 rounded-lg text-muted hover:text-ink hover:bg-bg cursor-pointer transition-colors"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreatePlanSubmit} className="space-y-5">
+            <form onSubmit={handleCreatePlanSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              {/* Scrollable Form Body */}
+              <div className="overflow-y-auto px-6 py-5 space-y-5 flex-1">
+                {/* Step 1: Prompt - Plan Category Selection */}
+              <div className="p-4 bg-bg border border-line rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-ink">
+                    Are you creating a User Subscription Plan or Free Default Trial Plan? *
+                  </label>
+                  <span className="text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded-full bg-panel text-muted border border-line">
+                    Step 1 of 2
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Option 1: User Subscription Plan */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewPlanType("subscription");
+                      if (newPlanName === "Free Trial" || newPlanName === "Default Trial") {
+                        setNewPlanName("");
+                        setNewPlanId("");
+                        setNewPlanTagline("");
+                        setNewPlanBadge("");
+                        setNewPlanTierBadge("PROFESSIONAL");
+                        setNewPlanCtaLabel("Get Started");
+                        setNewPlanCtaHref("/register");
+                      }
+                    }}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      newPlanType === "subscription"
+                        ? "bg-blue/10 border-blue text-ink ring-2 ring-blue/20"
+                        : "bg-panel border-line hover:border-ink/20 text-muted"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div className={`p-2 rounded-lg ${newPlanType === "subscription" ? "bg-blue text-white" : "bg-bg text-muted"}`}>
+                        <CreditCard className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-ink">User Subscription Plan</div>
+                        <div className="text-[10px] text-muted">Dual-currency recurring billing</div>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-muted leading-relaxed">
+                      Standard paid tier with INR ₹ and USD $ monthly & annual prices, seat limits, and query quotas.
+                    </p>
+                  </button>
+
+                  {/* Option 2: Free Default Trial Plan */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNewPlanType("trial");
+                      if (!newPlanName) {
+                        setNewPlanName("Free Trial");
+                        setNewPlanId("free-trial");
+                        setNewPlanTagline("Complimentary full-access trial for newly registered organizations.");
+                        setNewPlanBadge("FREE TRIAL");
+                        setNewPlanTierBadge("STARTER");
+                        setNewPlanCtaLabel("Start Free Trial");
+                        setNewPlanCtaHref("/register");
+                      }
+                    }}
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                      newPlanType === "trial"
+                        ? "bg-emerald-500/10 border-emerald-500 text-ink ring-2 ring-emerald-500/20"
+                        : "bg-panel border-line hover:border-ink/20 text-muted"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div className={`p-2 rounded-lg ${newPlanType === "trial" ? "bg-emerald-600 text-white" : "bg-bg text-muted"}`}>
+                        <Gift className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-ink">Free Default Trial Plan</div>
+                        <div className="text-[10px] text-emerald-600 font-semibold">Configurable duration & auto-expiry</div>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-muted leading-relaxed">
+                      No-cost trial tier with default signup toggle, duration in days, and synchronized expiration date.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
               {/* Basic Identity */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -1659,7 +2211,7 @@ export function DynamicPricingTab({
                         );
                       }
                     }}
-                    placeholder="e.g. Agency Pro, Custom SME"
+                    placeholder={newPlanType === "trial" ? "e.g. Free Trial, Pro Trial" : "e.g. Agency Pro, Custom SME"}
                     className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs font-bold text-ink focus:border-blue focus:outline-hidden"
                   />
                 </div>
@@ -1678,7 +2230,7 @@ export function DynamicPricingTab({
                           .replace(/-+/g, "-")
                       )
                     }
-                    placeholder="e.g. agency-pro"
+                    placeholder={newPlanType === "trial" ? "e.g. free-trial" : "e.g. agency-pro"}
                     className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs font-mono text-ink focus:border-blue focus:outline-hidden"
                   />
                 </div>
@@ -1720,7 +2272,7 @@ export function DynamicPricingTab({
                     type="text"
                     value={newPlanBadge}
                     onChange={(e) => setNewPlanBadge(e.target.value)}
-                    placeholder="e.g. BEST VALUE, AGENCY TIER"
+                    placeholder={newPlanType === "trial" ? "e.g. FREE TRIAL, EVALUATION" : "e.g. BEST VALUE, AGENCY TIER"}
                     className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink focus:border-blue focus:outline-hidden"
                   />
                 </div>
@@ -1743,8 +2295,8 @@ export function DynamicPricingTab({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="p-3 bg-bg border border-line rounded-xl flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-ink block">Active on Frontend</span>
-                    <span className="text-[10px] text-muted">Visible to customers immediately</span>
+                    <span className="text-xs font-bold text-ink block">Active Status</span>
+                    <span className="text-[10px] text-muted">Enable plan for platform usage</span>
                   </div>
                   <button
                     type="button"
@@ -1763,7 +2315,7 @@ export function DynamicPricingTab({
 
                 <div className="p-3 bg-bg border border-line rounded-xl flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-ink block">Featured / Most Popular</span>
+                    <span className="text-xs font-bold text-ink block">Featured / Highlight</span>
                     <span className="text-[10px] text-muted">Highlights with colored border</span>
                   </div>
                   <button
@@ -1782,58 +2334,181 @@ export function DynamicPricingTab({
                 </div>
               </div>
 
-              {/* Pricing Matrix */}
-              <div className="p-4 bg-bg border border-line rounded-2xl space-y-3">
-                <span className="text-xs font-bold text-ink font-mono uppercase tracking-wider block">
-                  Dual-Currency Pricing
-                </span>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <label className="text-[10px] text-muted font-mono block">INR Monthly (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      value={newPlanPriceMonthlyInr}
-                      onChange={(e) => setNewPlanPriceMonthlyInr(parseInt(e.target.value) || 0)}
-                      className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                    />
+              {/* Step 2: Plan-Specific Configuration (Free Trial Logics vs Paid Pricing Matrix) */}
+              {newPlanType === "trial" ? (
+                <div className="p-4 bg-emerald-500/5 border-2 border-emerald-500/30 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-emerald-500/20 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-emerald-600" />
+                      <span className="text-xs font-bold text-ink uppercase tracking-wider font-mono">
+                        Free Default Trial Logics
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                      ₹0 / $0 Free Tier
+                    </span>
                   </div>
 
-                  <div>
-                    <label className="text-[10px] text-muted font-mono block">INR Annual /mo (₹)</label>
-                    <input
-                      type="number"
-                      required
-                      value={newPlanPriceAnnualInr}
-                      onChange={(e) => setNewPlanPriceAnnualInr(parseInt(e.target.value) || 0)}
-                      className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                    />
+                  {/* Logic 1: Toggle to make it default use */}
+                  <div className="flex items-center justify-between p-3.5 bg-panel border border-emerald-500/20 rounded-xl">
+                    <div className="pr-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-ink">
+                          Toggle to make it default use
+                        </span>
+                        {newPlanIsDefaultTrial && (
+                          <span className="text-[10px] font-mono px-2 py-0.2 rounded-full bg-emerald-600 text-white font-bold">
+                            DEFAULT ON SIGNUP
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted block mt-0.5">
+                        If enabled, any new organization that registers at <code>/register</code> will instantly have this plan activated upon creation.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewPlanIsDefaultTrial(!newPlanIsDefaultTrial)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                        newPlanIsDefaultTrial ? "bg-emerald-600" : "bg-slate-300"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          newPlanIsDefaultTrial ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
                   </div>
 
-                  <div>
-                    <label className="text-[10px] text-muted font-mono block">USD Monthly ($)</label>
-                    <input
-                      type="number"
-                      required
-                      value={newPlanPriceMonthlyUsd}
-                      onChange={(e) => setNewPlanPriceMonthlyUsd(parseInt(e.target.value) || 0)}
-                      className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                    />
+                  {/* Logic 2: Plan's expiration date select picker with days input */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-ink flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Trial Duration (Days) *</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-600 font-bold">
+                          {newPlanTrialDays} Days
+                        </span>
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min={1}
+                        max={365}
+                        value={newPlanTrialDays}
+                        onChange={(e) => {
+                          const days = parseInt(e.target.value) || 1;
+                          setNewPlanTrialDays(days);
+                          setNewPlanTrialExpiryDate(calculateDateFromDays(days));
+                        }}
+                        className="w-full px-3 py-2 bg-panel border border-line rounded-xl text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                      <span className="text-[10px] text-muted block">
+                        Days input that auto-selects expiration dates from today.
+                      </span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-ink flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Plan Expiration Date Picker *</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-600 font-bold">
+                          {newPlanTrialExpiryDate}
+                        </span>
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        min={calculateDateFromDays(1)}
+                        value={newPlanTrialExpiryDate}
+                        onChange={(e) => {
+                          const dateVal = e.target.value;
+                          setNewPlanTrialExpiryDate(dateVal);
+                          setNewPlanTrialDays(calculateDaysFromDate(dateVal));
+                        }}
+                        className="w-full px-3 py-2 bg-panel border border-line rounded-xl text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                      <span className="text-[10px] text-muted block">
+                        This plan only works up to this selected ending date.
+                      </span>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="text-[10px] text-muted font-mono block">USD Annual /mo ($)</label>
-                    <input
-                      type="number"
-                      required
-                      value={newPlanPriceAnnualUsd}
-                      onChange={(e) => setNewPlanPriceAnnualUsd(parseInt(e.target.value) || 0)}
-                      className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
-                    />
+                  {/* Message preview */}
+                  <div className="p-3 bg-panel border border-emerald-500/20 rounded-xl space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Public Pricing & Landing Page Preview:</span>
+                      </span>
+                      <span className="font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-md font-mono">
+                        "{newPlanTrialDays} days free trial"
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted leading-relaxed">
+                      Configured to grant {newPlanTrialDays} days free trial. After {newPlanTrialDays} days (on {newPlanTrialExpiryDate}), the plan expires and users receive expiration notices to buy a subscription plan.
+                    </p>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* Dual-Currency Pricing Matrix for User Subscription Plan */
+                <div className="p-4 bg-bg border border-line rounded-2xl space-y-3">
+                  <span className="text-xs font-bold text-ink font-mono uppercase tracking-wider block">
+                    Dual-Currency Pricing Matrix (INR ₹ & USD $)
+                  </span>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div>
+                      <label className="text-[10px] text-muted font-mono block">INR Monthly (₹)</label>
+                      <input
+                        type="number"
+                        required
+                        value={newPlanPriceMonthlyInr}
+                        onChange={(e) => setNewPlanPriceMonthlyInr(parseInt(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-muted font-mono block">INR Annual /mo (₹)</label>
+                      <input
+                        type="number"
+                        required
+                        value={newPlanPriceAnnualInr}
+                        onChange={(e) => setNewPlanPriceAnnualInr(parseInt(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-muted font-mono block">USD Monthly ($)</label>
+                      <input
+                        type="number"
+                        required
+                        value={newPlanPriceMonthlyUsd}
+                        onChange={(e) => setNewPlanPriceMonthlyUsd(parseInt(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-muted font-mono block">USD Annual /mo ($)</label>
+                      <input
+                        type="number"
+                        required
+                        value={newPlanPriceAnnualUsd}
+                        onChange={(e) => setNewPlanPriceAnnualUsd(parseInt(e.target.value) || 0)}
+                        className="w-full px-2.5 py-1.5 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Plan Quotas & Workspace Usage Limits */}
               <div className="p-4 bg-bg border border-line rounded-2xl space-y-3">
@@ -2062,8 +2737,10 @@ export function DynamicPricingTab({
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="pt-4 border-t border-line flex items-center justify-end gap-3">
+              </div>
+
+              {/* Modal Footer Actions (Fixed at bottom) */}
+              <div className="px-6 py-4 border-t border-line bg-panel/95 backdrop-blur-xs flex items-center justify-end gap-3 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}

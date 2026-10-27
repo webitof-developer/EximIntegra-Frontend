@@ -15,6 +15,7 @@ import {
   Calculator,
   Lock,
 } from "lucide-react";
+import { useGetPricingPlansQuery } from "@/store/adminApi";
 
 export function LandingNavbar() {
   const pathname = usePathname();
@@ -23,6 +24,8 @@ export function LandingNavbar() {
 
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: pricingData } = useGetPricingPlansQuery();
+  const trialDays = pricingData?.trialDays ?? 14;
 
   return (
     <header className="sticky top-0 z-50 bg-panel/90 backdrop-blur-md border-b border-line">
@@ -187,7 +190,7 @@ export function LandingNavbar() {
                   href="/register"
                   className="w-full py-2 text-center rounded-lg bg-blue text-white font-semibold shadow-xs"
                 >
-                  Start 14-Day Free Trial &rarr;
+                  Start {trialDays}-Day Free Trial &rarr;
                 </Link>
               </>
             )}

@@ -571,6 +571,9 @@ export interface PricingPlan {
   maxTeamMembers?: number;
   hsClassificationLimit?: number;
   landedCostLimit?: number;
+  planType?: "subscription" | "trial";
+  isDefaultTrial?: boolean;
+  trialDays?: number;
   updatedAt?: string;
 }
 
