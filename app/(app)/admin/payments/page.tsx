@@ -75,7 +75,7 @@ export default function AdminPaymentsPage() {
 
   return (
     <AppShell>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <AdminNav
           title="Razorpay Payment Gateway & Checkout Engine"
           description="Configure enterprise payment credentials, App Key ID, Secret Key, Webhooks, and dual-currency (INR & USD) processing for subscription plans."

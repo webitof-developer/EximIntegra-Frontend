@@ -242,7 +242,7 @@ export function RazorpayGatewaySection({
             <button
               type="button"
               onClick={handleRefreshAll}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-panel hover:bg-line/20 text-ink border border-line text-xs font-semibold shadow-xs transition-colors"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-panel hover:bg-line/20 text-ink border border-line text-xs font-semibold shadow-xs transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Refresh</span>
