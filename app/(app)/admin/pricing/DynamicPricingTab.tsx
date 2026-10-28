@@ -84,6 +84,7 @@ export function DynamicPricingTab({
   const [pricingNotice, setPricingNotice] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [newFeatureText, setNewFeatureText] = useState("");
   const [previewCurrency, setPreviewCurrency] = useState<"INR" | "USD">("INR");
   const [previewAnnual, setPreviewAnnual] = useState<boolean>(false);
@@ -172,7 +173,7 @@ export function DynamicPricingTab({
   };
 
   // Toggle default trial status (ensures only one plan is active default trial)
-  const handleToggleDefaultTrial = (planIndex: number) => {
+  const handleToggleDefaultTrial = async (planIndex: number) => {
     const isCurrentlyDefault = editablePlans[planIndex].isDefaultTrial;
     const nextList = editablePlans.map((p, idx) => {
       if (idx === planIndex) {
@@ -184,11 +185,22 @@ export function DynamicPricingTab({
       return p;
     });
     setEditablePlans(nextList);
-    showToast(
-      !isCurrentlyDefault
-        ? `"${editablePlans[planIndex].name}" is now the active DEFAULT TRIAL for new organizations.`
-        : `Disabled default trial status for "${editablePlans[planIndex].name}".`
-    );
+
+    // Persist immediately to database so trial organizations take the new plan immediately!
+    try {
+      if (onSavePricing) {
+        await onSavePricing(nextList);
+      }
+      showToast(
+        !isCurrentlyDefault
+          ? `"${editablePlans[planIndex].name}" is now the active DEFAULT TRIAL for new and existing trial organizations (saved to database).`
+          : `Disabled default trial status for "${editablePlans[planIndex].name}".`
+      );
+    } catch (err: any) {
+      showToast(
+        `Failed to save default trial change to database: ${err?.data?.message || err?.message || "Unknown error"}`
+      );
+    }
   };
 
   const handleTrialDaysChange = (planIndex: number, days: number) => {
@@ -257,7 +269,7 @@ export function DynamicPricingTab({
   };
 
   // Create new plan handler
-  const handleCreatePlanSubmit = (e: React.FormEvent) => {
+  const handleCreatePlanSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanId = (newPlanId || newPlanName)
       .toLowerCase()
@@ -308,27 +320,39 @@ export function DynamicPricingTab({
     nextList = [...nextList, createdPlan];
     setSelectedPlanId(cleanId);
     setEditablePlans(nextList);
-    setIsCreateModalOpen(false);
 
-    // Reset create modal fields
-    setNewPlanType("subscription");
-    setNewPlanIsDefaultTrial(true);
-    setNewPlanTrialDays(14);
-    setNewPlanTrialExpiryDate(calculateDateFromDays(14));
-    setNewPlanId("");
-    setNewPlanName("");
-    setNewPlanTagline("");
-    setNewPlanBadge("");
-    setNewPlanTierBadge("PROFESSIONAL");
-    setNewPlanIsActive(true);
-    setNewPlanIsPopular(false);
-    setNewPlanMaxTeamMembers(5);
-    setNewPlanHsLimit(1000);
-    setNewPlanLcLmit(500);
+    // Save immediately to DB so refreshing the page preserves the plan!
+    setIsCreating(true);
+    try {
+      if (onSavePricing) {
+        await onSavePricing(nextList);
+      }
+      setIsCreateModalOpen(false);
 
-    showToast(
-      `New plan "${createdPlan.name}" added to editor! Click "Save Pricing Changes" to publish it live.`
-    );
+      // Reset create modal fields
+      setNewPlanType("subscription");
+      setNewPlanIsDefaultTrial(true);
+      setNewPlanTrialDays(14);
+      setNewPlanTrialExpiryDate(calculateDateFromDays(14));
+      setNewPlanId("");
+      setNewPlanName("");
+      setNewPlanTagline("");
+      setNewPlanBadge("");
+      setNewPlanTierBadge("PROFESSIONAL");
+      setNewPlanIsActive(true);
+      setNewPlanIsPopular(false);
+      setNewPlanMaxTeamMembers(5);
+      setNewPlanHsLimit(1000);
+      setNewPlanLcLmit(500);
+
+      showToast(`Plan "${createdPlan.name}" created and saved to database successfully!`);
+    } catch (err: any) {
+      showToast(
+        `Failed to save new plan to database: ${err?.data?.message || err?.message || "Unknown error"}`
+      );
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   // Delete plan handler
@@ -915,15 +939,7 @@ export function DynamicPricingTab({
                             </span>
                             <button
                               type="button"
-                              onClick={() => {
-                                const nextList = editablePlans.map((p, i) => {
-                                  if (i === planIdx) return { ...p, isDefaultTrial: true, planType: "trial" as const };
-                                  if (p.planType === "trial") return { ...p, isDefaultTrial: false };
-                                  return p;
-                                });
-                                setEditablePlans(nextList);
-                                showToast(`"${plan.name}" set as the default trial plan for new registrations.`);
-                              }}
+                              onClick={() => handleToggleDefaultTrial(planIdx)}
                               className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold cursor-pointer border transition-colors ${
                                 plan.isDefaultTrial
                                   ? "bg-emerald-600 text-white border-emerald-700 shadow-xs"
@@ -2862,10 +2878,15 @@ export function DynamicPricingTab({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                  disabled={isCreating}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Create Plan</span>
+                  {isCreating ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isCreating ? "Saving to Database..." : "Create Plan"}</span>
                 </button>
               </div>
             </form>

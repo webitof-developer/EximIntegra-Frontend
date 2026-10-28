@@ -183,7 +183,10 @@ export function SubscriptionBillingSection() {
 
   // Current active plan info resolved from DB plans
   const activePlanInfo =
-    (isTrial ? plansList.find((p) => p.planType === "trial") : null) ||
+    (isTrial
+      ? plansList.find((p) => p.planType === "trial" && p.isDefaultTrial) ||
+        plansList.find((p) => p.planType === "trial")
+      : null) ||
     plansList.find((p) => (p.tierBadge || p.id).toUpperCase() === currentPlan.toUpperCase()) ||
     plansList.find((p) => p.id.toLowerCase() === currentPlan.toLowerCase()) ||
     plansList[0];
