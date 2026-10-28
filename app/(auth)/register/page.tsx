@@ -49,7 +49,7 @@ export default function RegisterPage() {
         email,
         password,
         role,
-        tier: "STARTER",
+        tier: "FREE_TRIAL",
       }).unwrap();
 
       dispatch(

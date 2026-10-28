@@ -51,9 +51,9 @@ export interface UserProfile {
   name: string;
   company: string;
   role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR" | "ADMIN";
-  tier: "ENTERPRISE" | "PROFESSIONAL" | "STARTER";
+  tier: "ENTERPRISE" | "PROFESSIONAL" | "STARTER" | "FREE_TRIAL" | string;
   tierBadge?: string;
-  billingCycle?: "monthly" | "annual";
+  billingCycle?: "monthly" | "annual" | "trial" | string;
   subscriptionStartedAt?: string | null;
   subscriptionExpiresAt?: string | null;
   isSubscriptionExpired?: boolean;

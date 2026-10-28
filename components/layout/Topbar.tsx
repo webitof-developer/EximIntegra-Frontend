@@ -216,7 +216,7 @@ export function Topbar() {
                       ADMIN
                     </span>
                   ) : (
-                    <TierBadge tier={user.tier || "STARTER"} size="xs" />
+                    <TierBadge tier={user.billingCycle === "trial" || user.tier === "FREE_TRIAL" ? "FREE_TRIAL" : (user.tier || "STARTER")} size="xs" />
                   )}
                   <ChevronDown className="w-3 h-3 text-muted" />
                 </span>
@@ -240,7 +240,7 @@ export function Topbar() {
                           ADMIN
                         </span>
                       ) : (
-                        <TierBadge tier={user.tier || "STARTER"} size="sm" />
+                        <TierBadge tier={user.billingCycle === "trial" || user.tier === "FREE_TRIAL" ? "FREE_TRIAL" : (user.tier || "STARTER")} size="sm" />
                       )}
                       <button
                         type="button"

@@ -117,9 +117,9 @@ export function SubscriptionBillingSection() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
-  const [currentPlan, setCurrentPlan] = useState<"ENTERPRISE" | "PROFESSIONAL" | "STARTER">(
-    user?.tier || "STARTER"
-  );
+  const [currentPlan, setCurrentPlan] = useState<
+    "ENTERPRISE" | "PROFESSIONAL" | "STARTER" | "FREE_TRIAL" | string
+  >(user?.tier || "FREE_TRIAL");
   const [isAnnual, setIsAnnual] = useState(true);
   const [currency, setCurrency] = useState<"INR" | "USD">("INR");
   const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
@@ -176,8 +176,14 @@ export function SubscriptionBillingSection() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isChangePlanOpen]);
 
+  const isTrial =
+    user?.billingCycle === "trial" ||
+    currentPlan.toUpperCase() === "FREE_TRIAL" ||
+    currentPlan.toUpperCase() === "FREE TIER";
+
   // Current active plan info resolved from DB plans
   const activePlanInfo =
+    (isTrial ? plansList.find((p) => p.planType === "trial") : null) ||
     plansList.find((p) => (p.tierBadge || p.id).toUpperCase() === currentPlan.toUpperCase()) ||
     plansList.find((p) => p.id.toLowerCase() === currentPlan.toLowerCase()) ||
     plansList[0];
@@ -439,10 +445,12 @@ export function SubscriptionBillingSection() {
             <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-red-900">
-                Subscription Expired ({formattedExpiry})
+                {isTrial ? "Free Trial Expired" : "Subscription Expired"} ({formattedExpiry})
               </h4>
               <p className="text-xs text-red-700 mt-0.5">
-                Your organization&apos;s {currentPlan} plan expired on {formattedExpiry}. Renew or upgrade below to restore access to customs classification and logistics engines.
+                {isTrial
+                  ? `Your organization's Free Trial expired on ${formattedExpiry}. Upgrade to a paid subscription plan below to restore access to customs classification and logistics engines.`
+                  : `Your organization's ${currentPlan} plan expired on ${formattedExpiry}. Renew or upgrade below to restore access to customs classification and logistics engines.`}
               </p>
             </div>
           </div>
@@ -455,7 +463,7 @@ export function SubscriptionBillingSection() {
             }}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-xs"
           >
-            Renew Plan
+            {isTrial ? "Upgrade Plan" : "Renew Plan"}
           </button>
         </div>
       )}
@@ -466,10 +474,12 @@ export function SubscriptionBillingSection() {
             <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-amber-900">
-                Subscription Expiring Soon ({daysLeft === 0 ? "Today" : `in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`})
+                {isTrial ? "Free Trial Expiring Soon" : "Subscription Expiring Soon"} ({daysLeft === 0 ? "Today" : `in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`})
               </h4>
               <p className="text-xs text-amber-800 mt-0.5">
-                Your organization&apos;s {currentPlan} subscription expires on {formattedExpiry}. Renew in advance to ensure uninterrupted quota access and team seat availability.
+                {isTrial
+                  ? `Your organization's Free Trial expires on ${formattedExpiry}. Upgrade to a paid subscription plan in advance to ensure uninterrupted quota access and team seat availability.`
+                  : `Your organization's ${currentPlan} subscription expires on ${formattedExpiry}. Renew in advance to ensure uninterrupted quota access and team seat availability.`}
               </p>
             </div>
           </div>
@@ -482,7 +492,7 @@ export function SubscriptionBillingSection() {
             }}
             className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-xs"
           >
-            Renew Subscription
+            {isTrial ? "Upgrade Plan" : "Renew Subscription"}
           </button>
         </div>
       )}
@@ -513,6 +523,8 @@ export function SubscriptionBillingSection() {
               <h3 className="text-2xl font-bold text-ink">
                 {activePlanInfo?.name
                   ? `${activePlanInfo.name} Tier Plan`
+                  : isTrial
+                  ? "Free Trial Tier Plan"
                   : currentPlan === "ENTERPRISE"
                   ? "Enterprise Platform Plan"
                   : currentPlan === "PROFESSIONAL"
@@ -520,7 +532,11 @@ export function SubscriptionBillingSection() {
                   : "Starter Tier Plan"}
               </h3>
               <span className="text-xs text-muted font-mono">
-                {isAnnual ? "(Annual Billing • Save 20%)" : "(Monthly Billing)"}
+                {isTrial
+                  ? "(Free Evaluation Trial)"
+                  : isAnnual
+                  ? "(Annual Billing • Save 20%)"
+                  : "(Monthly Billing)"}
               </span>
             </div>
 
@@ -1102,10 +1118,12 @@ export function SubscriptionBillingSection() {
               </div>
             ) : (
               <div className="flex items-stretch gap-4 overflow-x-auto pb-3 pt-1 scrollbar-thin px-0.5">
-                {plansList.map((plan) => {
-                  const planTierKey = (plan.tierBadge || plan.id).toUpperCase();
-                  const isCurrent = currentPlan.toUpperCase() === planTierKey;
-                  const isAnnualCycle = modalBillingCycle === "annual";
+                {plansList
+                  .filter((p) => p.planType !== "trial")
+                  .map((plan) => {
+                    const planTierKey = (plan.tierBadge || plan.id).toUpperCase();
+                    const isCurrent = !isTrial && currentPlan.toUpperCase() === planTierKey;
+                    const isAnnualCycle = modalBillingCycle === "annual";
 
                   // Dynamic price calculation from real DB plan fields
                   const planPrice =

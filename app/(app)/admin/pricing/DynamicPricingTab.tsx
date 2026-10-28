@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { PricingPlan } from "@/lib/types";
 import { TierBadge } from "@/components/saas/TierBadge";
-import { CustomDropdown } from "@/components/ui";
+import { CustomDropdown, CustomDateInput } from "@/components/ui";
 import {
   Save,
   CheckCircle2,
@@ -126,7 +126,13 @@ export function DynamicPricingTab({
 
   useEffect(() => {
     if (pricingPlans && pricingPlans.length > 0) {
-      setEditablePlans(JSON.parse(JSON.stringify(pricingPlans)));
+      const sanitized = pricingPlans.map((p) => {
+        if (p.planType === "trial") {
+          return { ...p, tierBadge: "FREE_TRIAL", isPopular: false };
+        }
+        return p;
+      });
+      setEditablePlans(JSON.parse(JSON.stringify(sanitized)));
       if (!selectedPlanId || !pricingPlans.some((p) => p.id === selectedPlanId)) {
         setSelectedPlanId(pricingPlans[0].id);
       }
@@ -143,6 +149,10 @@ export function DynamicPricingTab({
   ) => {
     const updated = [...editablePlans];
     updated[index] = { ...updated[index], [field]: value };
+    if (updated[index].planType === "trial") {
+      updated[index].tierBadge = "FREE_TRIAL";
+      updated[index].isPopular = false;
+    }
     setEditablePlans(updated);
   };
 
@@ -270,10 +280,10 @@ export function DynamicPricingTab({
       id: cleanId,
       name: newPlanName.trim() || cleanId.toUpperCase(),
       tagline: newPlanTagline.trim() || (isTrial ? "Complimentary access for newly registered organizations." : "Enterprise subscription tier."),
-      badge: newPlanBadge.trim() || (isTrial ? "FREE TRIAL" : null),
-      tierBadge: newPlanTierBadge.trim() || (isTrial ? "STARTER" : "PROFESSIONAL"),
-      isActive: newPlanIsActive,
-      isPopular: newPlanIsPopular,
+      badge: isTrial ? null : (newPlanBadge.trim() || null),
+      tierBadge: isTrial ? "FREE_TRIAL" : (newPlanTierBadge.trim() || "PROFESSIONAL"),
+      isActive: isTrial ? true : newPlanIsActive,
+      isPopular: isTrial ? false : newPlanIsPopular,
       priceMonthlyInr: isTrial ? 0 : (Number(newPlanPriceMonthlyInr) || 0),
       priceAnnualInr: isTrial ? 0 : (Number(newPlanPriceAnnualInr) || 0),
       priceMonthlyUsd: isTrial ? 0 : (Number(newPlanPriceMonthlyUsd) || 0),
@@ -619,49 +629,63 @@ export function DynamicPricingTab({
                 </div>
 
                 {/* Active / Inactive Status & Toggle Bar */}
-                <div
-                  className="flex items-center justify-between pt-2 border-t border-line/60"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
-                      }`}
-                    />
-                    <span
-                      className={`text-[10px] font-mono font-semibold ${
-                        isActive ? "text-emerald-700" : "text-slate-500"
-                      }`}
-                    >
-                      {isActive ? "ACTIVE" : "INACTIVE"}
+                {isTrial ? (
+                  <div className="flex items-center justify-between pt-2 border-t border-line">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] font-mono font-semibold text-ink">
+                        ONBOARDING TRIAL
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-muted bg-panel border border-line px-1.5 py-0.5 rounded">
+                      Auto-enrolled
                     </span>
                   </div>
-
-                  {/* Direct Toggle Button */}
-                  <button
-                    type="button"
-                    title={isActive ? "Deactivate plan (hide from frontend)" : "Activate plan (show on frontend)"}
-                    onClick={(e) => handleTogglePlanActive(plan.id, e)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border ${
-                      isActive
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                        : "bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200"
-                    }`}
+                ) : (
+                  <div
+                    className="flex items-center justify-between pt-2 border-t border-line/60"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {isActive ? (
-                      <>
-                        <ToggleRight className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Live</span>
-                      </>
-                    ) : (
-                      <>
-                        <ToggleLeft className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Hidden</span>
-                      </>
-                    )}
-                  </button>
-                </div>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                        }`}
+                      />
+                      <span
+                        className={`text-[10px] font-mono font-semibold ${
+                          isActive ? "text-emerald-700" : "text-slate-500"
+                        }`}
+                      >
+                        {isActive ? "ACTIVE" : "INACTIVE"}
+                      </span>
+                    </div>
+
+                    {/* Direct Toggle Button */}
+                    <button
+                      type="button"
+                      title={isActive ? "Deactivate plan (hide from frontend)" : "Activate plan (show on frontend)"}
+                      onClick={(e) => handleTogglePlanActive(plan.id, e)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all cursor-pointer border ${
+                        isActive
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                          : "bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200"
+                      }`}
+                    >
+                      {isActive ? (
+                        <>
+                          <ToggleRight className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Live</span>
+                        </>
+                      ) : (
+                        <>
+                          <ToggleLeft className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Hidden</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
 
                 {/* Price & Features count */}
                 <div className="flex items-baseline justify-between text-xs font-mono text-muted">
@@ -790,52 +814,83 @@ export function DynamicPricingTab({
                       </div>
 
                       {/* Active / Inactive Toggle Bar */}
-                      <div className="p-2.5 rounded-xl bg-bg border border-line flex items-center justify-between">
-                        <span className="text-[11px] font-mono font-semibold flex items-center gap-1.5">
-                          <span
-                            className={`w-2 h-2 rounded-full ${
-                              isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
-                            }`}
-                          />
-                          <span className={isActive ? "text-emerald-700" : "text-slate-500"}>
-                            {isActive ? "ACTIVE (PUBLIC)" : "INACTIVE (HIDDEN)"}
+                      {isTrial ? (
+                        <div className="p-2.5 rounded-xl bg-bg border border-line flex items-center justify-between">
+                          <span className="text-[11px] font-mono font-semibold flex items-center gap-1.5 text-ink">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>ONBOARDING TRIAL</span>
                           </span>
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() => handleTogglePlanActive(plan.id)}
-                          className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold cursor-pointer border transition-colors ${
-                            isActive
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
-                              : "bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200"
-                          }`}
-                        >
-                          {isActive ? "Active" : "Inactive"}
-                        </button>
-                      </div>
-
-                      {/* Tier Badge Picker */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
-                            Tier Badge
-                          </label>
-                          <TierBadge tier={plan.tierBadge || plan.id} size="xs" />
+                          <span className="text-[10px] font-mono text-muted bg-panel border border-line px-2 py-0.5 rounded">
+                            Auto-assigned
+                          </span>
                         </div>
-                        <CustomDropdown
-                          value={
-                            TIER_BADGE_PRESETS.includes((plan.tierBadge || plan.id).toUpperCase())
-                              ? (plan.tierBadge || plan.id).toUpperCase()
-                              : "CUSTOM"
-                          }
-                          onChange={(val) =>
-                            handlePlanFieldChange(planIdx, "tierBadge", val)
-                          }
-                          options={TIER_BADGE_PRESETS.map((t) => ({ value: t, label: t }))}
-                          size="sm"
-                        />
-                      </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl bg-bg border border-line flex items-center justify-between">
+                          <span className="text-[11px] font-mono font-semibold flex items-center gap-1.5">
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                isActive ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                              }`}
+                            />
+                            <span className={isActive ? "text-emerald-700" : "text-slate-500"}>
+                              {isActive ? "ACTIVE (PUBLIC)" : "INACTIVE (HIDDEN)"}
+                            </span>
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePlanActive(plan.id)}
+                            className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold cursor-pointer border transition-colors ${
+                              isActive
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                                : "bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200"
+                            }`}
+                          >
+                            {isActive ? "Active" : "Inactive"}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Tier Badge */}
+                      {isTrial ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+                              Tier Badge
+                            </label>
+                            <TierBadge tier="FREE_TRIAL" size="xs" />
+                          </div>
+                          <div className="px-3 py-2 bg-bg border border-line rounded-xl text-xs flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Gift className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span className="font-semibold text-ink">Free Tier</span>
+                              <span className="text-[10px] text-muted">(Signup Default)</span>
+                            </div>
+                            <span className="text-[10px] font-mono text-muted">Fixed</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-semibold text-muted uppercase tracking-wider">
+                              Tier Badge
+                            </label>
+                            <TierBadge tier={plan.tierBadge || plan.id} size="xs" />
+                          </div>
+                          <CustomDropdown
+                            value={
+                              TIER_BADGE_PRESETS.includes((plan.tierBadge || plan.id).toUpperCase())
+                                ? (plan.tierBadge || plan.id).toUpperCase()
+                                : "CUSTOM"
+                            }
+                            onChange={(val) =>
+                              handlePlanFieldChange(planIdx, "tierBadge", val)
+                            }
+                            options={TIER_BADGE_PRESETS.map((t) => ({ value: t, label: t }))}
+                            size="sm"
+                          />
+                        </div>
+                      )}
 
                       {/* Tagline */}
                       <div className="space-y-1">
@@ -899,19 +954,19 @@ export function DynamicPricingTab({
                             </div>
 
                             <div>
-                              <span className="text-[10px] text-muted block flex items-center gap-1">
+                              <span className="text-[10px] text-muted block flex items-center gap-1 mb-1">
                                 <Calendar className="w-2.5 h-2.5" />
                                 <span>Expiry from Today</span>
                               </span>
-                              <input
-                                type="date"
+                              <CustomDateInput
                                 value={calculateDateFromDays(plan.trialDays || 14)}
                                 min={calculateDateFromDays(1)}
-                                onChange={(e) => {
-                                  const days = calculateDaysFromDate(e.target.value);
+                                onChange={(val) => {
+                                  const days = calculateDaysFromDate(val);
                                   handlePlanFieldChange(planIdx, "trialDays", days);
                                 }}
-                                className="w-full px-2 py-1 bg-panel border border-emerald-500/30 rounded text-xs font-mono font-bold text-ink focus:border-emerald-500 focus:outline-hidden"
+                                size="sm"
+                                placeholder="Select date"
                               />
                             </div>
                           </div>
@@ -1200,48 +1255,69 @@ export function DynamicPricingTab({
                   </button>
                 </div>
 
-                <div className="p-4 rounded-xl border flex items-center justify-between gap-4 transition-colors bg-bg">
-                  <div>
-                    <span className="text-xs font-bold text-ink block flex items-center gap-2">
-                      <span>Frontend Status:</span>
-                      {activePlan.isActive !== false ? (
+                {activePlan.planType === "trial" ? (
+                  <div className="p-4 rounded-xl border border-line bg-bg flex items-center justify-between gap-4 transition-colors">
+                    <div>
+                      <span className="text-xs font-bold text-ink block flex items-center gap-2">
+                        <span>Plan Role:</span>
                         <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          ACTIVE & PUBLISHED
+                          INTERNAL DEFAULT TRIAL
                         </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                          INACTIVE (HIDDEN)
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-[11px] text-muted block mt-1 leading-relaxed">
-                      {activePlan.isActive !== false
-                        ? "Visible to customers on /pricing, in billing upgrades, and during account registration."
-                        : "Hidden from customers on /pricing and the frontend. Kept in admin panel as draft."}
-                    </span>
-                  </div>
+                      </span>
+                      <span className="text-[11px] text-muted block mt-1 leading-relaxed">
+                        Exclusively assigned to new organizations upon account registration. Hidden from the public pricing and checkout pages.
+                      </span>
+                    </div>
 
-                  {/* Interactive Switch */}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handlePlanFieldChange(
-                        activePlanIndex,
-                        "isActive",
-                        !(activePlan.isActive !== false)
-                      )
-                    }
-                    className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                      activePlan.isActive !== false ? "bg-emerald-600" : "bg-slate-300"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        activePlan.isActive !== false ? "translate-x-5" : "translate-x-0"
+                    <div className="shrink-0 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-panel border border-line text-xs font-semibold text-ink">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Registration Active</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-xl border flex items-center justify-between gap-4 transition-colors bg-bg">
+                    <div>
+                      <span className="text-xs font-bold text-ink block flex items-center gap-2">
+                        <span>Frontend Status:</span>
+                        {activePlan.isActive !== false ? (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            ACTIVE & PUBLISHED
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            INACTIVE (HIDDEN)
+                          </span>
+                        )}
+                      </span>
+                      <span className="text-[11px] text-muted block mt-1 leading-relaxed">
+                        {activePlan.isActive !== false
+                          ? "Visible to customers on /pricing, in billing upgrades, and during account registration."
+                          : "Hidden from customers on /pricing and the frontend. Kept in admin panel as draft."}
+                      </span>
+                    </div>
+
+                    {/* Interactive Switch */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handlePlanFieldChange(
+                          activePlanIndex,
+                          "isActive",
+                          !(activePlan.isActive !== false)
+                        )
+                      }
+                      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                        activePlan.isActive !== false ? "bg-emerald-600" : "bg-slate-300"
                       }`}
-                    />
-                  </button>
-                </div>
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          activePlan.isActive !== false ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Card 2: Identity, Tier Badge & Tagline */}
@@ -1326,54 +1402,73 @@ export function DynamicPricingTab({
                   </div>
 
                   {/* Tier Badge Selector */}
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-semibold text-muted">Tier Badge</label>
-                      <TierBadge tier={activePlan.tierBadge || activePlan.id} size="xs" />
+                  {activePlan.planType === "trial" ? (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-muted">Profile Tier Badge</label>
+                        <TierBadge tier="FREE_TRIAL" size="xs" />
+                      </div>
+                      <div className="flex items-center justify-between px-3 py-2 bg-bg border border-line rounded-xl text-xs">
+                        <div className="flex items-center gap-2">
+                          <Gift className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span className="font-bold text-ink">Free Tier</span>
+                          <span className="text-[11px] text-muted">(Auto-assigned on registration)</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-muted uppercase">Fixed</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-48 shrink-0">
-                        <CustomDropdown
-                          value={
-                            TIER_BADGE_PRESETS.includes((activePlan.tierBadge || activePlan.id).toUpperCase())
-                              ? (activePlan.tierBadge || activePlan.id).toUpperCase()
-                              : "CUSTOM"
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-semibold text-muted">Tier Badge</label>
+                        <TierBadge tier={activePlan.tierBadge || activePlan.id} size="xs" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-48 shrink-0">
+                          <CustomDropdown
+                            value={
+                              TIER_BADGE_PRESETS.includes((activePlan.tierBadge || activePlan.id).toUpperCase())
+                                ? (activePlan.tierBadge || activePlan.id).toUpperCase()
+                                : "CUSTOM"
+                            }
+                            onChange={(val) => {
+                              handlePlanFieldChange(activePlanIndex, "tierBadge", val);
+                            }}
+                            options={TIER_BADGE_PRESETS.map((t) => ({ value: t, label: t }))}
+                            size="sm"
+                          />
+                        </div>
+                        <input
+                          type="text"
+                          value={activePlan.tierBadge || ""}
+                          placeholder="Custom Badge label"
+                          onChange={(e) =>
+                            handlePlanFieldChange(activePlanIndex, "tierBadge", e.target.value.toUpperCase())
                           }
-                          onChange={(val) => {
-                            handlePlanFieldChange(activePlanIndex, "tierBadge", val);
-                          }}
-                          options={TIER_BADGE_PRESETS.map((t) => ({ value: t, label: t }))}
-                          size="sm"
+                          className="flex-1 min-w-0 px-3 py-2 bg-bg border border-line rounded-xl text-xs font-mono uppercase text-ink focus:border-blue focus:outline-hidden"
                         />
                       </div>
-                      <input
-                        type="text"
-                        value={activePlan.tierBadge || ""}
-                        placeholder="Custom Badge label"
-                        onChange={(e) =>
-                          handlePlanFieldChange(activePlanIndex, "tierBadge", e.target.value.toUpperCase())
-                        }
-                        className="flex-1 min-w-0 px-3 py-2 bg-bg border border-line rounded-xl text-xs font-mono uppercase text-ink focus:border-blue focus:outline-hidden"
-                      />
                     </div>
-                  </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-muted">
-                      Card Ribbon Badge (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={activePlan.badge || ""}
-                      onChange={(e) =>
-                        handlePlanFieldChange(activePlanIndex, "badge", e.target.value || null)
-                      }
-                      placeholder="e.g. MOST POPULAR, FULL PLATFORM"
-                      className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink focus:border-blue focus:outline-hidden"
-                    />
-                  </div>
+                <div className={`grid grid-cols-1 ${activePlan.planType === "trial" ? "" : "sm:grid-cols-2"} gap-4`}>
+                  {activePlan.planType !== "trial" && (
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-semibold text-muted">
+                        Card Ribbon Badge (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={activePlan.badge || ""}
+                        onChange={(e) =>
+                          handlePlanFieldChange(activePlanIndex, "badge", e.target.value || null)
+                        }
+                        placeholder="e.g. MOST POPULAR, FULL PLATFORM"
+                        className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink focus:border-blue focus:outline-hidden"
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-muted">System Plan Slug / ID</label>
@@ -1399,31 +1494,33 @@ export function DynamicPricingTab({
                 </div>
 
                 {/* Popular / Featured Card Toggle */}
-                <div className="flex items-center justify-between p-3 bg-bg border border-line rounded-xl">
-                  <div>
-                    <span className="text-xs font-semibold text-ink block">
-                      Highlight as Featured / Most Popular Tier
-                    </span>
-                    <span className="text-[11px] text-muted block">
-                      Adds an eye-catching highlight border and glow badge on the pricing page.
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handlePlanFieldChange(activePlanIndex, "isPopular", !activePlan.isPopular)
-                    }
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                      activePlan.isPopular ? "bg-blue" : "bg-line"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        activePlan.isPopular ? "translate-x-5" : "translate-x-0"
+                {activePlan.planType !== "trial" && (
+                  <div className="flex items-center justify-between p-3 bg-bg border border-line rounded-xl">
+                    <div>
+                      <span className="text-xs font-semibold text-ink block">
+                        Highlight as Featured / Most Popular Tier
+                      </span>
+                      <span className="text-[11px] text-muted block">
+                        Adds an eye-catching highlight border and glow badge on the pricing page.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handlePlanFieldChange(activePlanIndex, "isPopular", !activePlan.isPopular)
+                      }
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                        activePlan.isPopular ? "bg-blue" : "bg-line"
                       }`}
-                    />
-                  </button>
-                </div>
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          activePlan.isPopular ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Card 3: Dual-Currency Pricing Matrix (Subscription) OR Free Trial Configuration (Trial) */}
@@ -1521,14 +1618,12 @@ export function DynamicPricingTab({
                             {calculateDateFromDays(activePlan.trialDays || 14)}
                           </span>
                         </label>
-                        <input
-                          type="date"
-                          min={calculateDateFromDays(1)}
+                        <CustomDateInput
                           value={calculateDateFromDays(activePlan.trialDays || 14)}
-                          onChange={(e) =>
-                            handleTrialDateChange(activePlanIndex, e.target.value)
-                          }
-                          className="w-full px-3 py-2 bg-panel border border-line rounded-lg text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                          min={calculateDateFromDays(1)}
+                          onChange={(val) => handleTrialDateChange(activePlanIndex, val)}
+                          placeholder="Select expiration date"
+                          size="sm"
                         />
                         <span className="text-[10px] text-muted block">
                           Auto-selects ending date from today so this plan only works up to that date.
@@ -2237,46 +2332,63 @@ export function DynamicPricingTab({
               </div>
 
               {/* Tier Badge & Ribbon Badge */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+              {newPlanType === "trial" ? (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-ink">Tier Badge Level *</label>
-                    <TierBadge tier={newPlanTierBadge} size="xs" />
+                    <label className="text-xs font-bold text-ink">Profile Tier Badge</label>
+                    <TierBadge tier="FREE_TRIAL" size="xs" />
                   </div>
-                  <CustomDropdown
-                    value={
-                      TIER_BADGE_PRESETS.includes(newPlanTierBadge.toUpperCase())
-                        ? newPlanTierBadge.toUpperCase()
-                        : "CUSTOM"
-                    }
-                    onChange={(val) => setNewPlanTierBadge(val)}
-                    options={TIER_BADGE_PRESETS.map((t) => ({ value: t, label: t }))}
-                    size="sm"
-                    className="w-full"
-                  />
-                  {(!TIER_BADGE_PRESETS.includes(newPlanTierBadge.toUpperCase()) ||
-                    newPlanTierBadge.toUpperCase() === "CUSTOM") && (
+                  <div className="flex items-center justify-between px-3 py-2 bg-bg border border-line rounded-xl text-xs">
+                    <div className="flex items-center gap-2">
+                      <Gift className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span className="font-bold text-ink">Free Tier</span>
+                      <span className="text-[11px] text-muted">(Auto-assigned on registration)</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-muted uppercase">Fixed</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-ink">Tier Badge Level *</label>
+                      <TierBadge tier={newPlanTierBadge} size="xs" />
+                    </div>
+                    <CustomDropdown
+                      value={
+                        TIER_BADGE_PRESETS.includes(newPlanTierBadge.toUpperCase())
+                          ? newPlanTierBadge.toUpperCase()
+                          : "CUSTOM"
+                      }
+                      onChange={(val) => setNewPlanTierBadge(val)}
+                      options={TIER_BADGE_PRESETS.map((t) => ({ value: t, label: t }))}
+                      size="sm"
+                      className="w-full"
+                    />
+                    {(!TIER_BADGE_PRESETS.includes(newPlanTierBadge.toUpperCase()) ||
+                      newPlanTierBadge.toUpperCase() === "CUSTOM") && (
+                      <input
+                        type="text"
+                        value={newPlanTierBadge === "CUSTOM" ? "" : newPlanTierBadge}
+                        onChange={(e) => setNewPlanTierBadge(e.target.value.toUpperCase())}
+                        placeholder="Enter custom badge name (e.g. VIP)"
+                        className="w-full px-3 py-1.5 bg-bg border border-line rounded-xl text-xs font-mono uppercase text-ink focus:border-blue focus:outline-hidden mt-1.5"
+                      />
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-ink block">Card Ribbon Badge (Optional)</label>
                     <input
                       type="text"
-                      value={newPlanTierBadge === "CUSTOM" ? "" : newPlanTierBadge}
-                      onChange={(e) => setNewPlanTierBadge(e.target.value.toUpperCase())}
-                      placeholder="Enter custom badge name (e.g. VIP)"
-                      className="w-full px-3 py-1.5 bg-bg border border-line rounded-xl text-xs font-mono uppercase text-ink focus:border-blue focus:outline-hidden mt-1.5"
+                      value={newPlanBadge}
+                      onChange={(e) => setNewPlanBadge(e.target.value)}
+                      placeholder="e.g. BEST VALUE, AGENCY TIER"
+                      className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink focus:border-blue focus:outline-hidden"
                     />
-                  )}
+                  </div>
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-ink block">Card Ribbon Badge (Optional)</label>
-                  <input
-                    type="text"
-                    value={newPlanBadge}
-                    onChange={(e) => setNewPlanBadge(e.target.value)}
-                    placeholder={newPlanType === "trial" ? "e.g. FREE TRIAL, EVALUATION" : "e.g. BEST VALUE, AGENCY TIER"}
-                    className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink focus:border-blue focus:outline-hidden"
-                  />
-                </div>
-              </div>
+              )}
 
               {/* Tagline */}
               <div className="space-y-1">
@@ -2292,47 +2404,49 @@ export function DynamicPricingTab({
               </div>
 
               {/* Active & Popular Toggles */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="p-3 bg-bg border border-line rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-ink block">Active Status</span>
-                    <span className="text-[10px] text-muted">Enable plan for platform usage</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setNewPlanIsActive(!newPlanIsActive)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      newPlanIsActive ? "bg-emerald-600" : "bg-slate-300"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        newPlanIsActive ? "translate-x-5" : "translate-x-0"
+              {newPlanType !== "trial" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-3 bg-bg border border-line rounded-xl flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-ink block">Active Status</span>
+                      <span className="text-[10px] text-muted">Enable plan for platform usage</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewPlanIsActive(!newPlanIsActive)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                        newPlanIsActive ? "bg-emerald-600" : "bg-slate-300"
                       }`}
-                    />
-                  </button>
-                </div>
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          newPlanIsActive ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
 
-                <div className="p-3 bg-bg border border-line rounded-xl flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-ink block">Featured / Highlight</span>
-                    <span className="text-[10px] text-muted">Highlights with colored border</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setNewPlanIsPopular(!newPlanIsPopular)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      newPlanIsPopular ? "bg-blue" : "bg-slate-300"
-                    }`}
-                  >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                        newPlanIsPopular ? "translate-x-5" : "translate-x-0"
+                  <div className="p-3 bg-bg border border-line rounded-xl flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-ink block">Featured / Highlight</span>
+                      <span className="text-[10px] text-muted">Highlights with colored border</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setNewPlanIsPopular(!newPlanIsPopular)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                        newPlanIsPopular ? "bg-blue" : "bg-slate-300"
                       }`}
-                    />
-                  </button>
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          newPlanIsPopular ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Step 2: Plan-Specific Configuration (Free Trial Logics vs Paid Pricing Matrix) */}
               {newPlanType === "trial" ? (
@@ -2421,17 +2535,15 @@ export function DynamicPricingTab({
                           {newPlanTrialExpiryDate}
                         </span>
                       </label>
-                      <input
-                        type="date"
-                        required
-                        min={calculateDateFromDays(1)}
+                      <CustomDateInput
                         value={newPlanTrialExpiryDate}
-                        onChange={(e) => {
-                          const dateVal = e.target.value;
+                        min={calculateDateFromDays(1)}
+                        onChange={(dateVal) => {
                           setNewPlanTrialExpiryDate(dateVal);
                           setNewPlanTrialDays(calculateDaysFromDate(dateVal));
                         }}
-                        className="w-full px-3 py-2 bg-panel border border-line rounded-xl text-xs font-mono font-bold text-ink focus:border-blue focus:outline-hidden"
+                        placeholder="Select expiration date"
+                        size="sm"
                       />
                       <span className="text-[10px] text-muted block">
                         This plan only works up to this selected ending date.

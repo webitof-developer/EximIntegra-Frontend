@@ -207,7 +207,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
                     SUPER ADMIN
                   </span>
                 ) : (
-                  <TierBadge tier={user.tier || "STARTER"} size="xs" />
+                  <TierBadge tier={user.billingCycle === "trial" || user.tier === "FREE_TRIAL" ? "FREE_TRIAL" : (user.tier || "STARTER")} size="xs" />
                 )}
               </h2>
               <p className="text-xs text-muted">
@@ -378,7 +378,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <TierBadge tier={user.tier || "STARTER"} size="sm" />
+                      <TierBadge tier={user.billingCycle === "trial" || user.tier === "FREE_TRIAL" ? "FREE_TRIAL" : (user.tier || "STARTER")} size="sm" />
                       <span className="text-[11px] font-semibold text-ink">Active Plan</span>
                     </div>
                     <span className="text-[11px] text-muted block mt-0.5">

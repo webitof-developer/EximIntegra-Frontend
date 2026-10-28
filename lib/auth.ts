@@ -28,7 +28,11 @@ export function getStoredUser(): UserProfile | null {
   try {
     const raw = localStorage.getItem(USER_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as UserProfile;
+    const user = JSON.parse(raw) as UserProfile;
+    if (user && user.billingCycle === "trial") {
+      return { ...user, tier: "FREE_TRIAL" };
+    }
+    return user;
   } catch {
     return null;
   }
@@ -37,15 +41,19 @@ export function getStoredUser(): UserProfile | null {
 export function setStoredUser(user: UserProfile): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    const userToStore =
+      user && user.billingCycle === "trial" ? { ...user, tier: "FREE_TRIAL" } : user;
+    localStorage.setItem(USER_KEY, JSON.stringify(userToStore));
   } catch {
     // Ignore storage errors in restricted contexts
   }
 }
 
 export function setStoredAuth(token: string, user: UserProfile): void {
+  const userToStore =
+    user && user.billingCycle === "trial" ? { ...user, tier: "FREE_TRIAL" } : user;
   setStoredToken(token);
-  setStoredUser(user);
+  setStoredUser(userToStore);
 }
 
 export function clearStoredAuth(): void {

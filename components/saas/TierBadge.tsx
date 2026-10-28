@@ -2,9 +2,9 @@
 
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Crown, Zap, Shield, Sparkles } from "lucide-react";
+import { Crown, Zap, Shield, Sparkles, Gift } from "lucide-react";
 
-export type TierType = "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
+export type TierType = "STARTER" | "PROFESSIONAL" | "ENTERPRISE" | "FREE_TRIAL";
 
 interface TierBadgeProps {
   tier: TierType | string;
@@ -72,6 +72,27 @@ export function TierBadge({
       classes: isDark
         ? "bg-slate-800 text-slate-300 border-slate-700"
         : "bg-slate-100 text-slate-700 border-slate-200/80",
+    };
+  } else if (
+    normalizedTier === "FREE_TRIAL" ||
+    normalizedTier === "FREE TRIAL" ||
+    normalizedTier === "FREE_TIER" ||
+    normalizedTier === "FREE TIER" ||
+    normalizedTier === "TRIAL"
+  ) {
+    config = {
+      label: compact ? "Trial" : "Free Tier",
+      icon: (
+        <Gift
+          className={cn(
+            "w-2.5 h-2.5 shrink-0",
+            isDark ? "text-emerald-400" : "text-emerald-600"
+          )}
+        />
+      ),
+      classes: isDark
+        ? "bg-emerald-950/70 text-emerald-300 border-emerald-700/50 font-semibold"
+        : "bg-emerald-50 text-emerald-700 border-emerald-200/80 font-semibold",
     };
   } else {
     config = {

@@ -63,7 +63,7 @@ export const authSlice = createSlice({
     },
     setUserTier: (
       state,
-      action: PayloadAction<"ENTERPRISE" | "PROFESSIONAL" | "STARTER">
+      action: PayloadAction<"ENTERPRISE" | "PROFESSIONAL" | "STARTER" | "FREE_TRIAL" | string>
     ) => {
       if (state.user) {
         state.user.tier = action.payload;
