@@ -6,6 +6,7 @@ import {
   RBACMatrixResponse,
   RolePermissionItem,
   TierPageAccessGate,
+  PublicRoleItem,
 } from "@/lib/types";
 
 export interface UpdateAdminUserRequest {
@@ -86,6 +87,31 @@ export const adminApi = api.injectEndpoints({
         body,
       }),
       invalidatesTags: ["RBAC", "Auth"],
+    }),
+    createCustomRole: builder.mutation<
+      { matrix: RBACMatrixResponse; message: string },
+      { role: string; roleName: string; description?: string; baseRole?: string; permissions?: any }
+    >({
+      query: (body) => ({
+        url: "/admin/rbac/roles",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["RBAC", "Auth"],
+    }),
+    deleteCustomRole: builder.mutation<
+      { matrix: RBACMatrixResponse; message: string },
+      string
+    >({
+      query: (roleCode) => ({
+        url: `/admin/rbac/roles/${roleCode}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["RBAC", "Auth"],
+    }),
+    getAvailableRoles: builder.query<PublicRoleItem[], void>({
+      query: () => "/auth/roles",
+      providesTags: ["RBAC"],
     }),
     getLlmProviders: builder.query<LlmProviderConfigItem[], void>({
       query: () => "/settings/llm-providers",
@@ -210,6 +236,9 @@ export const {
   useDeletePricingPlanMutation,
   useGetRBACMatrixQuery,
   useUpdateRBACMatrixMutation,
+  useCreateCustomRoleMutation,
+  useDeleteCustomRoleMutation,
+  useGetAvailableRolesQuery,
   useGetLlmProvidersQuery,
   useGetActiveLlmProviderQuery,
   useUpdateLlmProviderMutation,

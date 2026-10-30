@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRegisterMutation } from "@/store/authApi";
+import { useGetAvailableRolesQuery } from "@/store/adminApi";
 import { useAppDispatch } from "@/store";
 import { setCredentials } from "@/store/authSlice";
 import { getApiErrorMessage } from "@/lib/utils";
@@ -36,8 +37,22 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState<UserProfile["role"]>("IMPORTER");
+  const [role, setRole] = useState<string>("IMPORTER");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const { data: availableRoles } = useGetAvailableRolesQuery();
+
+  const roleOptions = availableRoles && availableRoles.length > 0
+    ? availableRoles.map((r) => ({
+        value: r.role,
+        label: r.description ? `${r.roleName} - ${r.description.slice(0, 35)}...` : r.roleName,
+      }))
+    : [
+        { value: "IMPORTER", label: "Importer (Finished / Raw)" },
+        { value: "EXPORTER", label: "Exporter (Global Outbound)" },
+        { value: "CUSTOMS_BROKER", label: "Customs Broker / CHA" },
+        { value: "TRADE_ADVISOR", label: "Trade Advisory / Counsel" },
+      ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -196,13 +211,8 @@ export default function RegisterPage() {
                 <CustomDropdown
                   id="role"
                   value={role}
-                  onChange={(val) => setRole(val as any)}
-                  options={[
-                    { value: "IMPORTER", label: "Importer (Finished / Raw)" },
-                    { value: "EXPORTER", label: "Exporter (Global Outbound)" },
-                    { value: "CUSTOMS_BROKER", label: "Customs Broker / CHA" },
-                    { value: "TRADE_ADVISOR", label: "Trade Advisory / Counsel" },
-                  ]}
+                  onChange={(val) => setRole(val)}
+                  options={roleOptions}
                   icon={<Briefcase className="w-4 h-4" />}
                   buttonClassName="py-2.5 text-xs bg-[#F8FAFC] border-[#CBD5E1]/70 rounded-xl text-[#0F172A]"
                 />

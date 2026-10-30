@@ -50,7 +50,7 @@ export interface UserProfile {
   email: string;
   name: string;
   company: string;
-  role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR" | "ADMIN";
+  role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR" | "ADMIN" | string;
   tier: "ENTERPRISE" | "PROFESSIONAL" | "STARTER" | "FREE_TRIAL" | string;
   tierBadge?: string;
   billingCycle?: "monthly" | "annual" | "trial" | string;
@@ -608,11 +608,19 @@ export interface RBACModule {
 }
 
 export interface RolePermissionItem {
-  role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR";
+  role: string;
   roleName: string;
   description: string;
   permissions: Record<string, boolean>;
+  isCustom?: boolean;
   updatedAt?: string;
+}
+
+export interface PublicRoleItem {
+  role: string;
+  roleName: string;
+  description: string;
+  isCustom?: boolean;
 }
 
 export interface RBACMatrixResponse {

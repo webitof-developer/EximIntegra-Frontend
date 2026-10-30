@@ -41,6 +41,7 @@ import {
   RoleType,
   TeamMember,
 } from "@/store/teamApi";
+import { useGetAvailableRolesQuery } from "@/store/adminApi";
 import { useAppSelector } from "@/store";
 
 export const ASSIGNABLE_ROLE_OPTIONS: { value: RoleType; label: string }[] = [
@@ -105,9 +106,21 @@ const roleDetails: Record<
 export function TeamWorkspaceSection() {
   const { user: currentUser } = useAppSelector((state) => state.auth);
   const { data: teamData, isLoading, isFetching, refetch } = useGetTeamMembersQuery();
+  const { data: availableRoles } = useGetAvailableRolesQuery();
   const [inviteMember, { isLoading: isInviting }] = useInviteTeamMemberMutation();
   const [updateMember, { isLoading: isUpdatingRole }] = useUpdateTeamMemberMutation();
   const [removeMember, { isLoading: isRemoving }] = useRemoveTeamMemberMutation();
+
+  const dynamicAssignableOptions = availableRoles && availableRoles.length > 0
+    ? availableRoles.map((r) => ({ value: r.role as RoleType, label: r.roleName }))
+    : ASSIGNABLE_ROLE_OPTIONS;
+
+  const dynamicInviteOptions = availableRoles && availableRoles.length > 0
+    ? availableRoles.map((r) => ({
+        value: r.role as RoleType,
+        label: r.description ? `${r.roleName} (${r.description.slice(0, 32)}...)` : r.roleName,
+      }))
+    : INVITE_ROLE_OPTIONS;
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
@@ -468,7 +481,7 @@ export function TeamWorkspaceSection() {
                           <CustomDropdown
                             value={m.role}
                             onChange={(val) => handleRoleChange(m, val as RoleType)}
-                            options={ASSIGNABLE_ROLE_OPTIONS}
+                            options={dynamicAssignableOptions}
                             size="sm"
                             usePortal={true}
                             className="w-full"
@@ -541,20 +554,32 @@ export function TeamWorkspaceSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(["IMPORTER", "EXPORTER", "CUSTOMS_BROKER", "TRADE_ADVISOR"] as RoleType[]).map((rKey) => {
-            const r = roleDetails[rKey];
+          {(availableRoles && availableRoles.length > 0
+            ? availableRoles
+            : [
+                { role: "IMPORTER", roleName: "Importer", description: "Commercial entities importing goods, customs clearance, duty calculation and landed costs." },
+                { role: "EXPORTER", roleName: "Exporter", description: "Manufacturers and exporters targeting global markets, origin rules, export benefits and FTA schemes." },
+                { role: "CUSTOMS_BROKER", roleName: "Customs Broker", description: "Licensed customs brokers executing high-velocity classifications, duty assessments and manifest filings." },
+                { role: "TRADE_ADVISOR", roleName: "Trade Advisor", description: "Strategic trade consultants running sourcing comparisons, tariff arbitrage and intelligence audits." },
+              ]
+          ).map((item) => {
+            const roleDetail = roleDetails[item.role as RoleType] || {
+              label: item.roleName,
+              badgeVariant: "primary" as const,
+              description: item.description,
+            };
 
             return (
               <div
-                key={rKey}
+                key={item.role}
                 className="p-4 bg-panel border border-line rounded-xl shadow-xs space-y-2.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-ink text-xs font-mono">{r.label}</span>
-                  <StatusPill label={rKey} variant={r.badgeVariant} size="xs" />
+                  <span className="font-bold text-ink text-xs font-mono">{item.roleName || roleDetail.label}</span>
+                  <StatusPill label={item.role} variant={roleDetail.badgeVariant} size="xs" />
                 </div>
-                <p className="text-[11px] text-muted leading-relaxed">
-                  {r.description}
+                <p className="text-[11px] text-muted leading-relaxed line-clamp-3">
+                  {item.description || roleDetail.description}
                 </p>
               </div>
             );
@@ -649,7 +674,7 @@ export function TeamWorkspaceSection() {
                 <CustomDropdown
                   value={inviteRole}
                   onChange={(val) => setInviteRole(val as RoleType)}
-                  options={INVITE_ROLE_OPTIONS}
+                  options={dynamicInviteOptions}
                   size="sm"
                   className="w-full"
                 />

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { AdminUserItem } from "@/lib/types";
+import { useGetAvailableRolesQuery } from "@/store/adminApi";
 import { TierBadge } from "@/components/saas/TierBadge";
 import {
   TableContainer,
@@ -50,6 +51,50 @@ export function UserDirectoryTab({
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const [tierFilter, setTierFilter] = useState<string>("ALL");
+
+  const { data: availableRoles } = useGetAvailableRolesQuery();
+
+  const filterRoleOptions = useMemo(() => {
+    const list = [
+      { value: "ALL", label: "All Roles" },
+      { value: "ADMIN", label: "Super Admin" },
+    ];
+    if (availableRoles && availableRoles.length > 0) {
+      availableRoles.forEach((r) => {
+        if (r.role !== "ADMIN") {
+          list.push({ value: r.role, label: r.roleName });
+        }
+      });
+    } else {
+      list.push(
+        { value: "IMPORTER", label: "Importer" },
+        { value: "EXPORTER", label: "Exporter" },
+        { value: "CUSTOMS_BROKER", label: "Customs Broker" },
+        { value: "TRADE_ADVISOR", label: "Trade Advisor" }
+      );
+    }
+    return list;
+  }, [availableRoles]);
+
+  const modalRoleOptions = useMemo(() => {
+    const list: { value: string; label: string }[] = [];
+    if (availableRoles && availableRoles.length > 0) {
+      availableRoles.forEach((r) => {
+        if (r.role !== "ADMIN") {
+          list.push({ value: r.role, label: r.roleName });
+        }
+      });
+    } else {
+      list.push(
+        { value: "IMPORTER", label: "Importer" },
+        { value: "EXPORTER", label: "Exporter" },
+        { value: "CUSTOMS_BROKER", label: "Customs Broker" },
+        { value: "TRADE_ADVISOR", label: "Trade Advisor" }
+      );
+    }
+    list.push({ value: "ADMIN", label: "Super Admin" });
+    return list;
+  }, [availableRoles]);
 
   // User Edit Modal State
   const [editingUserItem, setEditingUserItem] = useState<AdminUserItem | null>(null);
@@ -143,14 +188,7 @@ export function UserDirectoryTab({
               <CustomDropdown
                 value={roleFilter}
                 onChange={(val) => setRoleFilter(val)}
-                options={[
-                  { value: "ALL", label: "All Roles" },
-                  { value: "ADMIN", label: "Super Admin" },
-                  { value: "IMPORTER", label: "Importer" },
-                  { value: "EXPORTER", label: "Exporter" },
-                  { value: "CUSTOMS_BROKER", label: "Customs Broker" },
-                  { value: "TRADE_ADVISOR", label: "Trade Advisor" },
-                ]}
+                options={filterRoleOptions}
                 size="sm"
                 buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-lg text-xs font-semibold text-ink"
               />
@@ -331,13 +369,7 @@ export function UserDirectoryTab({
                   <CustomDropdown
                     value={editRole}
                     onChange={(val) => setEditRole(val as AdminUserItem["role"])}
-                    options={[
-                      { value: "IMPORTER", label: "Importer" },
-                      { value: "EXPORTER", label: "Exporter" },
-                      { value: "CUSTOMS_BROKER", label: "Customs Broker" },
-                      { value: "TRADE_ADVISOR", label: "Trade Advisor" },
-                      { value: "ADMIN", label: "Super Admin" },
-                    ]}
+                    options={modalRoleOptions}
                     buttonClassName="px-3 py-2 bg-bg border-line rounded-xl text-xs text-ink font-semibold focus:border-blue"
                   />
                 </div>
