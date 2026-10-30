@@ -14,6 +14,7 @@ import { PlatformKeysSection } from "@/components/settings/PlatformKeysSection";
 import { SubscriptionBillingSection } from "@/components/settings/SubscriptionBillingSection";
 import { TeamWorkspaceSection } from "@/components/settings/TeamWorkspaceSection";
 import { DynamicTierGate } from "@/components/saas/DynamicTierGate";
+import { useGetTeamMembersQuery } from "@/store/teamApi";
 import {
   Globe,
   Ship,
@@ -30,6 +31,7 @@ function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAppSelector((state) => state.auth);
+  const { data: teamData } = useGetTeamMembersQuery();
   const tabParam = searchParams.get("tab")?.toLowerCase();
 
   const getInitialTab = () => {
@@ -122,7 +124,9 @@ function SettingsContent() {
       id: "team",
       label: "Team & Organization",
       icon: <Users className="w-3.5 h-3.5 text-green" />,
-      badge: "4 Seats",
+      badge: teamData
+        ? `${teamData.usedSeats}/${teamData.isUnlimited ? "∞" : teamData.seatLimit} Seats`
+        : "Team",
     },
   ];
 
@@ -153,7 +157,7 @@ function SettingsContent() {
               <span className="truncate">{user?.company || "Organization Workspace"}</span>
             </div>
             <span className="text-[10px] text-muted font-mono block mt-0.5">
-              Tier: {user?.tier || "STARTER"} &bull; Multi-User RBAC
+              Tier: {teamData?.planName || user?.tier || "STARTER"} &bull; {teamData?.usedSeats ?? 1} {teamData?.usedSeats === 1 ? "Member" : "Members"}
             </span>
           </div>
         )}

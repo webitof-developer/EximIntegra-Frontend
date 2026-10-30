@@ -85,6 +85,7 @@ export const api = createApi({
     "TierAccess",
     "Contracts",
     "Payments",
+    "Team",
   ],
   endpoints: () => ({}),
 });
