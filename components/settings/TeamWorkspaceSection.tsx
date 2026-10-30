@@ -41,6 +41,25 @@ import {
   RoleType,
   TeamMember,
 } from "@/store/teamApi";
+import { useAppSelector } from "@/store";
+
+export const ASSIGNABLE_ROLE_OPTIONS: { value: RoleType; label: string }[] = [
+  { value: "IMPORTER", label: "Importer" },
+  { value: "EXPORTER", label: "Exporter" },
+  { value: "CUSTOMS_BROKER", label: "Customs Broker" },
+  { value: "TRADE_ADVISOR", label: "Trade Advisor" },
+  { value: "TRADE_OFFICER", label: "Trade Officer" },
+  { value: "AUDITOR", label: "Auditor" },
+];
+
+export const INVITE_ROLE_OPTIONS: { value: RoleType; label: string }[] = [
+  { value: "IMPORTER", label: "Importer (Finished / Raw Goods)" },
+  { value: "EXPORTER", label: "Exporter (Global Outbound)" },
+  { value: "CUSTOMS_BROKER", label: "Customs Broker / CHA Desk" },
+  { value: "TRADE_ADVISOR", label: "Trade Advisor / Counsel" },
+  { value: "TRADE_OFFICER", label: "Trade Officer (Duty & Landed Cost)" },
+  { value: "AUDITOR", label: "Auditor (Read-Only Calculation History)" },
+];
 
 const roleDetails: Record<
   RoleType,
@@ -51,15 +70,30 @@ const roleDetails: Record<
     badgeVariant: "primary",
     description: "Full access across all engines, subscription billing, API keys, and member management.",
   },
-  TRADE_OFFICER: {
-    label: "Trade Officer",
+  IMPORTER: {
+    label: "Importer",
+    badgeVariant: "primary",
+    description: "Commercial entities importing goods, customs clearance, duty calculation and landed costs.",
+  },
+  EXPORTER: {
+    label: "Exporter",
     badgeVariant: "success",
-    description: "Can classify goods, compute duties, model landed costs, and consult Akshara AI.",
+    description: "Manufacturers and exporters targeting global markets, origin rules, export benefits and FTA schemes.",
   },
   CUSTOMS_BROKER: {
     label: "Customs Broker",
     badgeVariant: "warning",
-    description: "External agent: access to Classification & Duty; restricted from viewing smelter yield margins.",
+    description: "Licensed customs brokers executing high-velocity classifications, duty assessments and manifest filings.",
+  },
+  TRADE_ADVISOR: {
+    label: "Trade Advisor",
+    badgeVariant: "primary",
+    description: "Strategic trade consultants running sourcing comparisons, tariff arbitrage and intelligence audits.",
+  },
+  TRADE_OFFICER: {
+    label: "Trade Officer",
+    badgeVariant: "success",
+    description: "Can classify goods, compute duties, model landed costs, and consult Akshara AI.",
   },
   AUDITOR: {
     label: "Auditor",
@@ -69,6 +103,7 @@ const roleDetails: Record<
 };
 
 export function TeamWorkspaceSection() {
+  const { user: currentUser } = useAppSelector((state) => state.auth);
   const { data: teamData, isLoading, isFetching, refetch } = useGetTeamMembersQuery();
   const [inviteMember, { isLoading: isInviting }] = useInviteTeamMemberMutation();
   const [updateMember, { isLoading: isUpdatingRole }] = useUpdateTeamMemberMutation();
@@ -83,7 +118,10 @@ export function TeamWorkspaceSection() {
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteDept, setInviteDept] = useState("Customs Compliance & Operations");
-  const [inviteRole, setInviteRole] = useState<RoleType>("TRADE_OFFICER");
+  const [inviteRole, setInviteRole] = useState<RoleType>("IMPORTER");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [inviteConfirmPassword, setInviteConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
 
   const members = teamData?.members || [];
@@ -113,6 +151,16 @@ export function TeamWorkspaceSection() {
       return;
     }
 
+    if (!invitePassword || invitePassword.length < 8) {
+      setInviteError("New Password must be at least 8 characters long.");
+      return;
+    }
+
+    if (invitePassword !== inviteConfirmPassword) {
+      setInviteError("New Password and Confirm Password do not match.");
+      return;
+    }
+
     if (!canInviteMore) {
       setInviteError(
         `Seat limit of ${seatLimit} reached for your ${planName} tier. Please upgrade your plan in Subscription & Billing.`
@@ -126,15 +174,19 @@ export function TeamWorkspaceSection() {
         email: inviteEmail.trim().toLowerCase(),
         department: inviteDept.trim() || "Customs Compliance & Operations",
         role: inviteRole,
+        password: invitePassword.trim(),
       }).unwrap();
 
       showToast(
-        `Invitation sent to ${created.email}. Added to ${created.department} as ${roleDetails[inviteRole]?.label || inviteRole}.`,
+        `Team member ${created.name} (${created.email}) added successfully with active 2FA security.`,
         "success"
       );
 
       setInviteName("");
       setInviteEmail("");
+      setInvitePassword("");
+      setInviteConfirmPassword("");
+      setShowPassword(false);
       setIsInviteOpen(false);
     } catch (err: any) {
       const msg =
@@ -218,6 +270,13 @@ export function TeamWorkspaceSection() {
             <button
               type="button"
               onClick={() => {
+                setInviteEmail("");
+                setInviteName("");
+                setInviteDept("Customs Compliance & Operations");
+                setInviteRole("IMPORTER");
+                setInvitePassword("");
+                setInviteConfirmPassword("");
+                setShowPassword(false);
                 setInviteError(null);
                 setIsInviteOpen(true);
               }}
@@ -357,19 +416,20 @@ export function TeamWorkspaceSection() {
                   </TableCell>
                 </TableRow>
               ) : (
-                members.map((m) => {
+                members.map((m, idx) => {
+                  const isPrimaryOwner = Boolean(m.isOwner || idx === 0);
+                  const isSelf = Boolean(
+                    currentUser &&
+                      (currentUser.id === m.id ||
+                        currentUser.email?.toLowerCase() === m.email?.toLowerCase())
+                  );
+
                   const initials = m.name
                     .split(" ")
                     .map((n) => n[0])
                     .slice(0, 2)
                     .join("")
                     .toUpperCase();
-
-                  const role = roleDetails[m.role as RoleType] || {
-                    label: m.role,
-                    badgeVariant: "primary",
-                    description: "Workspace member",
-                  };
 
                   return (
                     <TableRow key={m.id}>
@@ -384,9 +444,9 @@ export function TeamWorkspaceSection() {
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="font-bold text-ink">{m.name}</span>
-                              {m.role === "ADMIN" && (
-                                <span title="Organization Administrator">
-                                  <Crown className="w-3 h-3 text-amber-500 shrink-0" />
+                              {isPrimaryOwner && (
+                                <span title="Primary Organization Owner">
+                                  <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                                 </span>
                               )}
                             </div>
@@ -402,46 +462,26 @@ export function TeamWorkspaceSection() {
                         {m.department || "Customs Compliance & Operations"}
                       </TableCell>
 
-                      {/* Role Dropdown / Pill */}
+                      {/* Role Dropdown */}
                       <TableCell align="center">
-                        {m.role === "ADMIN" ? (
-                          <StatusPill
-                            label={role.label}
-                            variant={role.badgeVariant}
-                            size="xs"
+                        <div className="w-44 inline-block text-left">
+                          <CustomDropdown
+                            value={m.role}
+                            onChange={(val) => handleRoleChange(m, val as RoleType)}
+                            options={ASSIGNABLE_ROLE_OPTIONS}
+                            size="sm"
+                            usePortal={true}
+                            className="w-full"
                           />
-                        ) : (
-                          <div className="w-36 inline-block text-left">
-                            <CustomDropdown
-                              value={m.role}
-                              onChange={(val) => handleRoleChange(m, val as RoleType)}
-                              options={[
-                                { value: "TRADE_OFFICER", label: "Trade Officer" },
-                                { value: "CUSTOMS_BROKER", label: "Customs Broker" },
-                                { value: "AUDITOR", label: "Auditor" },
-                                { value: "ADMIN", label: "Admin" },
-                              ]}
-                              size="sm"
-                              usePortal={true}
-                              className="w-full"
-                            />
-                          </div>
-                        )}
+                        </div>
                       </TableCell>
 
                       {/* 2FA Status */}
                       <TableCell align="center">
-                        {m.twoFactorEnabled ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            <span>2FA Active</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-mono text-muted px-2 py-0.5 rounded-full bg-bg border border-line">
-                            <Lock className="w-3 h-3 text-muted/70" />
-                            <span>2FA Off</span>
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          <span>2FA Active</span>
+                        </span>
                       </TableCell>
 
                       {/* Last Active */}
@@ -451,14 +491,31 @@ export function TeamWorkspaceSection() {
 
                       {/* Actions */}
                       <TableCell align="center">
-                        <button
-                          type="button"
-                          onClick={() => setMemberToDelete(m)}
-                          className="p-1.5 text-muted hover:text-red hover:bg-red/10 rounded-lg transition-colors cursor-pointer"
-                          title={`Remove ${m.name}`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {isPrimaryOwner ? (
+                          <span
+                            title="Primary Organization Owner"
+                            className="text-[10px] font-mono text-muted flex items-center justify-center gap-1 select-none"
+                          >
+                            <Lock className="w-3 h-3 text-muted/60" />
+                            <span>Owner</span>
+                          </span>
+                        ) : isSelf ? (
+                          <span
+                            title="Your Account"
+                            className="text-[10px] font-mono text-muted flex items-center justify-center select-none"
+                          >
+                            You
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setMemberToDelete(m)}
+                            className="p-1.5 text-muted hover:text-red hover:bg-red/10 rounded-lg transition-colors cursor-pointer"
+                            title={`Remove ${m.name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -484,7 +541,7 @@ export function TeamWorkspaceSection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(Object.keys(roleDetails) as RoleType[]).map((rKey) => {
+          {(["IMPORTER", "EXPORTER", "CUSTOMS_BROKER", "TRADE_ADVISOR"] as RoleType[]).map((rKey) => {
             const r = roleDetails[rKey];
 
             return (
@@ -592,17 +649,59 @@ export function TeamWorkspaceSection() {
                 <CustomDropdown
                   value={inviteRole}
                   onChange={(val) => setInviteRole(val as RoleType)}
-                  options={[
-                    { value: "TRADE_OFFICER", label: "Trade Officer (Classify, Duty & Landed Cost)" },
-                    { value: "CUSTOMS_BROKER", label: "Customs Broker (External Clearance Desk)" },
-                    { value: "AUDITOR", label: "Auditor (Read-Only Calculation History)" },
-                    { value: "ADMIN", label: "Organization Admin (Full Access)" },
-                  ]}
+                  options={INVITE_ROLE_OPTIONS}
                   size="sm"
                   className="w-full"
                 />
                 <span className="text-[10px] text-muted block mt-1">
                   {roleDetails[inviteRole]?.description}
+                </span>
+              </div>
+
+              {/* Password & Confirm Password */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-ink block">
+                    Member Password *
+                  </label>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="Min. 8 characters"
+                    value={invitePassword}
+                    onChange={(e) => setInvitePassword(e.target.value)}
+                    className="w-full py-2 px-3 bg-bg border border-line rounded-xl text-ink focus:outline-hidden focus:border-blue text-xs font-mono font-medium"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-ink block">
+                    Confirm Password *
+                  </label>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="Re-enter password"
+                    value={inviteConfirmPassword}
+                    onChange={(e) => setInviteConfirmPassword(e.target.value)}
+                    className="w-full py-2 px-3 bg-bg border border-line rounded-xl text-ink focus:outline-hidden focus:border-blue text-xs font-mono font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-muted pt-1">
+                <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                    className="rounded text-blue"
+                  />
+                  <span>Show password characters</span>
+                </label>
+                <span className="flex items-center gap-1 text-emerald-600 font-mono font-semibold">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>2FA Active by default</span>
                 </span>
               </div>
             </div>

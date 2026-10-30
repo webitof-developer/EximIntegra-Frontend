@@ -1,6 +1,13 @@
 import { api } from "./api";
 
-export type RoleType = "ADMIN" | "TRADE_OFFICER" | "CUSTOMS_BROKER" | "AUDITOR";
+export type RoleType =
+  | "IMPORTER"
+  | "EXPORTER"
+  | "CUSTOMS_BROKER"
+  | "TRADE_ADVISOR"
+  | "TRADE_OFFICER"
+  | "AUDITOR"
+  | "ADMIN";
 
 export interface TeamMember {
   id: string;
@@ -9,6 +16,7 @@ export interface TeamMember {
   department: string;
   role: RoleType;
   twoFactorEnabled: boolean;
+  isOwner?: boolean;
   lastActive: string;
   avatarColor: string;
   createdAt?: string;
@@ -30,6 +38,7 @@ export interface InviteMemberPayload {
   name: string;
   role: string;
   department?: string;
+  password?: string;
 }
 
 export interface UpdateMemberPayload {
