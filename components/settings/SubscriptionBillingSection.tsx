@@ -538,7 +538,7 @@ export function SubscriptionBillingSection() {
                 {isTrial
                   ? "(Free Evaluation Trial)"
                   : isAnnual
-                  ? "(Annual Billing • Save 20%)"
+                  ? "(Annual Billing)"
                   : "(Monthly Billing)"}
               </span>
             </div>
@@ -1070,7 +1070,7 @@ export function SubscriptionBillingSection() {
                     }`}
                   >
                     <span>Yearly</span>
-                    <span
+                    {/* <span
                       className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
                         modalBillingCycle === "annual"
                           ? "bg-white/20 text-white"
@@ -1078,7 +1078,7 @@ export function SubscriptionBillingSection() {
                       }`}
                     >
                       Save 20%
-                    </span>
+                    </span> */}
                   </button>
                 </div>
               </div>
@@ -1179,7 +1179,7 @@ export function SubscriptionBillingSection() {
                         <div className="text-[10px] text-muted font-mono mt-0.5">
                           {isAnnualCycle ? (
                             <span className="text-green font-medium">
-                              Annual Subscription (Save 20%)
+                              Annual Subscription
                             </span>
                           ) : (
                             <span>Billed month-to-month</span>
