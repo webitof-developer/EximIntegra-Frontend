@@ -32,6 +32,7 @@ import {
   ArrowUpRight,
   Loader2,
   Crown,
+  Edit3,
 } from "lucide-react";
 import {
   useGetTeamMembersQuery,
@@ -225,6 +226,69 @@ export function TeamWorkspaceSection() {
       );
     } catch (err: any) {
       const msg = err?.data?.message || err?.message || "Failed to update member role.";
+      showToast(msg, "error");
+    }
+  };
+
+  // Edit Member Modal state
+  const [memberToEdit, setMemberToEdit] = useState<TeamMember | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editDept, setEditDept] = useState("Customs Compliance & Operations");
+  const [editRole, setEditRole] = useState<RoleType>("IMPORTER");
+  const [editPassword, setEditPassword] = useState("");
+  const [showEditPassword, setShowEditPassword] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const handleOpenEdit = (m: TeamMember) => {
+    setMemberToEdit(m);
+    setEditName(m.name || "");
+    setEditEmail(m.email || "");
+    setEditDept(m.department || "Customs Compliance & Operations");
+    setEditRole(m.role || "IMPORTER");
+    setEditPassword("");
+    setShowEditPassword(false);
+    setEditError(null);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!memberToEdit) return;
+    setEditError(null);
+
+    const cleanName = editName.trim();
+    const cleanEmail = editEmail.trim().toLowerCase();
+
+    if (!cleanName || !cleanEmail) {
+      setEditError("Name and Corporate Email ID are required.");
+      return;
+    }
+
+    if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
+      setEditError("Please provide a valid Corporate Email ID.");
+      return;
+    }
+
+    if (editPassword && editPassword.trim().length < 6) {
+      setEditError("New Password must be at least 6 characters long (or leave blank).");
+      return;
+    }
+
+    try {
+      await updateMember({
+        userId: memberToEdit.id,
+        name: cleanName,
+        email: cleanEmail,
+        department: editDept.trim() || "Customs Compliance & Operations",
+        role: editRole,
+        password: editPassword.trim() ? editPassword.trim() : undefined,
+      }).unwrap();
+
+      showToast(`Member ID & details for ${cleanName} (${cleanEmail}) updated successfully.`, "success");
+      setMemberToEdit(null);
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.data?.detail || err?.message || "Failed to update member ID and details.";
+      setEditError(msg);
       showToast(msg, "error");
     }
   };
@@ -463,9 +527,20 @@ export function TeamWorkspaceSection() {
                                 </span>
                               )}
                             </div>
-                            <span className="text-[11px] text-muted font-mono block">
-                              {m.email}
-                            </span>
+                            {isPrimaryOwner ? (
+                              <span className="text-[11px] text-muted font-mono block">
+                                {m.email}
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEdit(m)}
+                                className="text-[11px] text-muted hover:text-blue hover:underline font-mono block text-left cursor-pointer transition-colors"
+                                title="Click to edit member email ID"
+                              >
+                                {m.email}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </TableCell>
@@ -520,14 +595,24 @@ export function TeamWorkspaceSection() {
                             You
                           </span>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => setMemberToDelete(m)}
-                            className="p-1.5 text-muted hover:text-red hover:bg-red/10 rounded-lg transition-colors cursor-pointer"
-                            title={`Remove ${m.name}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEdit(m)}
+                              className="p-1.5 text-muted hover:text-blue hover:bg-blue/10 rounded-lg transition-colors cursor-pointer"
+                              title={`Edit ${m.name} ID & Details`}
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setMemberToDelete(m)}
+                              className="p-1.5 text-muted hover:text-red hover:bg-red/10 rounded-lg transition-colors cursor-pointer"
+                              title={`Remove ${m.name}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         )}
                       </TableCell>
                     </TableRow>
@@ -787,6 +872,147 @@ export function TeamWorkspaceSection() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 6. Modal: Edit Member ID & Details */}
+      {memberToEdit && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <form
+            onSubmit={handleSaveEdit}
+            className="bg-panel border border-line rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-line">
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-blue/10 text-blue border border-blue/20">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-ink">Edit Member Details</h3>
+                  <p className="text-[11px] text-muted">
+                    Update member email ID, name, department, or access credentials.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMemberToEdit(null)}
+                className="p-1 rounded-lg text-muted hover:text-ink hover:bg-line transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-600 rounded-xl text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <div className="space-y-3.5 text-xs">
+              {/* Member Email ID */}
+              <div className="space-y-1">
+                <label className="font-semibold text-ink flex items-center justify-between">
+                  <span>Corporate Email ID (User Login) *</span>
+                  <span className="text-[10px] text-muted font-mono font-normal">Unique member ID</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-3.5 h-3.5 text-muted absolute left-3 top-2.5" />
+                  <input
+                    type="email"
+                    required
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    placeholder="member@company.com"
+                    className="w-full py-2 pl-9 pr-3 bg-bg border border-line rounded-xl text-ink focus:outline-hidden focus:border-blue text-xs font-mono font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Full Name */}
+              <div className="space-y-1">
+                <label className="font-semibold text-ink block">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                  className="w-full py-2 px-3 bg-bg border border-line rounded-xl text-ink focus:outline-hidden focus:border-blue text-xs"
+                />
+              </div>
+
+              {/* Department */}
+              <div className="space-y-1">
+                <label className="font-semibold text-ink block">Department / Business Unit</label>
+                <input
+                  type="text"
+                  value={editDept}
+                  onChange={(e) => setEditDept(e.target.value)}
+                  placeholder="e.g. Customs Compliance & Operations"
+                  className="w-full py-2 px-3 bg-bg border border-line rounded-xl text-ink focus:outline-hidden focus:border-blue text-xs"
+                />
+              </div>
+
+              {/* Role Dropdown */}
+              <div className="space-y-1">
+                <label className="font-semibold text-ink block">Assigned Role</label>
+                <CustomDropdown
+                  value={editRole}
+                  onChange={(val) => setEditRole(val as RoleType)}
+                  options={dynamicAssignableOptions}
+                  size="sm"
+                  usePortal={true}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Optional Reset Password */}
+              <div className="space-y-1 pt-1">
+                <label className="font-semibold text-ink flex items-center justify-between">
+                  <span>Reset Password (Optional)</span>
+                  <span className="text-[10px] text-muted font-mono font-normal">Leave blank to keep current</span>
+                </label>
+                <input
+                  type={showEditPassword ? "text" : "password"}
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Min. 8 characters (optional)"
+                  className="w-full py-2 px-3 bg-bg border border-line rounded-xl text-ink focus:outline-hidden focus:border-blue text-xs font-mono"
+                />
+                <div className="flex items-center justify-between text-[11px] text-muted pt-1">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={showEditPassword}
+                      onChange={(e) => setShowEditPassword(e.target.checked)}
+                      className="rounded text-blue"
+                    />
+                    <span>Show password characters</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-line">
+              <button
+                type="button"
+                onClick={() => setMemberToEdit(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-bg hover:bg-panel border border-line text-muted hover:text-ink cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isUpdatingRole}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-blue hover:bg-blue-dark text-white cursor-pointer shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isUpdatingRole && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>{isUpdatingRole ? "Saving Changes..." : "Save Changes"}</span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

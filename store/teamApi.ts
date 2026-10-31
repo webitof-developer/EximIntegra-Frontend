@@ -43,8 +43,11 @@ export interface InviteMemberPayload {
 
 export interface UpdateMemberPayload {
   userId: string;
+  name?: string;
+  email?: string;
   role?: string;
   department?: string;
+  password?: string;
 }
 
 export const teamApi = api.injectEndpoints({

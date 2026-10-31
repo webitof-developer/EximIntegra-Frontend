@@ -163,7 +163,7 @@ const navSections: NavSection[] = [
       },
       {
         id: "settings",
-        title: "Settings & Integrations",
+        title: "Settings & Management",
         href: "/settings",
         icon: <Settings className="w-4 h-4" />,
         glyph: "SET",

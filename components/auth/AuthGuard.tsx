@@ -20,7 +20,7 @@ const GOVERNED_PAGES: Record<string, string> = {
   compare: "Country-of-Origin Comparison",
   akshara: "Akshara AI Copilot",
   reports: "Calculation History & Audit",
-  settings: "Settings & Integrations",
+  settings: "Settings & Management",
 };
 
 export function AuthGuard({ children }: AuthGuardProps) {

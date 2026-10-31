@@ -87,7 +87,7 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     description: "Isolated component library, design tokens, typography, and interactive state playground.",
   },
   "/settings": {
-    title: "Settings & Integrations",
+    title: "Settings & Management",
     description: "Configure contract rates, subscription, and team members.",
   },
   "/notifications": {
@@ -293,7 +293,7 @@ export function Topbar() {
                       className="flex items-center gap-2 px-3 py-2 text-xs text-ink hover:bg-bg rounded-lg transition-colors"
                     >
                       <Shield className="w-3.5 h-3.5 text-muted" />
-                      <span>Settings & Integrations</span>
+                      <span>Settings & Management</span>
                     </Link>
                   </>
                 )}

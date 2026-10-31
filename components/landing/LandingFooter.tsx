@@ -94,7 +94,7 @@ export function LandingFooter() {
               </li>
               <li>
                 <Link href="/settings" className="hover:text-ink transition-colors">
-                  Settings & Integrations
+                  Settings & Management
                 </Link>
               </li>
               <li>
