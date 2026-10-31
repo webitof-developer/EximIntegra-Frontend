@@ -279,60 +279,68 @@ function SidebarInner({
     const normalizePath = (p: string) =>
       "/" + (p || "").trim().toLowerCase().replace(/^\/+|\/+$/g, "");
 
-    // 1. Map existing navSections with dynamic tier badges & lock states
-    const updatedSections: NavSection[] = navSections.map((sec) => ({
-      ...sec,
-      items: sec.items.map((item) => {
-        const itemPath = normalizePath(item.href);
+    // 1. Map existing navSections with dynamic tier badges & lock states, filtering out modules without role permission
+    const updatedSections: NavSection[] = navSections
+      .map((sec) => ({
+        ...sec,
+        items: sec.items
+          .filter((item) => {
+            // Hide module completely if the user's role does not have permission
+            if (user?.role === "ADMIN") return true;
+            return user?.permissions?.[item.id] !== false;
+          })
+          .map((item) => {
+            const itemPath = normalizePath(item.href);
 
-        // Match gate by exact ID or by normalized route path (excluding sub-features)
-        const matchingGate =
-          gates.find(
-            (g) => g.id.toLowerCase() === item.id.toLowerCase()
-          ) ||
-          gates.find(
-            (g) =>
-              g.pagePath &&
-              normalizePath(g.pagePath) === itemPath &&
-              g.id.toLowerCase() !== "classify_bulk" &&
-              g.id.toLowerCase() !== "settings_byok"
-          );
+            // Match gate by exact ID or by normalized route path (excluding sub-features)
+            const matchingGate =
+              gates.find(
+                (g) => g.id.toLowerCase() === item.id.toLowerCase()
+              ) ||
+              gates.find(
+                (g) =>
+                  g.pagePath &&
+                  normalizePath(g.pagePath) === itemPath &&
+                  g.id.toLowerCase() !== "classify_bulk" &&
+                  g.id.toLowerCase() !== "settings_byok"
+              );
 
-        // Determine required tier from gate if active, else from static item definition
-        let requiredTier = "ALL";
-        if (matchingGate && matchingGate.isActive) {
-          requiredTier = matchingGate.requiredTier.toUpperCase();
-        } else if (!matchingGate && item.tierBadge) {
-          requiredTier = item.tierBadge.toUpperCase();
-        }
+            // Determine required tier from gate if active, else from static item definition
+            let requiredTier = "ALL";
+            if (matchingGate && matchingGate.isActive) {
+              requiredTier = matchingGate.requiredTier.toUpperCase();
+            } else if (!matchingGate && item.tierBadge) {
+              requiredTier = item.tierBadge.toUpperCase();
+            }
 
-        const requiredTierWeight = tierWeights[requiredTier] ?? 0;
-        const userTierWeight = user?.role === "ADMIN" ? 99 : (tierWeights[currentTier] ?? 1);
+            const requiredTierWeight = tierWeights[requiredTier] ?? 0;
+            const userTierWeight = user?.role === "ADMIN" ? 99 : (tierWeights[currentTier] ?? 1);
 
-        // A tier badge is an upgrade indicator: ONLY show it if the required plan is HIGHER than user's current plan!
-        const isHigherTier =
-          user?.role !== "ADMIN" &&
-          requiredTier !== "ALL" &&
-          requiredTierWeight > userTierWeight;
+            // A tier badge is an upgrade indicator: ONLY show it if the required plan is HIGHER than user's current plan!
+            const isHigherTier =
+              user?.role !== "ADMIN" &&
+              requiredTier !== "ALL" &&
+              requiredTierWeight > userTierWeight;
 
-        let dynamicTierBadge: "PRO" | "ENTERPRISE" | "STARTER" | undefined = undefined;
-        if (isHigherTier) {
-          if (requiredTier === "ENTERPRISE") dynamicTierBadge = "ENTERPRISE";
-          else if (requiredTier === "PROFESSIONAL" || requiredTier === "PRO") dynamicTierBadge = "PRO";
-          else if (requiredTier === "STARTER") dynamicTierBadge = "STARTER";
-        }
+            let dynamicTierBadge: "PRO" | "ENTERPRISE" | "STARTER" | undefined = undefined;
+            if (isHigherTier) {
+              if (requiredTier === "ENTERPRISE") dynamicTierBadge = "ENTERPRISE";
+              else if (requiredTier === "PROFESSIONAL" || requiredTier === "PRO") dynamicTierBadge = "PRO";
+              else if (requiredTier === "STARTER") dynamicTierBadge = "STARTER";
+            }
 
-        return {
-          ...item,
-          title: item.title,
-          tierBadge: dynamicTierBadge,
-          isTierLocked: isHigherTier,
-        };
-      }),
-    }));
+            return {
+              ...item,
+              title: item.title,
+              tierBadge: dynamicTierBadge,
+              isTierLocked: isHigherTier,
+            };
+          }),
+      }))
+      .filter((sec) => sec.items.length > 0);
 
     return updatedSections;
-  }, [isAdminView, tierGatesData, user?.tier, user?.role]);
+  }, [isAdminView, tierGatesData, user?.tier, user?.role, user?.permissions]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -475,31 +483,7 @@ function SidebarInner({
                     user?.permissions?.[item.id] !== false;
 
                   if (!isPermitted) {
-                    return (
-                      <div
-                        key={item.id}
-                        className={cn(
-                          "flex items-center rounded-md text-xs text-[#52637F] cursor-not-allowed opacity-55 select-none group",
-                          isCollapsed
-                            ? "justify-center p-2.5"
-                            : "justify-between px-3 py-2"
-                        )}
-                        title={`Access restricted: ${item.title}`}
-                      >
-                        <span className="text-[#52637F] shrink-0">{item.icon}</span>
-                        {!isCollapsed && (
-                          <>
-                            <span className="whitespace-nowrap truncate line-through decoration-[#52637F]/60 ml-2.5 flex-1">
-                              {item.title}
-                            </span>
-                            <span className="flex items-center gap-1 text-[9px] uppercase text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/80">
-                              <Lock className="w-2.5 h-2.5" />
-                              Res
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    );
+                    return null;
                   }
 
                   return (
