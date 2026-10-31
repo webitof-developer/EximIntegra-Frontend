@@ -72,10 +72,11 @@ export default function AdminLlmPage() {
           category="AI Providers"
           title="Enterprise AI & LLM Engine Configuration"
           description="Centrally configure corporate AI credentials (Anthropic Claude, OpenAI, Google Gemini, Groq, Private vLLM), manage active model dropdowns, and set the global default copilot engine for Akshara across your organization."
+          userCount={5}
         />
 
         <div className="space-y-4">
-          <div className="p-5 bg-panel border border-line rounded-2xl shadow-xs space-y-2">
+          {/* <div className="p-5 bg-panel border border-line rounded-2xl shadow-xs space-y-2">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-dim text-blue font-bold uppercase tracking-wider inline-flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3" />
@@ -88,7 +89,7 @@ export default function AdminLlmPage() {
             <p className="text-xs text-muted max-w-2xl leading-relaxed">
               Verify upstream API latency, toggle model availability, and manage fallback providers for seamless cross-border customs advisory.
             </p>
-          </div>
+          </div> */}
 
           <LlmProvidersSection />
         </div>

@@ -21,6 +21,9 @@ import {
   X,
   AlertCircle,
   Sparkles,
+  Search,
+  Filter,
+  Save,
 } from "lucide-react";
 import {
   useGetLlmProvidersQuery,
@@ -140,6 +143,8 @@ export function LlmProvidersSection() {
     oldModel: string;
     value: string;
   } | null>(null);
+  const [filterType, setFilterType] = useState<"ALL" | "CONFIGURED" | "ACTIVE">("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -551,8 +556,30 @@ export function LlmProvidersSection() {
 
   const modalProvider = providers.find((p) => p.id === manageModalProviderId);
 
+  const configuredCount = providers.filter((p) => p.isConfigured).length;
+  const activeCopilotProvider = providers.find((p) => p.isActiveCopilot);
+  const totalModelsCount = providers.reduce((acc, p) => acc + p.models.length, 0);
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setFilterType("ALL");
+  };
+
+  const filteredProviders = providers.filter((p) => {
+    if (filterType === "CONFIGURED" && !p.isConfigured) return false;
+    if (filterType === "ACTIVE" && !p.isActiveCopilot) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      p.id.toLowerCase().includes(q) ||
+      p.defaultModel.toLowerCase().includes(q) ||
+      p.models.some((m) => m.toLowerCase().includes(q))
+    );
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full animate-in fade-in duration-200">
       {/* Floating Bottom-Right Toast Notification */}
       <ToastNotification
         isOpen={!!savedNotification}
@@ -561,85 +588,264 @@ export function LlmProvidersSection() {
         onClose={() => setSavedNotification(null)}
       />
 
-      {/* Providers Grid */}
-      <div className="grid grid-cols-1 gap-4">
-        {providers.map((p) => {
-          const isShow = showKeyMap[p.id];
-          const isEditing = editingModelFor?.providerId === p.id;
+      {/* 0. Top Metric KPI Summary Cards (Matching /admin styles) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        {/* Card 1: Configured Engines */}
+        <div
+          onClick={resetFilters}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-blue/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
+          <div className="flex items-center justify-between text-muted text-xs">
+            <span className="text-xs font-medium text-muted">Configured Engines</span>
+            <div className="w-8 h-8 rounded-xl bg-blue/10 border border-blue/20 flex items-center justify-center text-blue group-hover:scale-110 transition-transform">
+              <Cpu className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-data text-ink">
+            {configuredCount} / {providers.length}
+          </div>
+          <span className="text-[11px] text-muted block truncate font-mono">
+            Enterprise upstream gateways
+          </span>
+        </div>
 
-          return (
-            <div
-              key={p.id}
-              className={`p-5 rounded-xl border transition-all ${
-                p.isActiveCopilot
-                  ? "bg-panel border-blue/40 shadow-xs"
-                  : "bg-panel border-line hover:border-line/80"
+        {/* Card 2: Active Copilot */}
+        <div
+          onClick={() => setFilterType(filterType === "ACTIVE" ? "ALL" : "ACTIVE")}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-purple-500/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
+          <div className="flex items-center justify-between text-muted text-xs">
+            <span className="text-xs font-medium text-muted">Active Copilot</span>
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+              <Sparkles className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-lg font-bold font-data text-purple-600 truncate">
+            {activeCopilotProvider?.name || "Anthropic Claude"}
+          </div>
+          <span className="text-[11px] text-muted block truncate font-mono">
+            Powering Akshara Trade Copilot
+          </span>
+        </div>
+
+        {/* Card 3: Ready for Inference */}
+        <div
+          onClick={() => setFilterType(filterType === "CONFIGURED" ? "ALL" : "CONFIGURED")}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-emerald-500/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
+          <div className="flex items-center justify-between text-muted text-xs">
+            <span className="text-xs font-medium text-muted">Inference Ready</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-data text-emerald-600">
+            {configuredCount} Ready
+          </div>
+          <span className="text-[11px] text-muted block truncate font-mono">
+            API secret tokens configured
+          </span>
+        </div>
+
+        {/* Card 4: Total Deployable Models */}
+        <div className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-amber-500/40 transition-all hover:-translate-y-0.5">
+          <div className="flex items-center justify-between text-muted text-xs">
+            <span className="text-xs font-medium text-muted">Deployable Models</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+              <Server className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-data text-ink">
+            {totalModelsCount} Models
+          </div>
+          <span className="text-[11px] text-muted block truncate font-mono">
+            Granular targets in dropdowns
+          </span>
+        </div>
+      </div>
+
+      {/* 1. Search, Filter & Bulk Actions Toolbar */}
+      <div className="p-4 bg-panel border border-line rounded-2xl shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Search Input */}
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search engines by name or model..."
+            className="w-full pl-9 pr-8 py-2 bg-bg border border-line rounded-xl text-xs text-ink placeholder:text-muted focus:outline-hidden focus:border-blue transition-colors"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-0.5 rounded cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Pills & Bulk Save Action */}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end flex-wrap">
+          <div className="inline-flex p-1 bg-bg border border-line rounded-xl text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setFilterType("ALL")}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-xs ${
+                filterType === "ALL"
+                  ? "bg-panel text-ink shadow-2xs font-bold"
+                  : "text-muted hover:text-ink"
               }`}
             >
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                {/* Header Information */}
-                <div className="flex items-start gap-3.5">
-                  <div
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                      p.isActiveCopilot
-                        ? "bg-blue text-white shadow-xs"
-                        : "bg-bg border border-line text-ink"
-                    }`}
-                  >
-                    <Cpu className="w-4 h-4" />
-                  </div>
+              All Engines ({providers.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterType("CONFIGURED")}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-xs ${
+                filterType === "CONFIGURED"
+                  ? "bg-panel text-ink shadow-2xs font-bold"
+                  : "text-muted hover:text-ink"
+              }`}
+            >
+              Configured ({configuredCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterType("ACTIVE")}
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-xs ${
+                filterType === "ACTIVE"
+                  ? "bg-panel text-ink shadow-2xs font-bold"
+                  : "text-muted hover:text-ink"
+              }`}
+            >
+              Active Copilot
+            </button>
+          </div>
 
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-bold text-ink">{p.name}</h3>
-                      <StatusPill
-                        label={p.badge}
-                        variant={p.isActiveCopilot ? "primary" : "muted"}
-                        size="xs"
-                      />
-                      {p.isActiveCopilot && (
-                        <span className="text-[10px] font-mono font-bold bg-green-dim text-green px-2 py-0.5 rounded border border-green/20">
-                          ACTIVE COPILOT ENGINE
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted font-mono">
-                      <span>Target Model:</span>
-                      <span className="text-ink font-semibold bg-bg px-1.5 py-0.5 rounded border border-line">
-                        {p.defaultModel}
-                      </span>
-                      <span className="text-muted/60">&bull;</span>
-                      <span className="text-[11px] text-muted">
-                        {p.models.length} saved in dropdown
-                      </span>
-                    </div>
-                  </div>
-                </div>
+          {(searchQuery || filterType !== "ALL") && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-xs text-muted hover:text-ink underline cursor-pointer px-1"
+            >
+              Reset
+            </button>
+          )}
 
-                {/* Status & Make Active Action */}
-                <div className="flex items-center gap-2.5">
-                  {p.isConfigured ? (
-                    <button
-                      type="button"
-                      disabled={p.isActiveCopilot}
-                      onClick={() => handleSetActiveCopilot(p.id)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+          <button
+            type="button"
+            onClick={handleSaveAll}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-blue hover:bg-blue-dark text-white shadow-2xs transition-all cursor-pointer"
+          >
+            <Save className="w-3.5 h-3.5" />
+            <span>Save All to DB</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Providers Grid */}
+      {filteredProviders.length === 0 ? (
+        <div className="p-12 text-center bg-panel border border-line rounded-2xl space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-muted/10 border border-line text-muted flex items-center justify-center mx-auto">
+            <Cpu className="w-6 h-6" />
+          </div>
+          <h3 className="text-sm font-bold text-ink">No AI providers found</h3>
+          <p className="text-xs text-muted max-w-sm mx-auto">
+            {searchQuery
+              ? `No providers match your search "${searchQuery}".`
+              : "No providers match the selected filter."}
+          </p>
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="px-4 py-2 rounded-xl bg-bg border border-line text-xs font-semibold text-ink hover:border-blue/40 transition-colors cursor-pointer"
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredProviders.map((p) => {
+            const isShow = showKeyMap[p.id];
+            const isEditing = editingModelFor?.providerId === p.id;
+
+            return (
+              <div
+                key={p.id}
+                className={`p-5 rounded-2xl border transition-all ${
+                  p.isActiveCopilot
+                    ? "bg-panel border-blue shadow-xs ring-2 ring-blue/20"
+                    : "bg-panel border-line hover:border-blue/40 shadow-xs"
+                }`}
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  {/* Header Information */}
+                  <div className="flex items-start gap-3.5">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                         p.isActiveCopilot
-                          ? "bg-blue-dim text-blue border border-blue/30 cursor-default"
-                          : "bg-bg hover:bg-line border border-line text-ink"
+                          ? "bg-blue text-white shadow-xs"
+                          : "bg-bg border border-line text-ink"
                       }`}
                     >
-                      {p.isActiveCopilot
-                        ? "Selected for Akshara"
-                        : "Use for Akshara"}
-                    </button>
-                  ) : (
-                    <span className="text-[11px] font-mono text-muted">
-                      Add API Key to Enable
-                    </span>
-                  )}
+                      <Cpu className="w-5 h-5" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-sm font-bold text-ink">{p.name}</h3>
+                        <StatusPill
+                          label={p.badge}
+                          variant={p.isActiveCopilot ? "primary" : "muted"}
+                          size="xs"
+                        />
+                        {p.isActiveCopilot && (
+                          <span className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-md border border-emerald-500/20 flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" />
+                            ACTIVE COPILOT ENGINE
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-muted font-mono">
+                        <span>Target Model:</span>
+                        <span className="text-ink font-semibold bg-bg px-2 py-0.5 rounded-md border border-line">
+                          {p.defaultModel}
+                        </span>
+                        <span className="text-muted/60">&bull;</span>
+                        <span className="text-[11px] text-muted">
+                          {p.models.length} saved in dropdown
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status & Make Active Action */}
+                  <div className="flex items-center gap-2.5">
+                    {p.isConfigured ? (
+                      <button
+                        type="button"
+                        disabled={p.isActiveCopilot}
+                        onClick={() => handleSetActiveCopilot(p.id)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                          p.isActiveCopilot
+                            ? "bg-blue/10 text-blue border border-blue/30 cursor-default font-bold"
+                            : "bg-bg hover:bg-panel border border-line text-ink hover:border-blue/40"
+                        }`}
+                      >
+                        {p.isActiveCopilot
+                          ? "Selected for Akshara"
+                          : "Use for Akshara"}
+                      </button>
+                    ) : (
+                      <span className="text-[11px] font-mono text-muted">
+                        Add API Key to Enable
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
 
               {/* Input Fields */}
               <div className="mt-4 pt-4 border-t border-line grid grid-cols-1 md:grid-cols-12 gap-3.5 text-xs">
@@ -814,7 +1020,7 @@ export function LlmProvidersSection() {
                     type="button"
                     disabled={!p.apiKey || p.testStatus === "testing"}
                     onClick={() => handleTestConnection(p.id)}
-                    className="flex-1 py-2 px-3 rounded-lg text-xs font-semibold bg-bg hover:bg-line border border-line text-ink transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex-1 py-2 px-3 rounded-xl text-xs font-semibold bg-bg hover:bg-panel border border-line hover:border-blue/40 text-ink transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
                   >
                     {p.testStatus === "testing" ? (
                       <>
@@ -823,7 +1029,7 @@ export function LlmProvidersSection() {
                       </>
                     ) : (
                       <>
-                        <RefreshCw className="w-3.5 h-3.5" />
+                        <RefreshCw className="w-3.5 h-3.5 text-muted" />
                         <span>Test</span>
                       </>
                     )}
@@ -833,35 +1039,35 @@ export function LlmProvidersSection() {
                     type="button"
                     onClick={() => handleSave(p.id)}
                     disabled={isUpdatingDb}
-                    className="py-2 px-3.5 rounded-lg text-xs font-semibold bg-blue hover:bg-blue-dark text-white transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                    className="py-2 px-3.5 rounded-xl text-xs font-bold bg-blue hover:bg-blue-dark text-white transition-all cursor-pointer shadow-2xs disabled:opacity-50"
                   >
                     Save to DB
                   </button>
                 </div>
 
                 {/* Base URL (Full Width on Expand) */}
-                <div className="md:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-[11px] text-muted">
+                <div className="md:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-line/60 text-[11px] text-muted">
                   <div className="flex items-center gap-1.5 font-mono">
-                    <Server className="w-3 h-3 text-muted" />
+                    <Server className="w-3.5 h-3.5 text-muted shrink-0" />
                     <span>Endpoint:</span>
                     <input
                       type="text"
                       value={p.baseUrl}
                       onChange={(e) => handleBaseUrlChange(p.id, e.target.value)}
-                      className="py-0.5 px-2 bg-transparent border-b border-line/60 hover:border-blue focus:outline-none focus:border-blue text-ink font-mono text-[11px] w-64 md:w-80"
+                      className="py-0.5 px-2 bg-transparent border-b border-line hover:border-blue focus:outline-hidden focus:border-blue text-ink font-mono text-[11px] w-64 md:w-80"
                     />
                   </div>
 
                   {/* Test Status feedback */}
                   {p.testStatus === "success" && (
-                    <span className="font-mono text-green font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span className="font-mono text-emerald-600 text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                       Verified (200 OK &bull; {p.testLatency}ms)
                     </span>
                   )}
                   {p.testStatus === "error" && (
-                    <span className="font-mono text-red font-semibold flex items-center gap-1">
-                      <XCircle className="w-3.5 h-3.5" />
+                    <span className="font-mono text-red text-xs font-semibold flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-red/10 border border-red/20">
+                      <XCircle className="w-3.5 h-3.5 text-red" />
                       Connection Failed (401 Unauthorized)
                     </span>
                   )}
@@ -871,6 +1077,7 @@ export function LlmProvidersSection() {
           );
         })}
       </div>
+      )}
 
       {/* Manage Models Modal */}
       {manageModalProviderId && modalProvider && mounted &&
@@ -879,7 +1086,7 @@ export function LlmProvidersSection() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="manage-models-modal-title"
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-navy/60 backdrop-blur-xs animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
           >
             {/* Backdrop click to dismiss */}
             <div

@@ -95,6 +95,7 @@ export default function AdminTierAccessPage() {
           description="Configure which subscription tiers can access each platform page and feature. Set custom locked messages and test live plan gating templates in real time."
           onRefresh={refetchGates}
           isRefreshing={gatesFetching}
+          userCount={gatesData?.gates?.length}
         />
 
         <TierAccessTab

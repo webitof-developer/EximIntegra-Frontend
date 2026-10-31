@@ -89,6 +89,7 @@ export default function AdminPricingPage() {
           description="Centrally configure live plan limits, monthly/annual fees in INR and USD, and feature entitlements published to customer pricing tiers."
           onRefresh={refetchPricing}
           isRefreshing={pricingFetching}
+          userCount={pricingData?.plans?.length}
         />
 
         <DynamicPricingTab

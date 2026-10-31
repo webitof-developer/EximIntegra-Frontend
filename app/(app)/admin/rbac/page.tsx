@@ -87,6 +87,7 @@ export default function AdminRBACPage() {
           description="Configure granular module permissions and access-control policies across all organizational user roles."
           onRefresh={refetchRBAC}
           isRefreshing={rbacFetching}
+          userCount={rbacData?.roles?.length}
         />
 
         <RolePermissionsTab

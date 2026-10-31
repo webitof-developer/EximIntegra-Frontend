@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { TierPageAccessGate } from "@/lib/types";
 import { CustomDropdown } from "@/components/ui/CustomDropdown";
-import { TierBadge, TierType } from "@/components/saas/TierBadge";
 import { PlanGateTemplate } from "@/components/saas/PlanGateTemplate";
 import {
   TableContainer,
@@ -30,6 +29,9 @@ import {
   AlertCircle,
   ExternalLink,
   X,
+  Crown,
+  Layers,
+  RefreshCw,
 } from "lucide-react";
 
 interface TierAccessTabProps {
@@ -62,6 +64,7 @@ export function TierAccessTab({
   const [previewGate, setPreviewGate] = useState<TierPageAccessGate | null>(null);
   const [editingGate, setEditingGate] = useState<TierPageAccessGate | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [newGate, setNewGate] = useState<Partial<TierPageAccessGate>>({
     id: "",
     pagePath: "/",
@@ -71,6 +74,10 @@ export function TierAccessTab({
     requiredTier: "PROFESSIONAL",
     isActive: true,
   });
+
+  const [gateToDelete, setGateToDelete] = useState<TierPageAccessGate | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeletingGate, setIsDeletingGate] = useState(false);
 
   useEffect(() => {
     if (initialGates && initialGates.length > 0) {
@@ -105,13 +112,14 @@ export function TierAccessTab({
 
   // Handle create new gate - persists immediately to DB
   const handleCreateGate = async () => {
+    setCreateError(null);
     if (!newGate.id || !newGate.title || !newGate.pagePath) {
-      alert("Please fill in ID, Title, and Route Path.");
+      setCreateError("Please fill in ID, Title, and Route Path.");
       return;
     }
     const cleanId = newGate.id.toLowerCase().replace(/[^a-z0-9_-]/g, "");
     if (gates.some((g) => g.id === cleanId)) {
-      alert(`A gate with ID "${cleanId}" already exists.`);
+      setCreateError(`A gate with ID "${cleanId}" already exists.`);
       return;
     }
 
@@ -149,28 +157,29 @@ export function TierAccessTab({
         isActive: true,
       });
     } catch (err: any) {
-      alert("Failed to save new gate to database: " + (err?.data?.error?.message || err?.message || "Unknown error"));
+      setCreateError(err?.data?.error?.message || err?.message || "Failed to create gate.");
     } finally {
       setIsSaving(false);
     }
   };
 
   // Handle delete gate - persists immediately to DB
-  const handleDeleteGate = async (gateId: string) => {
-    if (confirm(`Are you sure you want to permanently remove the gate rule for "${gateId}" from the database?`)) {
-      setIsSaving(true);
-      try {
-        if (onDeleteGate) {
-          await onDeleteGate(gateId);
-        } else {
-          await onSaveGates(gates.filter((g) => g.id !== gateId));
-        }
-        setGates((prev) => prev.filter((g) => g.id !== gateId));
-      } catch (err: any) {
-        alert("Failed to delete gate: " + (err?.data?.error?.message || err?.message || "Unknown error"));
-      } finally {
-        setIsSaving(false);
+  const handleDeleteGate = async () => {
+    if (!gateToDelete) return;
+    setDeleteError(null);
+    setIsDeletingGate(true);
+    try {
+      if (onDeleteGate) {
+        await onDeleteGate(gateToDelete.id);
+      } else {
+        await onSaveGates(gates.filter((g) => g.id !== gateToDelete.id));
       }
+      setGates((prev) => prev.filter((g) => g.id !== gateToDelete.id));
+      setGateToDelete(null);
+    } catch (err: any) {
+      setDeleteError(err?.data?.error?.message || err?.message || "Failed to delete gate.");
+    } finally {
+      setIsDeletingGate(false);
     }
   };
 
@@ -181,31 +190,43 @@ export function TierAccessTab({
       await onSaveGates(gates);
       setIsDirty(false);
     } catch (err: any) {
-      alert("Failed to save tier access rules: " + (err?.message || "Unknown error"));
+      showToast("Failed to save tier access rules: " + (err?.message || "Unknown error"));
     } finally {
       setIsSaving(false);
     }
   };
 
+  const resetFilters = () => {
+    setSearchQuery("");
+    setCategoryFilter("ALL");
+    setTierFilter("ALL");
+  };
+
   // Filtered gates
-  const filteredGates = gates.filter((g) => {
-    const matchesSearch =
-      g.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      g.pagePath.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      g.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (g.description && g.description.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredGates = useMemo(() => {
+    return gates.filter((g) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesSearch =
+        !q ||
+        g.title.toLowerCase().includes(q) ||
+        g.pagePath.toLowerCase().includes(q) ||
+        g.id.toLowerCase().includes(q) ||
+        (g.description && g.description.toLowerCase().includes(q));
 
-    const matchesCategory =
-      categoryFilter === "ALL" || g.category.toLowerCase() === categoryFilter.toLowerCase();
+      const matchesCategory =
+        categoryFilter === "ALL" || g.category.toLowerCase() === categoryFilter.toLowerCase();
 
-    const matchesTier =
-      tierFilter === "ALL" ||
-      g.requiredTier.toUpperCase() === tierFilter.toUpperCase();
+      const matchesTier =
+        tierFilter === "ALL" ||
+        g.requiredTier.toUpperCase() === tierFilter.toUpperCase();
 
-    return matchesSearch && matchesCategory && matchesTier;
-  });
+      return matchesSearch && matchesCategory && matchesTier;
+    });
+  }, [gates, searchQuery, categoryFilter, tierFilter]);
 
-  const allCategories = Array.from(new Set(gates.map((g) => g.category))).filter(Boolean);
+  const allCategories = useMemo(() => {
+    return Array.from(new Set(gates.map((g) => g.category))).filter(Boolean);
+  }, [gates]);
 
   // Statistics
   const totalGates = gates.length;
@@ -214,101 +235,188 @@ export function TierAccessTab({
   const professionalGates = gates.filter((g) => g.isActive && g.requiredTier === "PROFESSIONAL").length;
   const openGates = gates.filter((g) => !g.isActive || g.requiredTier === "ALL").length;
 
+  const hasActiveFilters = searchQuery !== "" || categoryFilter !== "ALL" || tierFilter !== "ALL";
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-24 bg-panel border border-line rounded-2xl" />
+          ))}
+        </div>
+        <div className="h-16 bg-panel border border-line rounded-2xl" />
+        <div className="h-80 bg-panel border border-line rounded-2xl" />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full space-y-6">
-      {/* Metric Stat Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-panel border border-line space-y-1 shadow-2xs">
+    <div className="w-full space-y-6 animate-in fade-in duration-200">
+      {/* 1. Top Quick Metric Cards (Matching /admin & /admin/users styles) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        {/* Card 1: Total Managed Pages */}
+        <div
+          onClick={resetFilters}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-blue/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
           <div className="flex items-center justify-between text-muted text-xs">
-            <span>Total Managed Pages</span>
-            <Lock className="w-3.5 h-3.5 text-blue" />
+            <span className="text-xs font-medium text-muted">Managed Pages</span>
+            <div className="w-8 h-8 rounded-xl bg-blue/10 border border-blue/20 flex items-center justify-center text-blue group-hover:scale-110 transition-transform">
+              <Lock className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-ink">{totalGates}</div>
-          <div className="text-[11px] text-muted font-mono">{activeGates} active plan gates</div>
+          <div className="text-2xl font-bold font-data text-ink">
+            {totalGates} Gates
+          </div>
+          <span className="text-[11px] text-muted block truncate font-mono">
+            {activeGates} active gating rules enforced
+          </span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-panel border border-line space-y-1 shadow-2xs">
+        {/* Card 2: Enterprise Exclusives */}
+        <div
+          onClick={() => setTierFilter(tierFilter === "ENTERPRISE" ? "ALL" : "ENTERPRISE")}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-purple-500/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
           <div className="flex items-center justify-between text-muted text-xs">
-            <span>Enterprise Gated</span>
-            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="text-xs font-medium text-muted">Enterprise Gated</span>
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+              <Crown className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-ink">{enterpriseGates}</div>
-          <div className="text-[11px] text-muted font-mono">Exclusive to Enterprise</div>
+          <div className="text-2xl font-bold font-data text-purple-600">
+            {enterpriseGates}
+          </div>
+          <span className="text-[11px] text-muted block truncate font-mono">
+            Exclusive to Enterprise tier
+          </span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-panel border border-line space-y-1 shadow-2xs">
+        {/* Card 3: Professional & Above */}
+        <div
+          onClick={() => setTierFilter(tierFilter === "PROFESSIONAL" ? "ALL" : "PROFESSIONAL")}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-amber-500/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
           <div className="flex items-center justify-between text-muted text-xs">
-            <span>Professional Gated</span>
-            <span className="w-2 h-2 rounded-full bg-blue" />
+            <span className="text-xs font-medium text-muted">Professional & Above</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+              <Sparkles className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-ink">{professionalGates}</div>
-          <div className="text-[11px] text-muted font-mono">Pro & Enterprise access</div>
+          <div className="text-2xl font-bold font-data text-ink">
+            {professionalGates}
+          </div>
+          <span className="text-[11px] text-muted block truncate font-mono">
+            Pro & Enterprise access
+          </span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-panel border border-line space-y-1 shadow-2xs">
+        {/* Card 4: Open Access */}
+        <div
+          onClick={() => setTierFilter(tierFilter === "ALL" && categoryFilter === "ALL" ? "STARTER" : "ALL")}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-emerald-500/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
           <div className="flex items-center justify-between text-muted text-xs">
-            <span>Open Access / All</span>
-            <Unlock className="w-3.5 h-3.5 text-green" />
+            <span className="text-xs font-medium text-muted">Open Access / All</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
+              <Unlock className="w-4 h-4" />
+            </div>
           </div>
-          <div className="text-2xl font-bold text-ink">{openGates}</div>
-          <div className="text-[11px] text-muted font-mono">Accessible on all tiers</div>
+          <div className="text-2xl font-bold font-data text-emerald-600">
+            {openGates}
+          </div>
+          <span className="text-[11px] text-muted block truncate font-mono">
+            Accessible on all plan tiers
+          </span>
         </div>
       </div>
 
-      {/* Control Bar: Filters & Actions */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 p-4 bg-panel border border-line rounded-2xl">
-        <div className="flex flex-wrap items-center gap-3 flex-1">
-          {/* Search */}
-          <div className="relative min-w-[220px] max-w-sm flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search page, route path, or copy..."
-              className="w-full pl-9 pr-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink placeholder:text-muted focus:outline-hidden focus:border-blue transition-colors"
-            />
-          </div>
-
-          {/* Category Filter */}
-          <div className="w-[180px]">
-            <CustomDropdown
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-              options={[
-                { value: "ALL", label: "All Categories" },
-                ...allCategories.map((c) => ({ value: c, label: c })),
-              ]}
-              size="sm"
-            />
-          </div>
-
-          {/* Tier Filter */}
-          <div className="w-[170px]">
-            <CustomDropdown
-              value={tierFilter}
-              onChange={setTierFilter}
-              options={[
-                { value: "ALL", label: "All Tiers" },
-                { value: "ENTERPRISE", label: "Enterprise Only" },
-                { value: "PROFESSIONAL", label: "Professional" },
-                { value: "STARTER", label: "Starter" },
-              ]}
-              size="sm"
-            />
-          </div>
+      {/* 2. Search, Filter & Actions Toolbar */}
+      <div className="p-4 bg-panel border border-line rounded-2xl shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Search Input */}
+        <div className="relative w-full md:w-80">
+          <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search page, path, or copy..."
+            className="w-full pl-9 pr-8 py-2 bg-bg border border-line rounded-xl text-xs text-ink placeholder:text-muted focus:outline-hidden focus:border-blue transition-colors"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-0.5 rounded cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-2.5 self-end md:self-auto shrink-0">
+        {/* Filters and Actions */}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end flex-wrap">
+          {/* Category Dropdown */}
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <span className="shrink-0 text-xs">Category:</span>
+            <div className="w-40">
+              <CustomDropdown
+                value={categoryFilter}
+                onChange={setCategoryFilter}
+                options={[
+                  { value: "ALL", label: "All Categories" },
+                  ...allCategories.map((c) => ({ value: c, label: c })),
+                ]}
+                size="sm"
+                buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-xl text-xs font-semibold text-ink"
+              />
+            </div>
+          </div>
+
+          {/* Tier Dropdown */}
+          <div className="flex items-center gap-1.5 text-xs text-muted">
+            <span className="shrink-0 text-xs">Tier:</span>
+            <div className="w-40">
+              <CustomDropdown
+                value={tierFilter}
+                onChange={setTierFilter}
+                options={[
+                  { value: "ALL", label: "All Tiers" },
+                  { value: "ENTERPRISE", label: "Enterprise Only" },
+                  { value: "PROFESSIONAL", label: "Professional & Up" },
+                  { value: "STARTER", label: "Starter & Up" },
+                ]}
+                size="sm"
+                buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-xl text-xs font-semibold text-ink"
+              />
+            </div>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-xs text-muted hover:text-ink underline cursor-pointer px-1"
+            >
+              Reset
+            </button>
+          )}
+
+          {/* Add Page Gate Button */}
           <button
             type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-panel border border-line hover:border-blue text-xs font-semibold text-ink transition-colors cursor-pointer"
+            onClick={() => {
+              setCreateError(null);
+              setIsCreateOpen(true);
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-bg border border-line hover:border-blue/40 text-ink text-xs font-semibold transition-all cursor-pointer shadow-2xs hover:bg-panel"
           >
             <Plus className="w-3.5 h-3.5 text-blue" />
             <span>Add Page Gate</span>
           </button>
 
+          {/* Save All Changes Button */}
           <button
             type="button"
             onClick={handleSaveAll}
@@ -316,34 +424,34 @@ export function TierAccessTab({
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer ${
               isDirty
                 ? "bg-blue hover:bg-blue-dark text-white ring-2 ring-blue/20"
-                : "bg-panel border border-line text-muted cursor-not-allowed opacity-60"
+                : "bg-panel border border-line text-muted cursor-not-allowed opacity-50"
             }`}
           >
-            <Save className="w-3.5 h-3.5" />
+            {isSaving ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Save className="w-3.5 h-3.5" />
+            )}
             <span>{isSaving ? "Saving..." : isDirty ? "Save Access Changes *" : "Saved"}</span>
           </button>
         </div>
       </div>
 
-      {/* Main Table */}
+      {/* 3. Main Data Table */}
       <TableContainer>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[260px]">Page / Feature</TableHead>
-              <TableHead className="w-[130px]">Category</TableHead>
+              <TableHead className="w-[140px]">Category</TableHead>
               <TableHead className="w-[220px]">Required Minimum Tier</TableHead>
               <TableHead className="w-[120px] text-center">Enforcement</TableHead>
               <TableHead className="w-[240px]">Locked Message / Benefit</TableHead>
-              <TableHead className="w-[140px] text-right">Actions</TableHead>
+              <TableHead className="w-[130px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredGates.map((gate) => {
-              const isLockedForStarter =
-                gate.isActive &&
-                (gate.requiredTier === "PROFESSIONAL" || gate.requiredTier === "ENTERPRISE");
-
               return (
                 <TableRow key={gate.id} className="hover:bg-bg/40 transition-colors">
                   {/* Name and Route */}
@@ -353,7 +461,7 @@ export function TierAccessTab({
                         <span>{gate.title}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-bg border border-line text-muted">
+                        <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-md bg-bg border border-line text-muted font-bold">
                           {gate.pagePath}
                         </span>
                         <span className="font-mono text-[10px] text-muted">({gate.id})</span>
@@ -363,7 +471,7 @@ export function TierAccessTab({
 
                   {/* Category */}
                   <TableCell className="align-top py-3.5">
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-panel border border-line text-muted">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-panel border border-line text-muted">
                       {gate.category}
                     </span>
                   </TableCell>
@@ -392,14 +500,14 @@ export function TierAccessTab({
                       onClick={() => handleToggleActive(gate.id)}
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer border ${
                         gate.isActive
-                          ? "bg-green/10 border-green/30 text-green"
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600"
                           : "bg-muted/10 border-line text-muted"
                       }`}
                       title={gate.isActive ? "Gate is active (enforced)" : "Gate is disabled (open)"}
                     >
                       {gate.isActive ? (
                         <>
-                          <Lock className="w-3 h-3 text-green" />
+                          <Lock className="w-3 h-3 text-emerald-600" />
                           <span>Gated</span>
                         </>
                       ) : (
@@ -444,7 +552,10 @@ export function TierAccessTab({
                       {/* Delete Custom Gate */}
                       <button
                         type="button"
-                        onClick={() => handleDeleteGate(gate.id)}
+                        onClick={() => {
+                          setGateToDelete(gate);
+                          setDeleteError(null);
+                        }}
                         title="Delete Gate"
                         className="p-1.5 rounded-lg border border-line hover:border-red/40 text-muted hover:text-red hover:bg-red/10 transition-colors cursor-pointer"
                       >
@@ -459,7 +570,17 @@ export function TierAccessTab({
             {filteredGates.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-12 text-muted text-xs">
-                  No page tier gates found matching your search and filter criteria.
+                  <div className="space-y-2">
+                    <Lock className="w-6 h-6 text-muted mx-auto opacity-50" />
+                    <p>No page tier gates found matching your search and filter criteria.</p>
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="px-3 py-1.5 rounded-lg bg-panel border border-line text-xs font-semibold text-ink hover:border-blue cursor-pointer"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -467,14 +588,16 @@ export function TierAccessTab({
         </Table>
       </TableContainer>
 
-      {/* MODAL 1: LIVE PREVIEW TEMPLATE MODAL (Matches Images 1, 2, 3!) */}
+      {/* ========================================================================= */}
+      {/* MODAL 1: LIVE PREVIEW TEMPLATE MODAL                                      */}
+      {/* ========================================================================= */}
       {previewGate && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto"
           onClick={() => setPreviewGate(null)}
         >
           <div
-            className="relative w-full max-w-2xl bg-panel border border-line rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 space-y-4 my-8"
+            className="relative w-full max-w-2xl bg-panel border border-line rounded-2xl shadow-2xl overflow-hidden p-6 sm:p-8 space-y-4 my-8 animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between pb-3 border-b border-line">
@@ -482,7 +605,7 @@ export function TierAccessTab({
                 <span className="text-xs font-mono font-bold text-muted uppercase">
                   Live Gate Template Preview
                 </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue/10 text-blue font-bold">
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-blue/10 text-blue font-bold border border-blue/20">
                   {previewGate.pagePath}
                 </span>
               </div>
@@ -495,7 +618,7 @@ export function TierAccessTab({
               </button>
             </div>
 
-            {/* Embedded PlanGateTemplate (The exact template shown to users!) */}
+            {/* Embedded PlanGateTemplate */}
             <PlanGateTemplate
               requiredTier={previewGate.requiredTier}
               featureName={previewGate.title}
@@ -509,56 +632,66 @@ export function TierAccessTab({
             />
 
             <div className="pt-2 text-center text-[11px] font-mono text-muted">
-              Press Escape or click outside to return to Admin Tier Governance.
+              Press Escape or click outside to return to Tier Governance.
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL 2: EDIT GATE COPY MODAL */}
+      {/* ========================================================================= */}
+      {/* MODAL 2: EDIT GATE COPY MODAL                                             */}
+      {/* ========================================================================= */}
       {editingGate && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/80 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
           onClick={() => setEditingGate(null)}
         >
           <div
-            className="relative w-full max-w-lg bg-panel border border-line rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200"
+            className="relative w-full max-w-lg bg-panel border border-line rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-ink">
-                Edit Page Gate — {editingGate.title}
-              </h3>
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue/10 border border-blue/20 text-blue flex items-center justify-center">
+                  <Edit2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-ink">Edit Page Gate</h3>
+                  <span className="text-xs font-mono text-muted">{editingGate.id}</span>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setEditingGate(null)}
                 className="p-1 rounded-lg text-muted hover:text-ink hover:bg-bg transition-colors cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-[11px] font-mono text-muted block mb-1">
-                  Feature / Page Title
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-ink block">
+                  Feature / Page Title *
                 </label>
                 <input
                   type="text"
+                  required
                   value={editingGate.title}
                   onChange={(e) =>
                     setEditingGate({ ...editingGate, title: e.target.value })
                   }
-                  className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink focus:outline-hidden focus:border-blue"
+                  className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink font-bold focus:outline-hidden focus:border-blue"
                 />
               </div>
 
-              <div>
-                <label className="text-[11px] font-mono text-muted block mb-1">
-                  Route Path (e.g. /compare, /akshara)
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-ink block">
+                  Route Path (e.g. /compare, /akshara) *
                 </label>
                 <input
                   type="text"
+                  required
                   value={editingGate.pagePath}
                   onChange={(e) =>
                     setEditingGate({ ...editingGate, pagePath: e.target.value })
@@ -567,8 +700,8 @@ export function TierAccessTab({
                 />
               </div>
 
-              <div>
-                <label className="text-[11px] font-mono text-muted block mb-1">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-ink block">
                   Category
                 </label>
                 <input
@@ -581,8 +714,8 @@ export function TierAccessTab({
                 />
               </div>
 
-              <div>
-                <label className="text-[11px] font-mono text-muted block mb-1">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-ink block">
                   Locked Description / Benefit Copy
                 </label>
                 <textarea
@@ -597,18 +730,18 @@ export function TierAccessTab({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-line">
               <button
                 type="button"
                 onClick={() => setEditingGate(null)}
-                className="px-4 py-2 rounded-xl border border-line text-xs font-semibold text-ink hover:bg-bg transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted hover:text-ink hover:bg-bg transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleSaveEdit(editingGate)}
-                className="px-4 py-2 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
               >
                 Apply Changes
               </button>
@@ -617,51 +750,70 @@ export function TierAccessTab({
         </div>
       )}
 
-      {/* MODAL 3: CREATE NEW GATE MODAL */}
+      {/* ========================================================================= */}
+      {/* MODAL 3: CREATE NEW GATE MODAL                                            */}
+      {/* ========================================================================= */}
       {isCreateOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/80 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
           onClick={() => setIsCreateOpen(false)}
         >
           <div
-            className="relative w-full max-w-lg bg-panel border border-line rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200"
+            className="relative w-full max-w-lg bg-panel border border-line rounded-2xl shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-ink">
-                Create New Page / Feature Gate
-              </h3>
+            <div className="flex items-center justify-between border-b border-line pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue/10 border border-blue/20 text-blue flex items-center justify-center">
+                  <Plus className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-ink">
+                    Create New Page Gate
+                  </h3>
+                  <p className="text-[11px] text-muted">Add a gated route with custom tier requirement</p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
                 className="p-1 rounded-lg text-muted hover:text-ink hover:bg-bg transition-colors cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-4">
+            {createError && (
+              <div className="p-3 rounded-xl bg-red/10 border border-red/20 text-red text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{createError}</span>
+              </div>
+            )}
+
+            <div className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-mono text-muted block mb-1">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-ink block">
                     Unique Gate ID *
                   </label>
                   <input
                     type="text"
+                    required
                     value={newGate.id}
                     onChange={(e) =>
                       setNewGate({ ...newGate, id: e.target.value })
                     }
                     placeholder="e.g. smelter_advanced"
-                    className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink font-mono focus:outline-hidden focus:border-blue"
+                    className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink font-mono font-bold focus:outline-hidden focus:border-blue"
                   />
                 </div>
-                <div>
-                  <label className="text-[11px] font-mono text-muted block mb-1">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-ink block">
                     Route Path *
                   </label>
                   <input
                     type="text"
+                    required
                     value={newGate.pagePath}
                     onChange={(e) =>
                       setNewGate({ ...newGate, pagePath: e.target.value })
@@ -672,24 +824,25 @@ export function TierAccessTab({
                 </div>
               </div>
 
-              <div>
-                <label className="text-[11px] font-mono text-muted block mb-1">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-ink block">
                   Feature / Page Title *
                 </label>
                 <input
                   type="text"
+                  required
                   value={newGate.title}
                   onChange={(e) =>
                     setNewGate({ ...newGate, title: e.target.value })
                   }
                   placeholder="e.g. Smelter Batch Recovery Simulation"
-                  className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink focus:outline-hidden focus:border-blue"
+                  className="w-full px-3 py-2 bg-bg border border-line rounded-xl text-xs text-ink font-bold focus:outline-hidden focus:border-blue"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] font-mono text-muted block mb-1">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-ink block">
                     Category
                   </label>
                   <input
@@ -703,9 +856,9 @@ export function TierAccessTab({
                   />
                 </div>
 
-                <div>
-                  <label className="text-[11px] font-mono text-muted block mb-1">
-                    Required Minimum Tier
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-ink block">
+                    Minimum Required Tier
                   </label>
                   <CustomDropdown
                     value={newGate.requiredTier || "PROFESSIONAL"}
@@ -721,8 +874,8 @@ export function TierAccessTab({
                 </div>
               </div>
 
-              <div>
-                <label className="text-[11px] font-mono text-muted block mb-1">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-ink block">
                   Locked Description / Benefit Copy
                 </label>
                 <textarea
@@ -737,20 +890,70 @@ export function TierAccessTab({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-line">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-line">
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
-                className="px-4 py-2 rounded-xl border border-line text-xs font-semibold text-ink hover:bg-bg transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-muted hover:text-ink hover:bg-bg transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleCreateGate}
-                className="px-4 py-2 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-blue hover:bg-blue-dark text-white text-xs font-bold transition-all shadow-2xs cursor-pointer"
               >
                 Create Gate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 4: DELETE GATE CONFIRMATION MODAL                                   */}
+      {/* ========================================================================= */}
+      {gateToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-panel border border-line rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="w-12 h-12 rounded-2xl bg-red/10 border border-red/20 text-red flex items-center justify-center mx-auto">
+              <Trash2 className="w-5 h-5" />
+            </div>
+
+            <div className="text-center space-y-1.5">
+              <h3 className="text-sm font-bold text-ink">
+                Delete Gate &quot;{gateToDelete.title}&quot;?
+              </h3>
+              <p className="text-xs text-muted leading-relaxed">
+                Are you sure you want to permanently delete gate{" "}
+                <span className="font-mono font-bold text-ink">
+                  {gateToDelete.pagePath}
+                </span>{" "}
+                ({gateToDelete.id}) from the database? This action cannot be undone.
+              </p>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-red/10 border border-red/20 text-red text-xs">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setGateToDelete(null)}
+                className="flex-1 py-2 rounded-xl text-xs font-semibold border border-line bg-bg text-muted hover:text-ink transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteGate}
+                disabled={isDeletingGate}
+                className="flex-1 py-2 rounded-xl text-xs font-bold bg-red hover:bg-red-dark text-white transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+              >
+                {isDeletingGate ? "Deleting..." : "Delete Gate"}
               </button>
             </div>
           </div>

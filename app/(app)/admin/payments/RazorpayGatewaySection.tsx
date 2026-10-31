@@ -16,6 +16,7 @@ import {
   Zap,
   Globe2,
   Lock,
+  Building2,
 } from "lucide-react";
 import {
   useGetAdminPaymentConfigQuery,
@@ -561,8 +562,16 @@ export function RazorpayGatewaySection({
                       )}
                     </td>
                     <td className="py-3 px-3 font-sans">
-                      <div className="font-medium text-ink">{tx.userName || tx.userEmail || "—"}</div>
-                      <div className="text-[11px] text-muted">{tx.organizationName || "—"}</div>
+                      <div className="font-semibold text-ink flex items-center gap-1.5 flex-wrap">
+                        <span>{tx.userName || tx.userEmail || "Corporate User"}</span>
+                        {tx.userName && tx.userEmail && (
+                          <span className="text-[10px] text-muted font-normal font-mono">({tx.userEmail})</span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-muted flex items-center gap-1 mt-0.5 font-medium">
+                        <Building2 className="w-3 h-3 text-muted/70 shrink-0" />
+                        <span>{tx.organizationName || "Primary Organization"}</span>
+                      </div>
                     </td>
                     <td className="py-3 px-3 font-sans">
                       <span className="font-bold text-ink uppercase">{tx.planId}</span>

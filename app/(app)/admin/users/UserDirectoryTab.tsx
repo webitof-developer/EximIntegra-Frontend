@@ -12,18 +12,23 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  StatusPill,
   CustomDropdown,
 } from "@/components/ui";
 import {
   Search,
   Filter,
-  Edit2,
+  Edit3,
   Trash2,
   X,
   ShieldAlert,
   Users,
   RefreshCw,
+  Crown,
+  Building2,
+  Sparkles,
+  RotateCcw,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
 
 interface UserDirectoryTabProps {
@@ -70,7 +75,9 @@ export function UserDirectoryTab({
         { value: "IMPORTER", label: "Importer" },
         { value: "EXPORTER", label: "Exporter" },
         { value: "CUSTOMS_BROKER", label: "Customs Broker" },
-        { value: "TRADE_ADVISOR", label: "Trade Advisor" }
+        { value: "TRADE_ADVISOR", label: "Trade Advisor" },
+        { value: "TRADE_OFFICER", label: "Trade Officer" },
+        { value: "AUDITOR", label: "Auditor" }
       );
     }
     return list;
@@ -89,7 +96,9 @@ export function UserDirectoryTab({
         { value: "IMPORTER", label: "Importer" },
         { value: "EXPORTER", label: "Exporter" },
         { value: "CUSTOMS_BROKER", label: "Customs Broker" },
-        { value: "TRADE_ADVISOR", label: "Trade Advisor" }
+        { value: "TRADE_ADVISOR", label: "Trade Advisor" },
+        { value: "TRADE_OFFICER", label: "Trade Officer" },
+        { value: "AUDITOR", label: "Auditor" }
       );
     }
     list.push({ value: "ADMIN", label: "Super Admin" });
@@ -152,51 +161,144 @@ export function UserDirectoryTab({
     }
   };
 
+  // Metrics summary
+  const totalCount = users.length;
+  const paidCount = users.filter((u) => u.tier === "PROFESSIONAL" || u.tier === "ENTERPRISE").length;
+  const starterCount = users.filter((u) => u.tier === "STARTER" || !u.tier || u.tier === "FREE_TRIAL").length;
+  const tenantCount = new Set(users.map((u) => u.company).filter(Boolean)).size;
+
   // Filtered Users
   const filteredUsers = users.filter((u) => {
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
     const matchSearch =
       !q ||
       u.name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
-      u.company.toLowerCase().includes(q);
+      (u.company && u.company.toLowerCase().includes(q));
     const matchRole = roleFilter === "ALL" || u.role === roleFilter;
     const matchTier = tierFilter === "ALL" || u.tier === tierFilter;
     return matchSearch && matchRole && matchTier;
   });
 
+  const hasActiveFilters = searchQuery !== "" || roleFilter !== "ALL" || tierFilter !== "ALL";
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setRoleFilter("ALL");
+    setTierFilter("ALL");
+  };
+
   return (
-    <div className="space-y-5">
-      {/* Search & Filter Bar */}
+    <div className="space-y-6 w-full animate-in fade-in duration-200">
+      {/* 1. Top Quick Metric Cards (Matching /admin styles) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        {/* Card 1: Total Users */}
+        <div
+          onClick={resetFilters}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-blue/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
+          <div className="flex items-center justify-between text-muted text-xs">
+            <span className="text-xs font-medium text-muted">Total Accounts</span>
+            <div className="w-8 h-8 rounded-xl bg-blue/10 border border-blue/20 flex items-center justify-center text-blue group-hover:scale-110 transition-transform">
+              <Users className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-data text-ink">
+            {totalCount}
+          </div>
+          <span className="text-[11px] text-muted block truncate">Registered trade profiles</span>
+        </div>
+
+        {/* Card 2: Corporate Tenants */}
+        <div className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-emerald-500/40 transition-all hover:-translate-y-0.5">
+          <div className="flex items-center justify-between text-muted text-xs">
+            <span className="text-xs font-medium text-muted">Corporate Tenants</span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600">
+              <Building2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-data text-ink">
+            {tenantCount}
+          </div>
+          <span className="text-[11px] text-muted block truncate">Unique business workspaces</span>
+        </div>
+
+        {/* Card 3: Paid Subscriptions */}
+        <div
+          onClick={() => setTierFilter(tierFilter === "PROFESSIONAL" ? "ALL" : "PROFESSIONAL")}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-amber-500/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
+          <div className="flex items-center justify-between text-muted text-xs">
+            <span className="text-xs font-medium text-muted">Paid Tiers</span>
+            <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+              <Crown className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-data text-amber-600">
+            {paidCount}
+          </div>
+          <span className="text-[11px] text-muted block truncate">Enterprise & Professional</span>
+        </div>
+
+        {/* Card 4: Starter / Trials */}
+        <div
+          onClick={() => setTierFilter(tierFilter === "STARTER" ? "ALL" : "STARTER")}
+          className="p-4 bg-panel border border-line rounded-2xl shadow-xs space-y-2 hover:border-purple-500/40 transition-all hover:-translate-y-0.5 cursor-pointer group"
+        >
+          <div className="flex items-center justify-between text-muted text-xs">
+            <span className="text-xs font-medium text-muted">Starter Accounts</span>
+            <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform">
+              <Sparkles className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl font-bold font-data text-ink">
+            {starterCount}
+          </div>
+          <span className="text-[11px] text-muted block truncate">Evaluation & free tiers</span>
+        </div>
+      </div>
+
+      {/* 2. Search & Filter Bar */}
       <div className="p-4 bg-panel border border-line rounded-2xl shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="relative w-full md:w-80">
+        {/* Search Input */}
+        <div className="relative w-full md:w-96">
           <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by name, email, or company..."
-            className="w-full pl-9 pr-3.5 py-2 bg-bg border border-line rounded-xl text-xs text-ink placeholder:text-muted focus:outline-hidden focus:border-blue"
+            placeholder="Search by user name, corporate email, or company..."
+            className="w-full pl-9 pr-8 py-2 bg-bg border border-line rounded-xl text-xs text-ink placeholder:text-muted focus:outline-hidden focus:border-blue transition-colors"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-0.5 rounded cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        {/* Filters & Actions */}
+        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end flex-wrap">
           <div className="flex items-center gap-1.5 text-xs text-muted">
-            <Filter className="w-3.5 h-3.5 shrink-0" />
-            <span className="shrink-0">Role:</span>
-            <div className="w-36">
+            <Filter className="w-3.5 h-3.5 shrink-0 text-muted" />
+            <span className="shrink-0 text-xs">Role:</span>
+            <div className="w-40">
               <CustomDropdown
                 value={roleFilter}
                 onChange={(val) => setRoleFilter(val)}
                 options={filterRoleOptions}
                 size="sm"
-                buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-lg text-xs font-semibold text-ink"
+                buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-xl text-xs font-semibold text-ink"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 text-xs text-muted">
-            <span className="shrink-0">Tier:</span>
+            <span className="shrink-0 text-xs">Tier:</span>
             <div className="w-36">
               <CustomDropdown
                 value={tierFilter}
@@ -209,140 +311,209 @@ export function UserDirectoryTab({
                 ]}
                 size="sm"
                 align="right"
-                buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-lg text-xs font-semibold text-ink"
+                buttonClassName="px-2.5 py-1.5 bg-bg border-line rounded-xl text-xs font-semibold text-ink"
               />
             </div>
           </div>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-muted hover:text-ink bg-bg hover:bg-slate-100 border border-line transition-all cursor-pointer"
+              title="Reset all filters"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Reset</span>
+            </button>
+          )}
+
+          <span className="text-[11px] text-muted font-mono whitespace-nowrap hidden sm:inline-block pl-1">
+            {filteredUsers.length} of {totalCount} users
+          </span>
         </div>
       </div>
 
-      {/* Users Table */}
-      <TableContainer>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User Details</TableHead>
-              <TableHead>Organization</TableHead>
-              <TableHead>Role Assignment</TableHead>
-              <TableHead>Subscription Tier</TableHead>
-              <TableHead>Registered</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted">
-                  <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-blue" />
-                  <span>Loading user directory...</span>
-                </TableCell>
+      {/* 3. Modern Users Table */}
+      <div className="bg-panel border border-line rounded-2xl shadow-xs overflow-hidden">
+        <TableContainer>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-bg/50 border-b border-line text-[11px] font-medium text-muted uppercase tracking-wider">
+                <TableHead className="py-3 px-4">User Details</TableHead>
+                <TableHead className="py-3 px-4">Organization</TableHead>
+                <TableHead className="py-3 px-4">Role Assignment</TableHead>
+                <TableHead className="py-3 px-4">Subscription Tier</TableHead>
+                <TableHead className="py-3 px-4">Registered Date</TableHead>
+                <TableHead className="py-3 px-4 text-right">Actions</TableHead>
               </TableRow>
-            ) : filteredUsers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted">
-                  <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                  <p className="font-semibold text-ink text-sm">No users matching search filters</p>
-                  <p className="text-xs">Adjust query or role/tier parameters above.</p>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredUsers.map((item) => {
-                const isAdmin = item.role === "ADMIN";
-                const isSuperAdminEmail = item.email.toLowerCase().includes("admin@");
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-16 text-muted">
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue" />
+                    <span className="text-xs font-mono">Loading user directory from database...</span>
+                  </TableCell>
+                </TableRow>
+              ) : filteredUsers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-16 text-muted">
+                    <Users className="w-8 h-8 mx-auto mb-2 opacity-40 text-muted" />
+                    <p className="font-semibold text-ink text-sm">No users match your criteria</p>
+                    <p className="text-xs text-muted mt-1">Try adjusting the search query or resetting filters.</p>
+                    {hasActiveFilters && (
+                      <button
+                        type="button"
+                        onClick={resetFilters}
+                        className="mt-3 px-3 py-1.5 rounded-xl text-xs font-semibold bg-bg hover:bg-slate-100 border border-line text-ink transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Clear Filters</span>
+                      </button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredUsers.map((item) => {
+                  const isAdmin = item.role === "ADMIN";
+                  const isSuperAdminEmail = item.email.toLowerCase().includes("admin@");
+                  const initials = item.name
+                    ? item.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .substring(0, 2)
+                        .toUpperCase()
+                    : "U";
 
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-ink">{item.name}</span>
-                          {isAdmin && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-400/30">
-                              SUPER ADMIN
+                  const formattedDate = item.createdAt
+                    ? new Date(item.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                    : "Recent";
+
+                  return (
+                    <TableRow key={item.id} className="hover:bg-bg/60 transition-colors">
+                      {/* User Details */}
+                      <TableCell className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-8 h-8 rounded-full font-bold text-[11px] flex items-center justify-center font-mono shrink-0 shadow-2xs border ${
+                              isAdmin
+                                ? "bg-purple-500/10 text-purple-600 border-purple-500/20"
+                                : "bg-blue/10 text-blue border-blue/20"
+                            }`}
+                          >
+                            {initials}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-semibold text-ink block truncate">{item.name}</span>
+                              {isAdmin && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-purple-500/15 text-purple-700 border border-purple-500/30">
+                                  SUPER ADMIN
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-muted font-mono block truncate">{item.email}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+
+                      {/* Organization */}
+                      <TableCell className="py-3 px-4">
+                        <div className="flex items-center gap-1.5 text-xs text-ink font-medium">
+                          <Building2 className="w-3.5 h-3.5 text-muted shrink-0" />
+                          <span className="truncate max-w-[180px]">{item.company || "Independent"}</span>
+                        </div>
+                      </TableCell>
+
+                      {/* Role Assignment */}
+                      <TableCell className="py-3 px-4">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-bg border border-line text-ink">
+                          {item.role.replace(/_/g, " ")}
+                        </span>
+                      </TableCell>
+
+                      {/* Subscription Tier */}
+                      <TableCell className="py-3 px-4">
+                        <TierBadge tier={item.tier} size="xs" />
+                      </TableCell>
+
+                      {/* Registered Date */}
+                      <TableCell className="py-3 px-4 text-xs text-muted font-mono whitespace-nowrap">
+                        {formattedDate}
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(item)}
+                            className="p-1.5 rounded-lg text-muted hover:text-blue hover:bg-blue/10 border border-transparent hover:border-blue/20 transition-colors cursor-pointer"
+                            title={`Edit ${item.name}`}
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+
+                          {!isSuperAdminEmail ? (
+                            <button
+                              type="button"
+                              onClick={() => setDeletingUserItem(item)}
+                              className="p-1.5 rounded-lg text-muted hover:text-red hover:bg-red/10 border border-transparent hover:border-red/20 transition-colors cursor-pointer"
+                              title={`Delete ${item.name}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (
+                            <span
+                              title="Primary Super Administrator cannot be deleted"
+                              className="p-1.5 text-muted/40 cursor-not-allowed"
+                            >
+                              <Lock className="w-3.5 h-3.5" />
                             </span>
                           )}
                         </div>
-                        <span className="text-xs text-muted font-mono block">{item.email}</span>
-                        <span className="text-[10px] text-muted/70 font-mono block">ID: {item.id}</span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell>
-                      <span className="font-medium text-ink">{item.company}</span>
-                    </TableCell>
-
-                    <TableCell>
-                      <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded bg-bg border border-line text-ink">
-                        {item.role.replace("_", " ")}
-                      </span>
-                    </TableCell>
-
-                    <TableCell>
-                      <TierBadge tier={item.tier} size="xs" />
-                    </TableCell>
-
-                    <TableCell>
-                      <span className="text-xs text-muted font-mono">
-                        {new Date(item.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </span>
-                    </TableCell>
-
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(item)}
-                          className="p-1.5 rounded-lg text-muted hover:text-ink hover:bg-bg border border-transparent hover:border-line transition-colors cursor-pointer"
-                          title="Edit user profile & permissions"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-
-                        {!isSuperAdminEmail && (
-                          <button
-                            type="button"
-                            onClick={() => setDeletingUserItem(item)}
-                            className="p-1.5 rounded-lg text-muted hover:text-red hover:bg-red/10 border border-transparent hover:border-red/20 transition-colors cursor-pointer"
-                            title="Delete user account"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
 
       {/* EDIT USER MODAL */}
       {editingUserItem && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-panel border border-line rounded-2xl p-6 max-w-lg w-full shadow-xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-panel border border-line rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-line pb-3">
-              <div>
-                <h3 className="text-base font-bold text-ink">Edit User Account & Role</h3>
-                <p className="text-xs text-muted font-mono">{editingUserItem.email}</p>
+              <div className="flex items-center gap-2">
+                <div className="p-2 rounded-xl bg-blue/10 text-blue border border-blue/20">
+                  <Edit3 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-ink">Edit User Account & Role</h3>
+                  <p className="text-[11px] text-muted font-mono">{editingUserItem.email}</p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setEditingUserItem(null)}
-                className="p-1 rounded-lg text-muted hover:text-ink cursor-pointer"
+                className="p-1 rounded-lg text-muted hover:text-ink hover:bg-line transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveUser} className="space-y-4">
+            <form onSubmit={handleSaveUser} className="space-y-4 text-xs">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted">Full Name</label>
+                <label className="font-semibold text-ink block">Full Name *</label>
                 <input
                   type="text"
                   required
@@ -353,7 +524,7 @@ export function UserDirectoryTab({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted">Company / Organization</label>
+                <label className="font-semibold text-ink block">Company / Organization *</label>
                 <input
                   type="text"
                   required
@@ -365,7 +536,7 @@ export function UserDirectoryTab({
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted">Corporate Role</label>
+                  <label className="font-semibold text-ink block">Assigned Role</label>
                   <CustomDropdown
                     value={editRole}
                     onChange={(val) => setEditRole(val as AdminUserItem["role"])}
@@ -375,7 +546,7 @@ export function UserDirectoryTab({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted">Subscription Plan</label>
+                  <label className="font-semibold text-ink block">Subscription Tier</label>
                   <CustomDropdown
                     value={editTier}
                     onChange={(val) => setEditTier(val as AdminUserItem["tier"])}
@@ -389,20 +560,20 @@ export function UserDirectoryTab({
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-line">
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-line">
                 <button
                   type="button"
                   onClick={() => setEditingUserItem(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-bg hover:bg-line border border-line text-muted cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-bg hover:bg-panel border border-line text-muted hover:text-ink cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={updatingUser}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue hover:bg-blue-dark text-white shadow-xs cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-blue hover:bg-blue-dark text-white shadow-xs cursor-pointer transition-colors disabled:opacity-50"
                 >
-                  {updatingUser ? "Saving..." : "Save User"}
+                  {updatingUser ? "Saving Changes..." : "Save Changes"}
                 </button>
               </div>
             </form>
@@ -412,25 +583,30 @@ export function UserDirectoryTab({
 
       {/* DELETE USER CONFIRMATION MODAL */}
       {deletingUserItem && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-panel border border-red/30 rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3 text-red">
-              <ShieldAlert className="w-6 h-6" />
-              <h3 className="text-base font-bold text-ink">Delete User Account</h3>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-panel border border-red/30 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-red/10 text-red border border-red/20">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-ink">Delete User Account</h3>
+                <p className="text-[11px] text-muted">This action is permanent and cannot be undone.</p>
+              </div>
             </div>
 
             <p className="text-xs text-muted leading-relaxed">
               Are you sure you want to permanently delete user{" "}
               <strong className="text-ink">{deletingUserItem.name}</strong> (
               <span className="font-mono">{deletingUserItem.email}</span>)? All calculations,
-              tokens, and workspace memberships will be purged. This action cannot be undone.
+              tokens, and workspace memberships will be purged.
             </p>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-line">
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-line">
               <button
                 type="button"
                 onClick={() => setDeletingUserItem(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-bg hover:bg-line border border-line text-muted cursor-pointer"
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-bg hover:bg-panel border border-line text-muted hover:text-ink cursor-pointer"
               >
                 Cancel
               </button>
@@ -438,7 +614,7 @@ export function UserDirectoryTab({
                 type="button"
                 disabled={deletingUser}
                 onClick={handleConfirmDelete}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-red hover:bg-red-dark text-white shadow-xs cursor-pointer disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-red hover:bg-red-dark text-white shadow-xs cursor-pointer disabled:opacity-50"
               >
                 {deletingUser ? "Deleting..." : "Permanently Delete"}
               </button>
