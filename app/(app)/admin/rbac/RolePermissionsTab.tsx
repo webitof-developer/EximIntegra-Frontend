@@ -835,14 +835,14 @@ export function RolePermissionsTab({
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <form
             onSubmit={handleCreateRole}
-            className="bg-panel border border-line rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
+            className="bg-panel border border-line rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-6 animate-in zoom-in-95 duration-150"
           >
             <div className="flex items-center justify-between border-b border-line pb-3">
               <div>
                 <h3 className="text-base font-bold text-ink">Create Custom Role</h3>
-                <p className="text-xs text-muted">
+                {/*<p className="text-xs text-muted">
                   Define a new corporate trade role and inherit base permissions.
-                </p>
+                </p>*/}
               </div>
               <button
                 type="button"
@@ -860,7 +860,7 @@ export function RolePermissionsTab({
               </div>
             )}
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-4 text-xs">
               <div className="space-y-1">
                 <label className="text-xs font-semibold text-ink block">
                   Role Identifier (Code) *
@@ -880,9 +880,9 @@ export function RolePermissionsTab({
                   }
                   className="w-full py-2 px-3 bg-bg border border-line rounded-xl text-ink focus:outline-hidden focus:border-blue text-xs font-mono font-bold"
                 />
-                <span className="text-[10px] text-muted block">
+                {/* <span className="text-[10px] text-muted block">
                   Uppercase letters and underscores only (e.g. WAREHOUSE_OFFICER).
-                </span>
+                </span> */}
               </div>
 
               <div className="space-y-1">

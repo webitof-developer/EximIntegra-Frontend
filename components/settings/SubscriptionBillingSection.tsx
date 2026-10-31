@@ -10,6 +10,7 @@ import {
   useCreateSubscriptionOrderMutation,
   useVerifyPaymentMutation,
   useGetInvoicesQuery,
+  useGetBillingStatusQuery,
   InvoiceItem,
 } from "@/store/paymentsApi";
 
@@ -45,6 +46,13 @@ import {
   CreditCard,
   AlertTriangle,
   Clock,
+  Sparkles,
+  Calculator,
+  Search,
+  Users,
+  ShieldCheck,
+  ArrowUpRight,
+  Zap,
 } from "lucide-react";
 
 // Fallback plans if database plans are still loading or network is offline
@@ -140,6 +148,7 @@ export function SubscriptionBillingSection() {
   const [verifyPaymentMutation, { isLoading: isVerifyingPayment }] = useVerifyPaymentMutation();
   const { data: publicPaymentConfig } = useGetPublicPaymentConfigQuery();
   const { data: rawInvoicesData, refetch: refetchInvoices } = useGetInvoicesQuery();
+  const { data: billingStatus, refetch: refetchBilling } = useGetBillingStatusQuery();
   const invoicesData: InvoiceItem[] = Array.isArray(rawInvoicesData)
     ? rawInvoicesData
     : Array.isArray((rawInvoicesData as unknown as { invoices?: InvoiceItem[] })?.invoices)
@@ -178,11 +187,14 @@ export function SubscriptionBillingSection() {
 
   const isTrial =
     user?.billingCycle === "trial" ||
+    billingStatus?.billingCycle === "trial" ||
     currentPlan.toUpperCase() === "FREE_TRIAL" ||
     currentPlan.toUpperCase() === "FREE TIER";
 
-  // Current active plan info resolved from DB plans
+  // Current active plan info resolved from DB plans or backend billing status
   const activePlanInfo =
+    billingStatus?.plan ||
+    (user?.planId ? plansList.find((p) => p.id === user.planId) : null) ||
     (isTrial
       ? plansList.find((p) => p.planType === "trial" && p.isDefaultTrial) ||
         plansList.find((p) => p.planType === "trial")
@@ -192,12 +204,16 @@ export function SubscriptionBillingSection() {
     plansList[0];
 
   // Subscription Lifecycle & Expiry Calculation
-  const subStarted = user?.subscriptionStartedAt
+  const subStarted = billingStatus?.planStartedAt
+    ? new Date(billingStatus.planStartedAt)
+    : user?.subscriptionStartedAt
     ? new Date(user.subscriptionStartedAt)
     : user?.createdAt
     ? new Date(user.createdAt)
     : new Date();
-  const subExpires = user?.subscriptionExpiresAt
+  const subExpires = billingStatus?.planExpiresAt
+    ? new Date(billingStatus.planExpiresAt)
+    : user?.subscriptionExpiresAt
     ? new Date(user.subscriptionExpiresAt)
     : new Date(subStarted.getTime() + (isAnnual ? 365 : 30) * 24 * 60 * 60 * 1000);
 
@@ -443,17 +459,17 @@ export function SubscriptionBillingSection() {
 
       {/* Expiration Notification Alert Banners */}
       {isExpired && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-red-800 shadow-2xs">
-          <div className="flex items-start gap-2.5">
-            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-between gap-4 text-red-950 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-500/20 text-red-600 rounded-lg shrink-0">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-red-900">
-                {isTrial ? "Free Trial Expired" : "Subscription Expired"} ({formattedExpiry})
-              </h4>
-              <p className="text-xs text-red-700 mt-0.5">
-                {isTrial
-                  ? `Your organization's Free Trial expired on ${formattedExpiry}. Upgrade to a paid subscription plan below to restore access to customs classification and logistics engines.`
-                  : `Your organization's ${currentPlan} plan expired on ${formattedExpiry}. Renew or upgrade below to restore access to customs classification and logistics engines.`}
+              <div className="text-xs font-bold font-mono uppercase text-red-900">
+                {isTrial ? "Trial Period Expired" : "Subscription Expired"}
+              </div>
+              <p className="text-xs text-red-800">
+                Access expired on {formattedExpiry}. Upgrade your subscription to restore quota and engine features.
               </p>
             </div>
           </div>
@@ -464,25 +480,25 @@ export function SubscriptionBillingSection() {
               setModalBillingCycle(isAnnual ? "annual" : "monthly");
               setIsChangePlanOpen(true);
             }}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-xs"
+            className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs"
           >
-            {isTrial ? "Upgrade Plan" : "Renew Plan"}
+            Upgrade Now
           </button>
         </div>
       )}
 
       {isExpiringSoon && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-900 shadow-2xs">
-          <div className="flex items-start gap-2.5">
-            <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-between gap-4 text-amber-950 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/20 text-amber-600 rounded-lg shrink-0">
+              <Clock className="w-4 h-4" />
+            </div>
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider font-mono text-amber-900">
-                {isTrial ? "Free Trial Expiring Soon" : "Subscription Expiring Soon"} ({daysLeft === 0 ? "Today" : `in ${daysLeft} day${daysLeft === 1 ? "" : "s"}`})
-              </h4>
-              <p className="text-xs text-amber-800 mt-0.5">
-                {isTrial
-                  ? `Your organization's Free Trial expires on ${formattedExpiry}. Upgrade to a paid subscription plan in advance to ensure uninterrupted quota access and team seat availability.`
-                  : `Your organization's ${currentPlan} subscription expires on ${formattedExpiry}. Renew in advance to ensure uninterrupted quota access and team seat availability.`}
+              <div className="text-xs font-bold font-mono uppercase text-amber-900">
+                {isTrial ? "Trial Ending Soon" : "Renewal Approaching"}
+              </div>
+              <p className="text-xs text-amber-800">
+                {daysLeft === 0 ? "Expires today" : `Expires in ${daysLeft} days`} ({formattedExpiry}). Upgrade or renew to avoid interruption.
               </p>
             </div>
           </div>
@@ -493,221 +509,257 @@ export function SubscriptionBillingSection() {
               setModalBillingCycle(isAnnual ? "annual" : "monthly");
               setIsChangePlanOpen(true);
             }}
-            className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-xs"
+            className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition-colors shadow-2xs"
           >
-            {isTrial ? "Upgrade Plan" : "Renew Subscription"}
+            Renew / Upgrade
           </button>
         </div>
       )}
 
       {/* 1. Active Plan Overview Card */}
-      <div className="p-6 bg-panel border border-line rounded-2xl shadow-xs space-y-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2.5">
-              <span className="text-[10px] font-mono uppercase bg-blue text-white px-2.5 py-0.5 rounded font-bold tracking-wider">
-                CURRENT PLAN
-              </span>
+      <div className="bg-panel border border-line rounded-2xl shadow-xs overflow-hidden">
+        {/* Card Top: Plan Name, Status, Price, and Action */}
+        <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-line bg-gradient-to-r from-panel via-panel to-bg/50">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-xl font-bold text-ink">
+                {activePlanInfo?.name
+                  ? `${activePlanInfo.name} Plan`
+                  : isTrial
+                  ? "Free Trial Plan"
+                  : `${currentPlan} Plan`}
+              </h3>
               {isExpired ? (
-                <StatusPill label="SUBSCRIPTION EXPIRED" variant="danger" size="xs" dot />
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-50 text-red-700 border border-red-200">
+                  EXPIRED
+                </span>
               ) : isExpiringSoon ? (
-                <StatusPill
-                  label={`EXPIRES IN ${daysLeft === 0 ? "TODAY" : `${daysLeft}D`}`}
-                  variant="warning"
-                  size="xs"
-                  dot
-                />
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                  {daysLeft === 0 ? "EXPIRES TODAY" : `${daysLeft}D LEFT`}
+                </span>
               ) : (
-                <StatusPill label="ACTIVE SUBSCRIPTION" variant="success" size="xs" dot />
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  ACTIVE
+                </span>
+              )}
+              {isTrial && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-50 text-blue border border-blue/20">
+                  EVALUATION
+                </span>
               )}
             </div>
 
-            <div className="flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold text-ink">
-                {activePlanInfo?.name
-                  ? `${activePlanInfo.name} Tier Plan`
-                  : isTrial
-                  ? "Free Trial Tier Plan"
-                  : currentPlan === "ENTERPRISE"
-                  ? "Enterprise Platform Plan"
-                  : currentPlan === "PROFESSIONAL"
-                  ? "Professional Tier Plan"
-                  : "Starter Tier Plan"}
-              </h3>
-              <span className="text-xs text-muted font-mono">
-                {isTrial
-                  ? "(Free Evaluation Trial)"
-                  : isAnnual
-                  ? "(Annual Billing)"
-                  : "(Monthly Billing)"}
-              </span>
-            </div>
-
-            <p className="text-xs text-muted max-w-xl leading-relaxed">
-              {activePlanInfo?.tagline ||
-                "Full access to sequential GIR classification, customs duty statutory engine, landed cost modeling, Akshara AI Copilot, and BYOK gateway integrations."}
+            <p className="text-xs text-muted">
+              {user?.company || "Workspace"} &bull; {isAnnual ? "Billed annually" : "Billed monthly"} &bull; Renews on {formattedExpiry}
             </p>
           </div>
 
           {/* Pricing & Plan Actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="text-right sm:pr-2">
-              <div className="text-xl font-bold font-data text-ink flex items-center justify-end gap-1.5">
-                <span>
-                  {currency === "INR"
-                    ? `₹${displayedPriceInr.toLocaleString("en-IN")}`
-                    : `$${displayedPriceUsd.toLocaleString("en-US")}`}
-                </span>
-                <span className="text-xs text-muted font-normal"> / mo</span>
+          <div className="flex items-center gap-4 self-start md:self-auto">
+            <div className="text-right">
+              <div className="text-2xl font-bold font-data text-ink">
+                {currency === "INR"
+                  ? `₹${displayedPriceInr.toLocaleString("en-IN")}`
+                  : `$${displayedPriceUsd.toLocaleString("en-US")}`}
+                <span className="text-xs font-normal text-muted font-sans ml-1">/ mo</span>
               </div>
-              <span className="text-[10px] font-mono text-muted block">
-                {isAnnual ? "Billed annually" : "Billed monthly"} • Start: {formattedStarted} • Renews: {formattedExpiry}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {/* Currency toggle on the active plan */}
-              <div className="flex items-center p-0.5 bg-bg border border-line rounded-lg text-[11px] font-mono">
+              <div className="flex items-center justify-end gap-1 mt-1">
                 <button
                   type="button"
                   onClick={() => setCurrency("INR")}
-                  className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                  className={`px-1.5 py-0.5 text-[10px] font-mono font-bold rounded transition-colors cursor-pointer ${
                     currency === "INR"
-                      ? "bg-panel font-bold text-ink shadow-2xs"
-                      : "text-muted hover:text-ink"
+                      ? "bg-blue text-white"
+                      : "text-muted hover:text-ink bg-bg border border-line"
                   }`}
-                  title="Display in Indian Rupees (INR)"
+                  title="Display in INR (₹)"
                 >
-                  ₹
+                  ₹ INR
                 </button>
                 <button
                   type="button"
                   onClick={() => setCurrency("USD")}
-                  className={`px-2 py-1 rounded transition-colors cursor-pointer ${
+                  className={`px-1.5 py-0.5 text-[10px] font-mono font-bold rounded transition-colors cursor-pointer ${
                     currency === "USD"
-                      ? "bg-panel font-bold text-ink shadow-2xs"
-                      : "text-muted hover:text-ink"
+                      ? "bg-blue text-white"
+                      : "text-muted hover:text-ink bg-bg border border-line"
                   }`}
-                  title="Display in US Dollars (USD)"
+                  title="Display in USD ($)"
                 >
-                  $
+                  $ USD
                 </button>
               </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setModalCurrency(currency);
-                  setModalBillingCycle(isAnnual ? "annual" : "monthly");
-                  setIsChangePlanOpen(true);
-                }}
-                className="px-4 py-2 bg-blue hover:bg-blue-dark text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer"
-              >
-                Change Plan
-              </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setModalCurrency(currency);
+                setModalBillingCycle(isAnnual ? "annual" : "monthly");
+                setIsChangePlanOpen(true);
+              }}
+              className="px-4 py-2 bg-blue hover:bg-blue-dark text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Change Plan</span>
+            </button>
           </div>
         </div>
 
         {/* Real-time Usage & Quota Meters */}
-        <div className="pt-4 border-t border-line space-y-3">
-          <span className="text-xs font-bold text-ink font-mono uppercase tracking-wider block">
-            Monthly Quota & Seat Consumption
-          </span>
+        <div className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold text-ink font-mono uppercase tracking-wider">
+              Monthly Quota & Seat Consumption
+            </h4>
+            <span className="text-[11px] text-muted font-mono">
+              Resets on {formattedExpiry}
+            </span>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Meter 1: HS Classifications */}
             {(() => {
-              const isUnlimited = activePlanInfo?.hsClassificationLimit === -1;
-              const limit = isUnlimited ? "Unlimited" : (activePlanInfo?.hsClassificationLimit ?? (currentPlan === "STARTER" ? 100 : 1000));
+              const quota = billingStatus?.quotaUsage?.classifications;
+              const isUnlimited = quota?.isUnlimited ?? (activePlanInfo?.hsClassificationLimit === -1);
+              const limit = isUnlimited ? "Unlimited" : (quota?.limit ?? activePlanInfo?.hsClassificationLimit ?? 1000);
+              const used = quota?.used ?? 0;
+              const limitNum = typeof limit === "number" ? limit : 1000;
+              const pct = isUnlimited ? 100 : Math.min(100, Math.round((used / Math.max(1, limitNum)) * 100));
+
               return (
-                <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted font-mono">HS Classifications</span>
-                    <span className={`font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-ink"}`}>
-                      {isUnlimited ? "342 / ∞ Unlimited" : `68 / ${limit}`}
+                <div className="p-4 bg-bg rounded-xl border border-line space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted flex items-center gap-1.5">
+                      <Search className="w-3.5 h-3.5 text-blue" />
+                      HS Classifications
+                    </span>
+                    <span className={`text-xs font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-ink"}`}>
+                      {isUnlimited ? `${used} / ∞` : `${used} / ${limit}`}
                     </span>
                   </div>
                   <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
                     <div
-                      className={`h-1.5 rounded-full ${isUnlimited ? "bg-purple-600" : "bg-blue"}`}
-                      style={{ width: "100%" }}
+                      className={`h-1.5 rounded-full transition-all ${isUnlimited ? "bg-purple-600" : "bg-blue"}`}
+                      style={{ width: `${isUnlimited ? 100 : Math.max(used > 0 ? 3 : 0, pct)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted block">
-                    {isUnlimited ? "Uncapped batch & single lookup" : "Tracked monthly consumption"}
-                  </span>
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span>{isUnlimited ? "Unlimited usage" : `${pct}% used`}</span>
+                    <span>{isUnlimited ? "Uncapped" : `${Math.max(0, limitNum - used)} left`}</span>
+                  </div>
                 </div>
               );
             })()}
 
             {/* Meter 2: Landed Cost Runs */}
             {(() => {
-              const isUnlimited = activePlanInfo?.landedCostLimit === -1;
-              const limit = isUnlimited ? "Unlimited" : (activePlanInfo?.landedCostLimit ?? (currentPlan === "STARTER" ? 50 : 500));
+              const quota = billingStatus?.quotaUsage?.calculations;
+              const isUnlimited = quota?.isUnlimited ?? (activePlanInfo?.landedCostLimit === -1);
+              const limit = isUnlimited ? "Unlimited" : (quota?.limit ?? activePlanInfo?.landedCostLimit ?? 500);
+              const used = quota?.used ?? 0;
+              const limitNum = typeof limit === "number" ? limit : 500;
+              const pct = isUnlimited ? 100 : Math.min(100, Math.round((used / Math.max(1, limitNum)) * 100));
+
               return (
-                <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted font-mono">Landed Cost Runs</span>
-                    <span className={`font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-green"}`}>
-                      {isUnlimited ? "84 / ∞ Unlimited" : `84 / ${limit}`}
+                <div className="p-4 bg-bg rounded-xl border border-line space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted flex items-center gap-1.5">
+                      <Calculator className="w-3.5 h-3.5 text-emerald-600" />
+                      Landed Cost Runs
+                    </span>
+                    <span className={`text-xs font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-ink"}`}>
+                      {isUnlimited ? `${used} / ∞` : `${used} / ${limit}`}
                     </span>
                   </div>
                   <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
                     <div
-                      className={`h-1.5 rounded-full ${isUnlimited ? "bg-purple-600" : "bg-green"}`}
-                      style={{ width: "100%" }}
+                      className={`h-1.5 rounded-full transition-all ${isUnlimited ? "bg-purple-600" : "bg-emerald-600"}`}
+                      style={{ width: `${isUnlimited ? 100 : Math.max(used > 0 ? 3 : 0, pct)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted block">
-                    {isUnlimited ? "Uncapped Landed Cost & port runs" : "Smelter yield & port CFS calculations"}
-                  </span>
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span>{isUnlimited ? "Unlimited usage" : `${pct}% used`}</span>
+                    <span>{isUnlimited ? "Uncapped" : `${Math.max(0, limitNum - used)} left`}</span>
+                  </div>
                 </div>
               );
             })()}
 
             {/* Meter 3: Akshara AI Inquiries */}
-            <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted font-mono">Akshara AI Queries</span>
-                <span className="font-bold text-ink font-mono">
-                  {currentPlan === "ENTERPRISE" ? "129 / Unlimited" : "Locked (Enterprise)"}
-                </span>
-              </div>
-              <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
-                <div
-                  className={`h-1.5 rounded-full ${
-                    currentPlan === "ENTERPRISE" ? "bg-blue" : "bg-muted/40"
-                  }`}
-                  style={{ width: currentPlan === "ENTERPRISE" ? "100%" : "0%" }}
-                />
-              </div>
-              <span className="text-[10px] text-muted block">
-                {currentPlan === "ENTERPRISE" ? "Grounded tool-call execution" : "Requires Enterprise tier"}
-              </span>
-            </div>
-
-            {/* Meter 4: Team Seats */}
             {(() => {
-              const isUnlimited = activePlanInfo?.maxTeamMembers === -1;
-              const limit = isUnlimited ? "Unlimited" : (activePlanInfo?.maxTeamMembers ?? (currentPlan === "ENTERPRISE" ? 10 : 5));
+              const quota = billingStatus?.quotaUsage?.aksharaQueries;
+              const isLocked = quota?.isLocked ?? (currentPlan !== "ENTERPRISE");
+              const isUnlimited = quota?.isUnlimited ?? (currentPlan === "ENTERPRISE");
+              const used = quota?.used ?? 0;
+              const limit = quota?.limit ?? 500;
+              const limitNum = typeof limit === "number" ? limit : 500;
+              const pct = isLocked ? 0 : isUnlimited ? 100 : Math.min(100, Math.round((used / Math.max(1, limitNum)) * 100));
+
               return (
-                <div className="p-3.5 bg-bg rounded-xl border border-line space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted font-mono">Workspace Seats</span>
-                    <span className={`font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-ink"}`}>
-                      {isUnlimited ? "4 / ∞ Unlimited Active" : `4 / ${limit} Active`}
+                <div className="p-4 bg-bg rounded-xl border border-line space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-600" />
+                      AI Copilot Queries
+                    </span>
+                    <span className="text-xs font-bold font-mono text-ink">
+                      {isLocked ? (
+                        <span className="text-muted font-normal text-[11px]">Enterprise Only</span>
+                      ) : isUnlimited ? (
+                        <span className="text-purple-600">{used} / ∞</span>
+                      ) : (
+                        `${used} / ${limit}`
+                      )}
                     </span>
                   </div>
                   <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
                     <div
-                      className={`h-1.5 rounded-full ${isUnlimited ? "bg-purple-600" : "bg-blue"}`}
-                      style={{ width: isUnlimited ? "100%" : "40%" }}
+                      className={`h-1.5 rounded-full transition-all ${
+                        isLocked ? "bg-muted/30" : isUnlimited ? "bg-purple-600" : "bg-purple-500"
+                      }`}
+                      style={{ width: `${pct}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted block">
-                    {isUnlimited ? "Unlimited team seats permitted" : "Available seats for customs brokers"}
-                  </span>
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span>{isLocked ? "Upgrade to unlock" : isUnlimited ? "Unlimited prompts" : `${pct}% used`}</span>
+                    <span>{isLocked ? "Locked" : isUnlimited ? "Uncapped" : `${Math.max(0, limitNum - used)} left`}</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Meter 4: Team Seats */}
+            {(() => {
+              const quota = billingStatus?.quotaUsage?.seats;
+              const isUnlimited = quota?.isUnlimited ?? (activePlanInfo?.maxTeamMembers === -1);
+              const limit = isUnlimited ? "Unlimited" : (billingStatus?.seatsTotal ?? quota?.limit ?? activePlanInfo?.maxTeamMembers ?? 5);
+              const used = billingStatus?.seatsUsed ?? quota?.used ?? 1;
+              const limitNum = typeof limit === "number" ? limit : 5;
+              const pct = isUnlimited ? 25 : Math.min(100, Math.round((used / Math.max(1, limitNum)) * 100));
+
+              return (
+                <div className="p-4 bg-bg rounded-xl border border-line space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-indigo-600" />
+                      Workspace Seats
+                    </span>
+                    <span className={`text-xs font-bold font-mono ${isUnlimited ? "text-purple-600" : "text-ink"}`}>
+                      {isUnlimited ? `${used} / ∞` : `${used} / ${limit}`}
+                    </span>
+                  </div>
+                  <div className="w-full bg-line rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${isUnlimited ? "bg-purple-600" : "bg-indigo-600"}`}
+                      style={{ width: `${isUnlimited ? 100 : Math.max(5, pct)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-muted">
+                    <span>{used} active member{used === 1 ? "" : "s"}</span>
+                    <span>{isUnlimited ? "Unlimited" : `${Math.max(0, limitNum - used)} available`}</span>
+                  </div>
                 </div>
               );
             })()}
@@ -715,24 +767,17 @@ export function SubscriptionBillingSection() {
         </div>
       </div>
 
-      {/* 2. Tax & GSTIN Invoicing (Full Width Card - Payment Method Removed) */}
+      {/* 2. Billing & Tax Information */}
       <div className="p-6 bg-panel border border-line rounded-2xl shadow-xs space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-line">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-green/10 text-green border border-green/20">
-              <Building2 className="w-4 h-4" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-ink font-mono uppercase tracking-wider flex items-center gap-2">
-                <span>Tax & GSTIN Invoicing</span>
-                <span className="text-[10px] font-mono text-muted bg-bg px-2 py-0.5 rounded border border-line font-normal normal-case">
-                  SAC 998314 • 18% GST Eligible
-                </span>
-              </h4>
-              <p className="text-xs text-muted">
-                Configure your Indian GST identification number (GSTIN) and billing email for official B2B tax invoices & ITC claims.
-              </p>
-            </div>
+        <div className="flex items-center justify-between pb-3 border-b border-line">
+          <div>
+            <h4 className="text-xs font-bold text-ink font-mono uppercase tracking-wider flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-muted" />
+              <span>Tax & Invoicing Details</span>
+            </h4>
+            <p className="text-xs text-muted mt-0.5">
+              GST details and billing email used for official tax invoices and ITC claims.
+            </p>
           </div>
 
           {!isEditingTax && (
@@ -744,114 +789,73 @@ export function SubscriptionBillingSection() {
                 setGstinError(null);
                 setIsEditingTax(true);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue hover:bg-blue-dark text-white shadow-xs transition-colors cursor-pointer self-start sm:self-auto shrink-0"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-bg hover:bg-line border border-line text-ink transition-colors cursor-pointer"
             >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Configure GSTIN & Email</span>
+              <Edit3 className="w-3.5 h-3.5 text-muted" />
+              <span>Edit Details</span>
             </button>
           )}
         </div>
 
-        {/* View Mode */}
         {!isEditingTax ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Entity Card */}
+            {/* Legal Entity */}
             <div className="p-4 bg-bg rounded-xl border border-line space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase text-muted block">
-                  Billing Legal Entity
-                </span>
-                <span className="text-[10px] font-mono text-muted bg-line/50 px-1.5 py-0.5 rounded">
-                  Workspace
-                </span>
-              </div>
+              <span className="text-[10px] font-mono uppercase text-muted block">Legal Entity</span>
               <div className="text-sm font-bold text-ink truncate">
-                {user?.company || "Organization Entity"}
+                {user?.company || "Organization Workspace"}
               </div>
-              <span className="text-[11px] text-muted block">
-                Entity name on official tax invoices
+              <span className="text-[11px] text-muted flex items-center gap-1">
+                <Lock className="w-3 h-3 text-muted/70" />
+                <span>Managed in Team & Org</span>
               </span>
             </div>
 
-            {/* GSTIN Card */}
+            {/* GSTIN */}
             <div className="p-4 bg-bg rounded-xl border border-line space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase text-muted block">
-                  GST Identification Number (GSTIN)
-                </span>
-                {user?.gstin ? (
-                  <StatusPill label="ITC ELIGIBLE (18%)" variant="success" size="xs" />
-                ) : (
-                  <span className="text-[10px] font-mono font-semibold text-amber bg-amber/10 px-2 py-0.5 rounded border border-amber/20">
-                    B2C (Not Configured)
-                  </span>
-                )}
-              </div>
+              <span className="text-[10px] font-mono uppercase text-muted block">GSTIN</span>
               <div className="text-sm font-bold font-mono text-ink">
                 {user?.gstin ? (
                   <span className="text-blue">{user.gstin}</span>
                 ) : (
-                  <span className="text-muted font-normal italic">No GSTIN added</span>
+                  <span className="text-muted font-normal italic">Not provided</span>
                 )}
               </div>
-              <span className="text-[11px] text-muted block">
-                {user?.gstin
-                  ? "Input Tax Credit (ITC) applied automatically"
-                  : "Click Configure to add your 15-digit GSTIN"}
+              <span className="text-[11px]">
+                {user?.gstin ? (
+                  <span className="text-emerald-600 font-medium">18% Input Tax Credit eligible</span>
+                ) : (
+                  <span className="text-muted">Add GSTIN for B2B tax credit</span>
+                )}
               </span>
             </div>
 
-            {/* Invoicing Email Card */}
+            {/* Billing Email */}
             <div className="p-4 bg-bg rounded-xl border border-line space-y-1">
-              <span className="text-[10px] font-mono uppercase text-muted block">
-                Invoice Delivery Email
-              </span>
-              <div className="text-sm font-bold font-mono text-ink truncate flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-muted shrink-0" />
-                <span className="truncate">{user?.billingEmail || user?.email || "billing@organization.com"}</span>
+              <span className="text-[10px] font-mono uppercase text-muted block">Invoice Email</span>
+              <div className="text-sm font-bold text-ink truncate font-mono">
+                {user?.billingEmail || user?.email || "Not set"}
               </div>
-              <span className="text-[11px] text-muted block">
-                PDF receipts & GST invoices sent to this inbox
+              <span className="text-[11px] text-muted">
+                Receipts sent directly to this inbox
               </span>
             </div>
           </div>
         ) : (
-          /* Edit Mode Form: Legal Entity Name is Read-Only */
-          <form
-            onSubmit={handleSaveTaxDetails}
-            className="p-5 bg-bg border border-blue/40 rounded-xl space-y-4"
-          >
-            <div className="font-bold text-ink text-xs flex items-center justify-between">
-              <span>Edit Corporate Tax & Invoicing Details</span>
-              <span className="text-[10px] text-muted font-normal">
-                Changes will reflect on all future subscription invoices
-              </span>
-            </div>
-
+          <form onSubmit={handleSaveTaxDetails} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              {/* Read-Only Company Name */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] text-muted flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-muted" />
-                    <span>Legal Entity / Company Name</span>
-                  </label>
-                  <span className="text-[10px] text-muted font-mono bg-line/60 px-1.5 py-0.5 rounded">
-                    Read-only
-                  </span>
+                <label className="text-[11px] text-muted block mb-1 font-medium">
+                  Legal Entity (Workspace)
+                </label>
+                <div className="w-full py-2 px-3 bg-bg border border-line rounded-lg text-ink font-semibold text-xs truncate select-none">
+                  {user?.company || "Organization Workspace"}
                 </div>
-                <div className="w-full py-2 px-3 bg-panel/70 border border-line rounded-lg text-ink font-semibold text-xs truncate select-none shadow-2xs">
-                  {user?.company || "Organization Entity"}
-                </div>
-                <span className="text-[10px] text-muted block mt-1">
-                  Company name is managed in Workspace settings
-                </span>
               </div>
 
-              {/* Editable GSTIN */}
               <div>
-                <label className="text-[11px] text-muted block mb-1">
-                  GSTIN (15-Character Tax ID)
+                <label className="text-[11px] text-muted block mb-1 font-medium">
+                  GSTIN (15 Alphanumeric)
                 </label>
                 <input
                   type="text"
@@ -862,35 +866,27 @@ export function SubscriptionBillingSection() {
                     setEditGstin(e.target.value.toUpperCase());
                     setGstinError(null);
                   }}
-                  className={`w-full py-2 px-3 bg-panel border rounded-lg text-ink font-mono focus:outline-none text-xs uppercase ${
+                  className={`w-full py-2 px-3 bg-bg border rounded-lg text-ink font-mono focus:outline-none text-xs uppercase ${
                     gstinError ? "border-red focus:border-red" : "border-line focus:border-blue"
                   }`}
                 />
-                {gstinError ? (
+                {gstinError && (
                   <span className="text-[10px] text-red block mt-1">{gstinError}</span>
-                ) : (
-                  <span className="text-[10px] text-muted block mt-1">
-                    State code (2) + PAN (10) + Entity (3)
-                  </span>
                 )}
               </div>
 
-              {/* Editable Billing Email */}
               <div>
-                <label className="text-[11px] text-muted block mb-1">
-                  Billing Email for Tax Invoices
+                <label className="text-[11px] text-muted block mb-1 font-medium">
+                  Billing Email
                 </label>
                 <input
                   type="email"
                   required
-                  placeholder="e.g. accounts@yourcompany.com"
+                  placeholder="accounts@company.com"
                   value={editBillingEmail}
                   onChange={(e) => setEditBillingEmail(e.target.value)}
-                  className="w-full py-2 px-3 bg-panel border border-line rounded-lg text-ink focus:outline-none focus:border-blue text-xs font-mono"
+                  className="w-full py-2 px-3 bg-bg border border-line rounded-lg text-ink focus:outline-none focus:border-blue text-xs font-mono"
                 />
-                <span className="text-[10px] text-muted block mt-1">
-                  Invoice recipient for accounting team
-                </span>
               </div>
             </div>
 
@@ -901,7 +897,7 @@ export function SubscriptionBillingSection() {
                   setGstinError(null);
                   setIsEditingTax(false);
                 }}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-panel hover:bg-line border border-line text-muted cursor-pointer"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-bg hover:bg-line border border-line text-muted cursor-pointer"
               >
                 Cancel
               </button>
@@ -911,7 +907,7 @@ export function SubscriptionBillingSection() {
                 className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold bg-blue hover:bg-blue-dark text-white cursor-pointer disabled:opacity-50"
               >
                 {isUpdatingProfile && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>Save Details</span>
+                <span>Save Changes</span>
               </button>
             </div>
           </form>
@@ -919,41 +915,46 @@ export function SubscriptionBillingSection() {
       </div>
 
       {/* 3. Invoices History Table */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-blue" />
-            <h4 className="text-xs font-bold text-ink font-mono uppercase tracking-wider">
-              Billing History & Tax Invoices
+      <div className="p-6 bg-panel border border-line rounded-2xl shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-line">
+          <div>
+            <h4 className="text-xs font-bold text-ink font-mono uppercase tracking-wider flex items-center gap-2">
+              <FileText className="w-4 h-4 text-muted" />
+              <span>Billing History</span>
+              <span className="text-[10px] font-mono text-muted bg-bg px-2 py-0.5 rounded-full border border-line font-normal">
+                {invoicesData.length} {invoicesData.length === 1 ? "invoice" : "invoices"}
+              </span>
             </h4>
+            <p className="text-xs text-muted mt-0.5">
+              Download tax invoices and receipts for accounting and ITC claims.
+            </p>
           </div>
-          <span className="text-[10px] font-mono text-muted">
-            SAC 998314 • Input Tax Credit (ITC) Eligible
-          </span>
         </div>
 
-        <TableContainer>
-          <Table>
-            <TableHeader>
-              <tr>
-                <TableHead>Invoice ID</TableHead>
-                <TableHead>Billing Date</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead align="right">Taxable Outlay</TableHead>
-                <TableHead align="right">Total (with GST)</TableHead>
-                <TableHead align="center">Status</TableHead>
-                <TableHead align="center">Receipt</TableHead>
-              </tr>
-            </TableHeader>
-            <TableBody>
-              {invoicesData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} align="center" className="py-8 text-muted">
-                    No payment invoices recorded yet. Invoices will automatically appear here once subscriptions are processed via Razorpay.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                invoicesData.map((inv) => {
+        {invoicesData.length === 0 ? (
+          <div className="py-12 text-center space-y-2 bg-bg/50 rounded-xl border border-dashed border-line">
+            <FileText className="w-8 h-8 text-muted/40 mx-auto" />
+            <div className="text-xs font-semibold text-ink">No invoices yet</div>
+            <p className="text-[11px] text-muted max-w-sm mx-auto">
+              Invoices will be automatically generated and available for download here upon subscription payment.
+            </p>
+          </div>
+        ) : (
+          <TableContainer>
+            <Table>
+              <TableHeader>
+                <tr>
+                  <TableHead>Invoice ID</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Plan & Cycle</TableHead>
+                  <TableHead align="right">Taxable</TableHead>
+                  <TableHead align="right">Total (with GST)</TableHead>
+                  <TableHead align="center">Status</TableHead>
+                  <TableHead align="center">Invoice</TableHead>
+                </tr>
+              </TableHeader>
+              <TableBody>
+                {invoicesData.map((inv) => {
                   const symbol = inv.currency === "INR" ? "₹" : "$";
                   const formattedDate = new Date(inv.createdAt).toLocaleDateString("en-US", {
                     year: "numeric",
@@ -962,9 +963,10 @@ export function SubscriptionBillingSection() {
                   });
                   const rawAmount = Number(inv.amount) || 0;
                   const totalAmount = rawAmount > 100000 ? Math.round(rawAmount / 100) : rawAmount;
-                  const taxableAmount = inv.currency === "INR"
-                    ? Math.round(totalAmount / 1.18)
-                    : Math.round(totalAmount * 0.9);
+                  const taxableAmount =
+                    inv.currency === "INR"
+                      ? Math.round(totalAmount / 1.18)
+                      : Math.round(totalAmount * 0.9);
 
                   return (
                     <TableRow key={inv.id}>
@@ -973,7 +975,10 @@ export function SubscriptionBillingSection() {
                       </TableCell>
                       <TableCell className="text-muted font-mono">{formattedDate}</TableCell>
                       <TableCell className="text-ink font-semibold uppercase">
-                        {inv.planId} <span className="text-muted text-[11px] lowercase font-normal">({inv.billingCycle})</span>
+                        {inv.planId}{" "}
+                        <span className="text-muted text-[11px] lowercase font-normal">
+                          ({inv.billingCycle})
+                        </span>
                       </TableCell>
                       <TableCell align="right" className="font-mono text-muted tabular-nums">
                         {symbol}
@@ -986,7 +991,11 @@ export function SubscriptionBillingSection() {
                       <TableCell align="center">
                         <StatusPill
                           label={inv.status}
-                          variant={inv.status === "PAID" || inv.status === "SUCCESS" ? "success" : "neutral"}
+                          variant={
+                            inv.status === "PAID" || inv.status === "SUCCESS"
+                              ? "success"
+                              : "neutral"
+                          }
                           size="xs"
                         />
                       </TableCell>
@@ -994,20 +1003,20 @@ export function SubscriptionBillingSection() {
                         <button
                           type="button"
                           onClick={() => handleDownloadInvoice({ ...inv, amount: totalAmount })}
-                          className="p-1.5 rounded-md hover:bg-bg text-muted hover:text-blue transition-colors cursor-pointer inline-flex items-center gap-1"
+                          className="px-2.5 py-1 rounded-lg hover:bg-bg border border-line text-xs text-ink hover:text-blue transition-colors cursor-pointer inline-flex items-center gap-1.5 font-medium"
                           title="Download GST Tax Invoice"
                         >
                           <Download className="w-3.5 h-3.5" />
-                          <span className="text-[11px]">PDF</span>
+                          <span>PDF</span>
                         </button>
                       </TableCell>
                     </TableRow>
                   );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </div>
 
       {/* Change Plan Modal showing Live Real Database Stored Plans */}

@@ -1,4 +1,31 @@
 import { api } from "./api";
+import { PricingPlan } from "@/lib/types";
+
+export interface QuotaItem {
+  used: number;
+  limit: number;
+  isUnlimited: boolean;
+  isLocked?: boolean;
+}
+
+export interface BillingStatusResponse {
+  tier: string;
+  billingCycle: string;
+  seatsUsed: number;
+  seatsTotal: number;
+  isPlanExpired: boolean;
+  planExpiresAt: string | null;
+  planStartedAt: string | null;
+  daysUntilExpiry: number | null;
+  plan?: PricingPlan;
+  quotaUsage?: {
+    classifications?: QuotaItem;
+    calculations?: QuotaItem;
+    aksharaQueries?: QuotaItem;
+    seats?: QuotaItem;
+  };
+  invoices?: InvoiceItem[];
+}
 
 export interface PublicPaymentConfig {
   isActive: boolean;
@@ -175,6 +202,11 @@ export const paymentsApi = api.injectEndpoints({
       },
       providesTags: ["Payments"],
     }),
+
+    getBillingStatus: builder.query<BillingStatusResponse, void>({
+      query: () => "/settings/billing",
+      providesTags: ["Payments", "Team", "Pricing"],
+    }),
   }),
 });
 
@@ -186,4 +218,5 @@ export const {
   useGetAdminPaymentConfigQuery,
   useUpdateAdminPaymentConfigMutation,
   useGetAdminTransactionsQuery,
+  useGetBillingStatusQuery,
 } = paymentsApi;

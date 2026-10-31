@@ -34,56 +34,84 @@ function SettingsContent() {
   const { data: teamData } = useGetTeamMembersQuery();
   const tabParam = searchParams.get("tab")?.toLowerCase();
 
-  const getInitialTab = () => {
-    if (
-      tabParam === "billing" ||
-      tabParam === "subscription" ||
-      tabParam === "plan" ||
-      tabParam === "plans"
-    ) {
-      return "billing";
+  const resolveTab = (rawTab?: string | null): string | null => {
+    if (!rawTab) return null;
+    const tab = rawTab.toLowerCase().trim();
+    if (["team", "organization", "org", "members", "workspace"].includes(tab)) return "team";
+    if (["billing", "subscription", "plan", "plans"].includes(tab)) return "billing";
+    if (["contracts", "contract", "rates", "yield", "freight"].includes(tab)) return "contracts";
+    if (SHOW_TRADE_GATEWAYS && ["gateways", "gateway", "tradegateways"].includes(tab)) return "gateways";
+    if (SHOW_API_KEYS && ["platform", "api-keys", "keys", "apikey"].includes(tab)) return "platform";
+    return null;
+  };
+
+  const getInitialTab = (): string => {
+    // 1. URL search parameter (?tab=...)
+    const fromUrl = resolveTab(tabParam);
+    if (fromUrl) return fromUrl;
+
+    // 2. Saved preference in sessionStorage
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("exim_settings_tab");
+        const fromSaved = resolveTab(saved);
+        if (fromSaved) return fromSaved;
+      } catch {
+        // ignore
+      }
     }
-    const validTabs = [
-      ...(SHOW_TRADE_GATEWAYS ? ["gateways"] : []),
-      "contracts",
-      ...(SHOW_API_KEYS ? ["platform"] : []),
-      "billing",
-      "team",
-    ];
-    if (tabParam && validTabs.includes(tabParam)) {
-      return tabParam;
-    }
+
+    // 3. Fallback default
     return SHOW_TRADE_GATEWAYS ? "gateways" : "contracts";
   };
 
   const [activeTab, setActiveTab] = useState<string>(getInitialTab);
 
-  useEffect(() => {
-    const currentTab = searchParams.get("tab")?.toLowerCase();
-    const validTabs = [
-      ...(SHOW_TRADE_GATEWAYS ? ["gateways"] : []),
-      "contracts",
-      ...(SHOW_API_KEYS ? ["platform"] : []),
-      "billing",
-      "team",
-    ];
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.setItem("exim_settings_tab", tabId);
+      } catch {}
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tabId);
+      window.history.replaceState(null, "", url.toString());
+    }
+    router.replace(`/settings?tab=${tabId}`, { scroll: false });
+  };
 
-    if (
-      currentTab === "billing" ||
-      currentTab === "subscription" ||
-      currentTab === "plan" ||
-      currentTab === "plans"
-    ) {
-      setActiveTab("billing");
-    } else if (currentTab === "llm" || currentTab === "ai") {
+  useEffect(() => {
+    const rawTab = searchParams.get("tab");
+    const fromUrl = resolveTab(rawTab);
+
+    if (fromUrl) {
+      setActiveTab(fromUrl);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("exim_settings_tab", fromUrl);
+        } catch {}
+      }
+    } else if (rawTab === "llm" || rawTab === "ai") {
       // AI/LLM configuration has moved to the Super Admin Cockpit
       if (user?.role === "ADMIN") {
         router.push("/admin/llm");
       } else {
         setActiveTab(SHOW_TRADE_GATEWAYS ? "gateways" : "contracts");
       }
-    } else if (currentTab && validTabs.includes(currentTab)) {
-      setActiveTab(currentTab);
+    } else {
+      // When no URL query param is present on refresh or direct navigation, restore saved tab
+      if (typeof window !== "undefined") {
+        try {
+          const saved = sessionStorage.getItem("exim_settings_tab");
+          const fromSaved = resolveTab(saved);
+          if (fromSaved) {
+            setActiveTab(fromSaved);
+            const url = new URL(window.location.href);
+            url.searchParams.set("tab", fromSaved);
+            window.history.replaceState(null, "", url.toString());
+          }
+        } catch {}
+      }
     }
   }, [searchParams, user, router]);
 
@@ -135,7 +163,10 @@ function SettingsContent() {
       {/* Quick Status Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {SHOW_TRADE_GATEWAYS ? (
-          <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+          <div
+            onClick={() => handleTabChange("gateways")}
+            className="p-3.5 bg-panel border border-line rounded-xl shadow-xs cursor-pointer hover:border-line-hover transition-all"
+          >
             <span className="text-[10px] font-mono uppercase text-muted block">
               Customs Gateways
             </span>
@@ -148,7 +179,10 @@ function SettingsContent() {
             </span>
           </div>
         ) : (
-          <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+          <div
+            onClick={() => handleTabChange("team")}
+            className="p-3.5 bg-panel border border-line rounded-xl shadow-xs cursor-pointer hover:border-line-hover transition-all"
+          >
             <span className="text-[10px] font-mono uppercase text-muted block">
               Workspace & Organization
             </span>
@@ -162,7 +196,10 @@ function SettingsContent() {
           </div>
         )}
 
-        <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+        <div
+          onClick={() => handleTabChange("contracts")}
+          className="p-3.5 bg-panel border border-line rounded-xl shadow-xs cursor-pointer hover:border-line-hover transition-all"
+        >
           <span className="text-[10px] font-mono uppercase text-muted block">
             Contract Overrides
           </span>
@@ -176,7 +213,10 @@ function SettingsContent() {
         </div>
 
         {SHOW_API_KEYS ? (
-          <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+          <div
+            onClick={() => handleTabChange("platform")}
+            className="p-3.5 bg-panel border border-line rounded-xl shadow-xs cursor-pointer hover:border-line-hover transition-all"
+          >
             <span className="text-[10px] font-mono uppercase text-muted block">
               Enterprise Integration
             </span>
@@ -189,7 +229,10 @@ function SettingsContent() {
             </span>
           </div>
         ) : (
-          <div className="p-3.5 bg-panel border border-line rounded-xl shadow-xs">
+          <div
+            onClick={() => handleTabChange("billing")}
+            className="p-3.5 bg-panel border border-line rounded-xl shadow-xs cursor-pointer hover:border-line-hover transition-all"
+          >
             <span className="text-[10px] font-mono uppercase text-muted block">
               Plan & Billing
             </span>
@@ -209,7 +252,7 @@ function SettingsContent() {
         <Tabs
           tabs={allTabsConfig}
           activeTab={activeTab}
-          onChange={(tabId) => setActiveTab(tabId)}
+          onChange={handleTabChange}
           className="w-full justify-between"
         />
       </div>

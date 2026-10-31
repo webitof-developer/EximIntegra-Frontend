@@ -53,6 +53,7 @@ export interface UserProfile {
   role: "IMPORTER" | "EXPORTER" | "CUSTOMS_BROKER" | "TRADE_ADVISOR" | "ADMIN" | string;
   tier: "ENTERPRISE" | "PROFESSIONAL" | "STARTER" | "FREE_TRIAL" | string;
   tierBadge?: string;
+  planId?: string | null;
   billingCycle?: "monthly" | "annual" | "trial" | string;
   subscriptionStartedAt?: string | null;
   subscriptionExpiresAt?: string | null;
