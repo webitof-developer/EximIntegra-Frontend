@@ -14,7 +14,7 @@ import {
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { FeatureMatrixItem, PricingPlan } from "@/lib/types";
-import { ToastNotification, ToastVariant } from "@/components/ui";
+import { ToastNotification, ToastVariant, CustomDropdown } from "@/components/ui";
 import {
   TableProperties,
   Plus,
@@ -124,16 +124,75 @@ export default function AdminFeatureMatrixPage() {
     return matrixData?.items || [];
   }, [matrixData]);
 
-  const categories: string[] = useMemo(() => {
+  // Category Normalization Map: ensures all categories have sequential number prefix (e.g. "6. Gaming")
+  const { categories, categoryMap, nextCategoryNumber } = useMemo(() => {
+    const rawList: string[] = [];
     if (matrixData?.categories && matrixData.categories.length > 0) {
-      return matrixData.categories;
+      matrixData.categories.forEach((c) => {
+        const trimmed = (c || "").trim();
+        if (trimmed && !rawList.includes(trimmed)) rawList.push(trimmed);
+      });
     }
-    const cats = new Set<string>();
     items.forEach((it) => {
-      if (it.category) cats.add(it.category);
+      const trimmed = (it.category || "").trim();
+      if (trimmed && !rawList.includes(trimmed)) {
+        rawList.push(trimmed);
+      }
     });
-    return Array.from(cats);
+
+    // Calculate highest existing category number
+    let maxNum = 0;
+    rawList.forEach((c) => {
+      const m = c.match(/^(\d+)\./);
+      if (m) {
+        maxNum = Math.max(maxNum, parseInt(m[1], 10));
+      }
+    });
+
+    // Build map for raw -> normalized with sequential numbering
+    const map = new Map<string, string>();
+    let nextNum = maxNum;
+    rawList.forEach((c) => {
+      if (/^\d+\.\s*/.test(c)) {
+        map.set(c, c);
+        const unnumbered = c.replace(/^\d+\.\s*/, "").trim();
+        if (unnumbered) map.set(unnumbered, c);
+      } else {
+        nextNum += 1;
+        const normalized = `${nextNum}. ${c}`;
+        map.set(c, normalized);
+      }
+    });
+
+    const uniqueNormalized = Array.from(new Set(Array.from(map.values()))).sort((a, b) => {
+      const numA = parseInt(a.match(/^(\d+)\./)?.[1] || "9999", 10);
+      const numB = parseInt(b.match(/^(\d+)\./)?.[1] || "9999", 10);
+      if (numA !== numB) return numA - numB;
+      return a.localeCompare(b);
+    });
+
+    return {
+      categories: uniqueNormalized,
+      categoryMap: map,
+      nextCategoryNumber: Math.max(maxNum, nextNum) + 1,
+    };
   }, [matrixData, items]);
+
+  const categoryFilterOptions = useMemo(
+    () => [
+      { value: "ALL", label: `All Categories (${categories.length})` },
+      ...categories.map((c) => ({ value: c, label: c })),
+    ],
+    [categories]
+  );
+
+  const modalCategoryOptions = useMemo(
+    () => [
+      ...categories.map((c) => ({ value: c, label: c })),
+      { value: "__custom__", label: "+ Enter New Category..." },
+    ],
+    [categories]
+  );
 
   // KPIs
   const totalRows = items.length;
@@ -144,14 +203,20 @@ export default function AdminFeatureMatrixPage() {
   // Filtered Items
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
+      const rawCat = (item.category || "").trim();
+      const normCat = categoryMap.get(rawCat) || rawCat;
+
       const matchesSearch =
         searchQuery === "" ||
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase());
+        normCat.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        rawCat.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCat =
-        selectedCategory === "ALL" || item.category === selectedCategory;
+        selectedCategory === "ALL" ||
+        normCat === selectedCategory ||
+        rawCat === selectedCategory;
 
       const matchesVis =
         visibilityFilter === "ALL" ||
@@ -160,23 +225,31 @@ export default function AdminFeatureMatrixPage() {
 
       return matchesSearch && matchesCat && matchesVis;
     });
-  }, [items, searchQuery, selectedCategory, visibilityFilter]);
+  }, [items, searchQuery, selectedCategory, visibilityFilter, categoryMap]);
 
   // Grouped filtered items by category
   const groupedCategories = useMemo(() => {
     const map = new Map<string, FeatureMatrixItem[]>();
 
     filteredItems.forEach((it) => {
-      const cat = it.category || "General";
+      const rawCat = (it.category || "General").trim();
+      const cat = categoryMap.get(rawCat) || rawCat;
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat)!.push(it);
     });
 
-    return Array.from(map.entries()).map(([category, rows]) => ({
-      category,
-      rows: rows.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
-    }));
-  }, [filteredItems]);
+    return Array.from(map.entries())
+      .map(([category, rows]) => ({
+        category,
+        rows: rows.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+      }))
+      .sort((a, b) => {
+        const numA = parseInt(a.category.match(/^(\d+)\./)?.[1] || "9999", 10);
+        const numB = parseInt(b.category.match(/^(\d+)\./)?.[1] || "9999", 10);
+        if (numA !== numB) return numA - numB;
+        return a.category.localeCompare(b.category);
+      });
+  }, [filteredItems, categoryMap]);
 
   // Open Create Modal
   const handleOpenCreateModal = (preselectedCategory?: string) => {
@@ -201,12 +274,14 @@ export default function AdminFeatureMatrixPage() {
   // Open Edit Modal
   const handleOpenEditModal = (item: FeatureMatrixItem) => {
     setEditingItem(item);
-    if (categories.includes(item.category)) {
-      setFormCategory(item.category);
+    const rawCat = (item.category || "").trim();
+    const normCat = categoryMap.get(rawCat) || rawCat;
+    if (categories.includes(normCat)) {
+      setFormCategory(normCat);
       setFormCustomCategory("");
     } else {
       setFormCategory("__custom__");
-      setFormCustomCategory(item.category);
+      setFormCustomCategory(normCat);
     }
     setFormName(item.name);
     setFormDescription(item.description || "");
@@ -233,7 +308,7 @@ export default function AdminFeatureMatrixPage() {
   // Save Create/Edit
   const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalCategory =
+    let finalCategory =
       formCategory === "__custom__" ? formCustomCategory.trim() : formCategory.trim();
 
     if (!finalCategory) {
@@ -243,6 +318,13 @@ export default function AdminFeatureMatrixPage() {
     if (!formName.trim()) {
       showToast("Please provide a feature name.", "error");
       return;
+    }
+
+    // Auto-normalize category name: ensure sequential prefix number like "6. Gaming"
+    if (categoryMap.has(finalCategory)) {
+      finalCategory = categoryMap.get(finalCategory)!;
+    } else if (!/^\d+\.\s*/.test(finalCategory)) {
+      finalCategory = `${nextCategoryNumber}. ${finalCategory}`;
     }
 
     // Convert formPlanValues into backend planValues dict
@@ -552,18 +634,16 @@ export default function AdminFeatureMatrixPage() {
             </div>
 
             {/* Category Dropdown Filter */}
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-bg border border-line px-3 py-1.5 text-xs font-semibold text-ink rounded-lg focus:outline-none focus:border-blue transition-colors cursor-pointer"
-            >
-              <option value="ALL">All Categories ({totalCategories})</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <div className="min-w-[200px] sm:min-w-[240px]">
+              <CustomDropdown
+                value={selectedCategory}
+                onChange={(val) => setSelectedCategory(val)}
+                options={categoryFilterOptions}
+                size="sm"
+                buttonClassName="px-3 py-1.5 bg-bg border-line rounded-lg text-xs font-semibold text-ink hover:border-blue/50 w-full"
+                menuClassName="w-64 max-h-72"
+              />
+            </div>
 
             {/* Visibility Filter Pills */}
             <div className="flex items-center bg-bg border border-line p-0.5 rounded-lg text-xs font-semibold">
@@ -896,28 +976,30 @@ export default function AdminFeatureMatrixPage() {
                     <span>Category / Engine Section</span>
                     <span className="text-red">*</span>
                   </label>
-                  <select
+                  <CustomDropdown
                     value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full bg-bg border border-line px-3 py-2 text-xs text-ink rounded-lg focus:outline-none focus:border-blue transition-colors cursor-pointer"
-                  >
-                    {categories.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                    <option value="__custom__">+ Enter New Category...</option>
-                  </select>
+                    onChange={(val) => setFormCategory(val)}
+                    options={modalCategoryOptions}
+                    size="md"
+                    buttonClassName="w-full px-3 py-2 bg-bg border-line rounded-lg text-xs text-ink font-semibold focus:border-blue"
+                    menuClassName="w-full max-h-60"
+                    placeholder="Select or enter category..."
+                  />
 
                   {formCategory === "__custom__" && (
-                    <input
-                      type="text"
-                      placeholder="e.g. 6. Advanced Custom Clearance & APIs"
-                      value={formCustomCategory}
-                      onChange={(e) => setFormCustomCategory(e.target.value)}
-                      className="w-full bg-bg border border-blue px-3 py-2 text-xs text-ink rounded-lg focus:outline-none transition-colors mt-2"
-                      required
-                    />
+                    <div className="space-y-1.5 mt-2">
+                      <input
+                        type="text"
+                        placeholder={`e.g. ${nextCategoryNumber}. Advanced Custom Clearance & APIs`}
+                        value={formCustomCategory}
+                        onChange={(e) => setFormCustomCategory(e.target.value)}
+                        className="w-full bg-bg border border-blue px-3 py-2 text-xs text-ink rounded-lg focus:outline-none transition-colors"
+                        required
+                      />
+                      <p className="text-[11px] text-muted font-mono">
+                        Sequential category number prefix (e.g. &apos;{nextCategoryNumber}. &apos;) will be automatically assigned if omitted.
+                      </p>
+                    </div>
                   )}
                 </div>
 

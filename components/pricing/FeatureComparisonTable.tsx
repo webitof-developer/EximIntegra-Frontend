@@ -307,22 +307,56 @@ export function FeatureComparisonTable() {
     return rawItems.filter((it) => it.isVisible !== false);
   }, [matrixData]);
 
-  // Group items by category preserving category order
+  // Group items by category preserving sequential category numbering and order
   const groupedCategories = useMemo(() => {
-    const categoryMap = new Map<string, FeatureMatrixItem[]>();
-
+    // 1. Collect all distinct categories
+    const rawCategories: string[] = [];
     items.forEach((item) => {
-      const cat = item.category || "General Features";
-      if (!categoryMap.has(cat)) {
-        categoryMap.set(cat, []);
-      }
-      categoryMap.get(cat)!.push(item);
+      const c = (item.category || "General Features").trim();
+      if (!rawCategories.includes(c)) rawCategories.push(c);
     });
 
-    return Array.from(categoryMap.entries()).map(([title, rows]) => ({
-      title,
-      rows: rows.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
-    }));
+    // 2. Find max category number from existing numbered categories
+    let maxNum = 0;
+    rawCategories.forEach((c) => {
+      const m = c.match(/^(\d+)\./);
+      if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+    });
+
+    // 3. Normalize category names (ensure sequential number prefix)
+    const normMap = new Map<string, string>();
+    let nextNum = maxNum;
+    rawCategories.forEach((c) => {
+      if (/^\d+\.\s*/.test(c)) {
+        normMap.set(c, c);
+      } else {
+        nextNum += 1;
+        normMap.set(c, `${nextNum}. ${c}`);
+      }
+    });
+
+    // 4. Group items by normalized category name
+    const categoryMap = new Map<string, FeatureMatrixItem[]>();
+    items.forEach((item) => {
+      const rawCat = (item.category || "General Features").trim();
+      const normCat = normMap.get(rawCat) || rawCat;
+      if (!categoryMap.has(normCat)) {
+        categoryMap.set(normCat, []);
+      }
+      categoryMap.get(normCat)!.push(item);
+    });
+
+    return Array.from(categoryMap.entries())
+      .map(([title, rows]) => ({
+        title,
+        rows: rows.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+      }))
+      .sort((a, b) => {
+        const numA = parseInt(a.title.match(/^(\d+)\./)?.[1] || "9999", 10);
+        const numB = parseInt(b.title.match(/^(\d+)\./)?.[1] || "9999", 10);
+        if (numA !== numB) return numA - numB;
+        return a.title.localeCompare(b.title);
+      });
   }, [items]);
 
   // Helper to extract feature value for a specific plan with intelligent auto-fetch & resolution
