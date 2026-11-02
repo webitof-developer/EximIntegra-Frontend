@@ -578,6 +578,25 @@ export interface PricingPlan {
   updatedAt?: string;
 }
 
+export interface FeatureMatrixItem {
+  id: string;
+  category: string;
+  name: string;
+  description?: string;
+  sortOrder: number;
+  isVisible: boolean;
+  planValues: Record<string, boolean | string>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface FeatureMatrixResponse {
+  items: FeatureMatrixItem[];
+  categories: string[];
+  plans: PricingPlan[];
+  total: number;
+}
+
 export interface AdminUserItem {
   id: string;
   name: string;

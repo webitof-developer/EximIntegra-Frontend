@@ -7,6 +7,8 @@ import {
   RolePermissionItem,
   TierPageAccessGate,
   PublicRoleItem,
+  FeatureMatrixItem,
+  FeatureMatrixResponse,
 } from "@/lib/types";
 
 export interface UpdateAdminUserRequest {
@@ -61,7 +63,7 @@ export const adminApi = api.injectEndpoints({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Pricing"],
+      invalidatesTags: ["Pricing", "FeatureMatrix"],
     }),
     deletePricingPlan: builder.mutation<
       { plans: PricingPlan[]; message: string },
@@ -71,7 +73,7 @@ export const adminApi = api.injectEndpoints({
         url: `/admin/pricing/${planId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Pricing"],
+      invalidatesTags: ["Pricing", "FeatureMatrix"],
     }),
     getRBACMatrix: builder.query<RBACMatrixResponse, void>({
       query: () => "/admin/rbac",
@@ -199,6 +201,68 @@ export const adminApi = api.injectEndpoints({
       }),
       invalidatesTags: ["TierAccess"],
     }),
+    getPublicFeatureMatrix: builder.query<FeatureMatrixResponse, void>({
+      query: () => "/pricing/matrix",
+      providesTags: ["FeatureMatrix"],
+    }),
+    getAdminFeatureMatrix: builder.query<FeatureMatrixResponse, void>({
+      query: () => "/admin/feature-matrix",
+      providesTags: ["FeatureMatrix"],
+    }),
+    createFeatureMatrixRow: builder.mutation<
+      { item: FeatureMatrixItem; matrix: FeatureMatrixResponse; message: string },
+      Partial<FeatureMatrixItem>
+    >({
+      query: (body) => ({
+        url: "/admin/feature-matrix",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["FeatureMatrix"],
+    }),
+    updateFeatureMatrixRow: builder.mutation<
+      { item: FeatureMatrixItem; matrix: FeatureMatrixResponse; message: string },
+      { id: string } & Partial<FeatureMatrixItem>
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/admin/feature-matrix/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["FeatureMatrix"],
+    }),
+    toggleFeatureVisibility: builder.mutation<
+      { item: FeatureMatrixItem; matrix: FeatureMatrixResponse; message: string },
+      { id: string; isVisible?: boolean }
+    >({
+      query: ({ id, isVisible }) => ({
+        url: `/admin/feature-matrix/${id}/visibility`,
+        method: "PATCH",
+        body: { isVisible },
+      }),
+      invalidatesTags: ["FeatureMatrix"],
+    }),
+    deleteFeatureMatrixRow: builder.mutation<
+      { matrix: FeatureMatrixResponse; message: string },
+      string
+    >({
+      query: (featureId) => ({
+        url: `/admin/feature-matrix/${featureId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["FeatureMatrix"],
+    }),
+    syncFeatureMatrixPlans: builder.mutation<
+      { success: boolean; message: string; syncedRows: number; activePlans: string[]; matrix?: FeatureMatrixResponse },
+      { forceRefreshAll?: boolean } | void
+    >({
+      query: (body) => ({
+        url: "/admin/feature-matrix/sync-plans",
+        method: "POST",
+        body: body || {},
+      }),
+      invalidatesTags: ["FeatureMatrix"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -249,5 +313,12 @@ export const {
   useCreateTierAccessGateMutation,
   useUpdateTierAccessGatesMutation,
   useDeleteTierAccessGateMutation,
+  useGetPublicFeatureMatrixQuery,
+  useGetAdminFeatureMatrixQuery,
+  useCreateFeatureMatrixRowMutation,
+  useUpdateFeatureMatrixRowMutation,
+  useToggleFeatureVisibilityMutation,
+  useDeleteFeatureMatrixRowMutation,
+  useSyncFeatureMatrixPlansMutation,
 } = adminApi;
 

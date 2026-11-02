@@ -32,6 +32,7 @@ import {
   DollarSign,
   Cpu,
   CreditCard,
+  TableProperties,
   LogOut,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
@@ -221,6 +222,13 @@ const adminNavSections: NavSection[] = [
         href: "/admin/pricing",
         icon: <DollarSign className="w-4 h-4 text-amber-400" />,
         glyph: "PRC",
+      },
+      {
+        id: "admin-feature-matrix",
+        title: "Feature Matrix (Pricing)",
+        href: "/admin/feature-matrix",
+        icon: <TableProperties className="w-4 h-4 text-emerald-400" />,
+        glyph: "MTX",
       },
       {
         id: "admin-llm",

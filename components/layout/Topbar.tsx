@@ -42,6 +42,10 @@ const pageMeta: Record<string, { title: string; description: string }> = {
     title: "Super Admin — Dynamic SaaS Pricing",
     description: "Configure tier definitions, feature quotas, regional currencies, and live plan limits.",
   },
+  "/admin/feature-matrix": {
+    title: "Super Admin — Feature Matrix Management",
+    description: "Control public pricing comparison rows, customize plan entitlements, and toggle live visibility.",
+  },
   "/admin/llm": {
     title: "Super Admin — AI & LLM Providers",
     description: "Configure enterprise AI credentials, active models, and global Akshara copilot engine.",
