@@ -3,6 +3,13 @@
 import React, { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
+import "lenis/dist/lenis.css";
+
+declare global {
+  interface Window {
+    __lenis?: Lenis;
+  }
+}
 
 export function SmoothScrollProvider({
   children,
@@ -13,56 +20,64 @@ export function SmoothScrollProvider({
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    // 1. Initialize Lenis with optimized physics-based lerp for buttery smooth scrolling
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: "vertical",
-      gestureOrientation: "vertical",
+      lerp: 0.085, // Physics-based linear interpolation for fluid, cinematic glide
       smoothWheel: true,
-      wheelMultiplier: 1.0,
-      touchMultiplier: 1.5,
+      wheelMultiplier: 1.05, // Immediate, natural wheel response on desktop
+      touchMultiplier: 1.8,
+      syncTouch: false, // Maintain smooth native touch feel on phones/tablets
+      respectReducedMotion: false, // Ensure smooth scroll is not disabled by Windows OS reduced-motion flags
+      autoResize: true, // Automatically recalculate dimensions on layout changes
+      autoRaf: true, // High-performance internal requestAnimationFrame loop
+      allowNestedScroll: true, // Allow inner scroll areas (e.g. pricing card lists) to scroll without freezing page
+      anchors: {
+        offset: -75, // Accurate offset for fixed sticky navigation bar
+      },
     });
+
     lenisRef.current = lenis;
+    window.__lenis = lenis;
 
-    let rafId: number;
-
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-
-    rafId = requestAnimationFrame(raf);
-
-    // Helper to scroll to hash target if it exists
+    // Helper to scroll to hash target smoothly
     const tryScrollToHash = (hash: string) => {
       if (!hash) return;
       try {
         const elem = document.querySelector(hash);
         if (elem && lenisRef.current) {
-          lenisRef.current.scrollTo(elem as HTMLElement, { offset: -70 });
+          lenisRef.current.scrollTo(elem as HTMLElement, {
+            offset: -75,
+            immediate: false,
+          });
         }
       } catch {
-        // ignore invalid selectors
+        // ignore invalid selector syntax
       }
     };
 
-    // Auto-scroll on mount if URL contains a hash (e.g. navigated from /pricing to /#features)
+    // 2. Handle initial hash on mount (e.g., direct navigation to /#features or /#interactive-demo)
+    const timers: NodeJS.Timeout[] = [];
     if (typeof window !== "undefined" && window.location.hash) {
       const hash = window.location.hash;
-      const timers = [
-        setTimeout(() => tryScrollToHash(hash), 60),
-        setTimeout(() => tryScrollToHash(hash), 200),
-        setTimeout(() => tryScrollToHash(hash), 500),
-      ];
-      return () => {
-        timers.forEach(clearTimeout);
-        cancelAnimationFrame(rafId);
-        lenis.destroy();
-        lenisRef.current = null;
-      };
+      timers.push(setTimeout(() => tryScrollToHash(hash), 80));
+      timers.push(setTimeout(() => tryScrollToHash(hash), 250));
+      timers.push(setTimeout(() => tryScrollToHash(hash), 600));
+    } else {
+      // If navigating between pages without a hash, reset scroll position cleanly
+      lenis.scrollTo(0, { immediate: true });
     }
 
-    // Intercept in-page anchor clicks (#interactive-demo, /#features, etc.)
+    // 3. Keep dimensions synchronized as fonts, images, and interactive engines load
+    const handleResize = () => {
+      lenis.resize();
+    };
+    window.addEventListener("resize", handleResize);
+
+    timers.push(setTimeout(() => lenis.resize(), 100));
+    timers.push(setTimeout(() => lenis.resize(), 400));
+    timers.push(setTimeout(() => lenis.resize(), 1200));
+
+    // 4. Intercept in-page and cross-page anchor clicks (#features, /#interactive-demo, etc.)
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("a");
       if (!target) return;
@@ -72,7 +87,7 @@ export function SmoothScrollProvider({
       let hash = "";
       if (href.startsWith("#") && href.length > 1) {
         hash = href;
-      } else if (href.startsWith("/#") && href.length > 2) {
+      } else if (href.startsWith("/#") && href.length > 2 && pathname === "/") {
         hash = href.substring(1);
       }
 
@@ -80,20 +95,18 @@ export function SmoothScrollProvider({
         try {
           const elem = document.querySelector(hash);
           if (elem) {
-            // Target element is present on this page, perform smooth scroll!
             e.preventDefault();
-            lenis.scrollTo(elem as HTMLElement, { offset: -70 });
+            lenis.scrollTo(elem as HTMLElement, { offset: -75 });
             window.history.pushState(null, "", hash);
           }
-          // If element is not on this page (e.g. on /pricing), allow normal Next.js navigation to /#section
         } catch {
-          // invalid querySelector fallback
+          // ignore querySelector fallback
         }
       }
     };
 
     const handleHashChange = () => {
-      if (window.location.hash) {
+      if (typeof window !== "undefined" && window.location.hash) {
         tryScrollToHash(window.location.hash);
       }
     };
@@ -102,11 +115,15 @@ export function SmoothScrollProvider({
     window.addEventListener("hashchange", handleHashChange);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      timers.forEach(clearTimeout);
+      window.removeEventListener("resize", handleResize);
       document.removeEventListener("click", handleAnchorClick);
       window.removeEventListener("hashchange", handleHashChange);
       lenis.destroy();
       lenisRef.current = null;
+      if (window.__lenis === lenis) {
+        delete window.__lenis;
+      }
     };
   }, [pathname]);
 
