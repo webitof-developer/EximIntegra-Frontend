@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle2, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
+import { Check, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
 
 export type ToastVariant = "success" | "error" | "warning" | "info";
 
@@ -11,48 +11,53 @@ export interface ToastNotificationProps {
   variant?: ToastVariant;
   isOpen?: boolean;
   onClose: () => void;
-  duration?: number; // Auto close duration in ms (default: 4000, 0 to disable)
+  duration?: number; // Auto close duration in ms (default: 4500, 0 to disable)
   title?: string;
   className?: string;
 }
 
-const variantStyles: Record<
+const variantConfig: Record<
   ToastVariant,
   {
-    border: string;
-    iconBg: string;
-    iconColor: string;
+    badgeGradient: string;
+    badgeShadow: string;
+    badgeRing: string;
+    progressBar: string;
+    glowBg: string;
     IconComponent: React.ComponentType<{ className?: string }>;
-    accentColor: string;
   }
 > = {
   success: {
-    border: "border-green/30 hover:border-green/50",
-    iconBg: "bg-green-dim text-green border-green/20",
-    iconColor: "text-green",
-    IconComponent: CheckCircle2,
-    accentColor: "bg-green",
+    badgeGradient: "from-emerald-500 to-teal-600 text-white",
+    badgeShadow: "shadow-emerald-500/25",
+    badgeRing: "ring-emerald-500/15",
+    progressBar: "bg-emerald-500",
+    glowBg: "bg-emerald-500/10",
+    IconComponent: Check,
   },
   error: {
-    border: "border-red/30 hover:border-red/50",
-    iconBg: "bg-red-dim text-red border-red/20",
-    iconColor: "text-red",
+    badgeGradient: "from-rose-500 to-red-600 text-white",
+    badgeShadow: "shadow-red-500/25",
+    badgeRing: "ring-rose-500/15",
+    progressBar: "bg-red-500",
+    glowBg: "bg-red-500/10",
     IconComponent: AlertCircle,
-    accentColor: "bg-red",
   },
   warning: {
-    border: "border-amber/30 hover:border-amber/50",
-    iconBg: "bg-amber-dim text-amber-dark border-amber/20",
-    iconColor: "text-amber-dark",
+    badgeGradient: "from-amber-500 to-orange-500 text-white",
+    badgeShadow: "shadow-amber-500/25",
+    badgeRing: "ring-amber-500/15",
+    progressBar: "bg-amber-500",
+    glowBg: "bg-amber-500/10",
     IconComponent: AlertTriangle,
-    accentColor: "bg-amber",
   },
   info: {
-    border: "border-blue/30 hover:border-blue/50",
-    iconBg: "bg-blue-dim text-blue border-blue/20",
-    iconColor: "text-blue",
+    badgeGradient: "from-blue-600 to-indigo-600 text-white",
+    badgeShadow: "shadow-blue-500/25",
+    badgeRing: "ring-blue-500/15",
+    progressBar: "bg-blue-600",
+    glowBg: "bg-blue-500/10",
     IconComponent: Info,
-    accentColor: "bg-blue",
   },
 };
 
@@ -66,72 +71,134 @@ export function ToastNotification({
   className = "",
 }: ToastNotificationProps) {
   const [mounted, setMounted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const remainingTimeRef = useRef<number>(duration);
+  const startTimeRef = useRef<number>(Date.now());
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Timer management with pause/resume support on hover
   useEffect(() => {
-    if (!isOpen || !duration || duration <= 0) return;
-    const timer = setTimeout(() => {
-      onClose();
-    }, duration);
-    return () => clearTimeout(timer);
+    if (!isOpen || duration <= 0) return;
+
+    remainingTimeRef.current = duration;
+    startTimeRef.current = Date.now();
+
+    const startTimer = () => {
+      timerRef.current = setTimeout(() => {
+        onClose();
+      }, remainingTimeRef.current);
+    };
+
+    startTimer();
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [isOpen, duration, onClose]);
+
+  const handleMouseEnter = () => {
+    if (duration <= 0) return;
+    setIsPaused(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    const elapsed = Date.now() - startTimeRef.current;
+    remainingTimeRef.current = Math.max(0, remainingTimeRef.current - elapsed);
+  };
+
+  const handleMouseLeave = () => {
+    if (duration <= 0 || remainingTimeRef.current <= 0) return;
+    setIsPaused(false);
+    startTimeRef.current = Date.now();
+    timerRef.current = setTimeout(() => {
+      onClose();
+    }, remainingTimeRef.current);
+  };
 
   if (!isOpen || !message || !mounted) {
     return null;
   }
 
-  const { border, iconBg, IconComponent, accentColor } =
-    variantStyles[variant] || variantStyles.success;
+  const config = variantConfig[variant] || variantConfig.success;
+  const IconComponent = config.IconComponent;
 
   const content = (
-    <div
-      role="alert"
-      aria-live="assertive"
-      className="fixed bottom-6 right-6 z-[9999] pointer-events-none flex flex-col items-end max-w-sm sm:max-w-md w-full px-4 sm:px-0"
-    >
+    <>
+      <style>{`
+        @keyframes toast-progress-shrink {
+          from { width: 100%; }
+          to { width: 0%; }
+        }
+      `}</style>
       <div
-        className={`pointer-events-auto w-full relative overflow-hidden bg-panel/95 backdrop-blur-md border ${border} rounded-2xl shadow-2xl shadow-navy/15 p-4 flex items-start gap-3.5 text-xs transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-5 ${className}`}
+        role="alert"
+        aria-live="assertive"
+        className="fixed bottom-6 right-6 z-[9999] pointer-events-none flex flex-col items-end max-w-sm sm:max-w-md w-full px-4 sm:px-0"
       >
-        {/* Subtle accent indicator bar on the left edge */}
         <div
-          className={`absolute left-0 top-0 bottom-0 w-1 ${accentColor}`}
-          aria-hidden="true"
-        />
-
-        {/* Icon */}
-        <div
-          className={`w-7 h-7 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 ${iconBg}`}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          className={`pointer-events-auto w-full relative overflow-hidden bg-panel/95 backdrop-blur-xl border border-line/80 rounded-2xl shadow-[0_20px_45px_-10px_rgba(15,27,51,0.14),0_2px_6px_rgba(15,27,51,0.04)] p-4 flex items-start gap-3.5 transition-all duration-200 ease-out animate-in fade-in slide-in-from-bottom-4 zoom-in-95 hover:border-line-dark/80 group ${className}`}
         >
-          <IconComponent className="w-4 h-4" />
-        </div>
+          {/* Subtle atmospheric glow in top-left */}
+          <div
+            className={`absolute -top-10 -left-10 w-28 h-28 rounded-full blur-2xl pointer-events-none ${config.glowBg}`}
+            aria-hidden="true"
+          />
 
-        {/* Message body */}
-        <div className="flex-1 min-w-0 pr-1 space-y-0.5">
-          {title && (
-            <h4 className="font-semibold text-ink text-xs leading-tight">
-              {title}
-            </h4>
-          )}
-          <div className="text-ink text-xs font-medium leading-relaxed break-words">
-            {message}
+          {/* Micro Badge Icon */}
+          <div
+            className={`w-7 h-7 rounded-full bg-gradient-to-br ${config.badgeGradient} shadow-md ${config.badgeShadow} ring-4 ${config.badgeRing} flex items-center justify-center shrink-0 mt-0.5 transition-transform group-hover:scale-105`}
+          >
+            <IconComponent className="w-3.5 h-3.5 stroke-[2.75]" />
           </div>
-        </div>
 
-        {/* Cross / Close icon button */}
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close notification"
-          title="Close notification"
-          className="p-1 rounded-lg text-muted hover:text-ink hover:bg-line/60 transition-colors cursor-pointer shrink-0 -mr-1 -mt-0.5"
-        >
-          <X className="w-4 h-4" />
-        </button>
+          {/* Text Message Content */}
+          <div className="flex-1 min-w-0 pr-1 space-y-0.5">
+            {title ? (
+              <>
+                <h4 className="font-bold text-ink text-xs leading-tight tracking-tight">
+                  {title}
+                </h4>
+                <div className="text-muted text-xs leading-relaxed break-words font-medium">
+                  {message}
+                </div>
+              </>
+            ) : (
+              <div className="text-ink text-xs leading-snug break-words font-semibold pt-0.5">
+                {message}
+              </div>
+            )}
+          </div>
+
+          {/* Sleek Close Button */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close notification"
+            title="Close notification"
+            className="w-6 h-6 rounded-full flex items-center justify-center text-muted/70 hover:text-ink hover:bg-line/60 transition-all cursor-pointer shrink-0 -mr-1 -mt-0.5 active:scale-95"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Hairline Auto-Dismiss Progress Bar */}
+          {duration > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-line/30 overflow-hidden">
+              <div
+                className={`h-full ${config.progressBar} opacity-85`}
+                style={{
+                  animation: `toast-progress-shrink ${duration}ms linear forwards`,
+                  animationPlayState: isPaused ? "paused" : "running",
+                }}
+              />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 
   return createPortal(content, document.body);

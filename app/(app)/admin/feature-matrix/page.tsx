@@ -14,6 +14,7 @@ import {
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { FeatureMatrixItem, PricingPlan } from "@/lib/types";
+import { ToastNotification, ToastVariant } from "@/components/ui";
 import {
   TableProperties,
   Plus,
@@ -41,10 +42,8 @@ import {
 export default function AdminFeatureMatrixPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [mounted, setMounted] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{
-    text: string;
-    type: "success" | "error";
-  } | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
 
   // Filters & State
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,9 +85,9 @@ export default function AdminFeatureMatrixPage() {
   const [deleteFeature, { isLoading: isDeleting }] = useDeleteFeatureMatrixRowMutation();
   const [syncPlans, { isLoading: isSyncing }] = useSyncFeatureMatrixPlansMutation();
 
-  const showToast = (text: string, type: "success" | "error" = "success") => {
-    setToastMessage({ text, type });
-    setTimeout(() => setToastMessage(null), 4000);
+  const showToast = (text: string, type: ToastVariant = "success") => {
+    setToastMessage(text);
+    setToastVariant(type);
   };
 
   const handleSyncPlans = async () => {
@@ -473,27 +472,7 @@ export default function AdminFeatureMatrixPage() {
 
   return (
     <AppShell>
-      <div className="space-y-6 max-w-7xl mx-auto pb-16">
-        {/* Toast Notification Banner */}
-        {toastMessage && (
-          <div
-            className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl border shadow-lg flex items-center gap-2.5 text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-200 ${
-              toastMessage.type === "success"
-                ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
-                : "bg-red-500/10 text-red-600 border-red-500/30"
-            }`}
-          >
-            <CheckCircle2 className="w-4 h-4 shrink-0" />
-            <span>{toastMessage.text}</span>
-            <button
-              onClick={() => setToastMessage(null)}
-              className="ml-2 hover:opacity-75 transition-opacity"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-
+      <div className="w-full space-y-6 pb-16">
         {/* Top Navigation Banner */}
         <AdminNav
           title="Comprehensive Feature Matrix Management"
@@ -1240,6 +1219,13 @@ export default function AdminFeatureMatrixPage() {
           </div>
         )}
       </div>
+
+      <ToastNotification
+        isOpen={!!toastMessage}
+        variant={toastVariant}
+        message={toastMessage}
+        onClose={() => setToastMessage(null)}
+      />
     </AppShell>
   );
 }

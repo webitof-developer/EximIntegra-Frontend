@@ -6,20 +6,22 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAppSelector } from "@/store";
 import { AdminNav } from "../AdminNav";
 import { LlmProvidersSection } from "./LlmProvidersSection";
-import { ToastNotification } from "@/components/ui";
+import { ToastNotification, ToastVariant } from "@/components/ui";
 import { ShieldAlert, Sparkles } from "lucide-react";
 
 export default function AdminLlmPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, variant: ToastVariant = "success") => {
     setToastMessage(msg);
+    setToastVariant(variant);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -97,7 +99,7 @@ export default function AdminLlmPage() {
 
       <ToastNotification
         isOpen={!!toastMessage}
-        variant="success"
+        variant={toastVariant}
         message={toastMessage}
         onClose={() => setToastMessage(null)}
       />

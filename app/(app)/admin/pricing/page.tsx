@@ -11,12 +11,13 @@ import {
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { DynamicPricingTab } from "./DynamicPricingTab";
-import { ToastNotification } from "@/components/ui";
+import { ToastNotification, ToastVariant } from "@/components/ui";
 import { ShieldAlert } from "lucide-react";
 
 export default function AdminPricingPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -33,8 +34,9 @@ export default function AdminPricingPage() {
   const [updatePricing] = useUpdatePricingPlansMutation();
   const [deletePricing] = useDeletePricingPlanMutation();
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, variant: ToastVariant = "success") => {
     setToastMessage(msg);
+    setToastVariant(variant);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -111,7 +113,7 @@ export default function AdminPricingPage() {
 
       <ToastNotification
         isOpen={!!toastMessage}
-        variant="success"
+        variant={toastVariant}
         message={toastMessage}
         onClose={() => setToastMessage(null)}
       />

@@ -7,7 +7,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAppSelector } from "@/store";
 import { useGetAdminStatsQuery, useGetAdminUsersQuery } from "@/store/adminApi";
 import { PlatformMetricsTab } from "./PlatformMetrics";
-import { ToastNotification } from "@/components/ui";
+import { ToastNotification, ToastVariant } from "@/components/ui";
 import { ShieldAlert } from "lucide-react";
 
 function AdminMetricsContent() {
@@ -15,6 +15,7 @@ function AdminMetricsContent() {
   const searchParams = useSearchParams();
   const { user } = useAppSelector((state) => state.auth);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -45,8 +46,9 @@ function AdminMetricsContent() {
     isFetching: usersFetching,
   } = useGetAdminUsersQuery(undefined, { skip: !mounted || user?.role !== "ADMIN" });
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, variant: ToastVariant = "success") => {
     setToastMessage(msg);
+    setToastVariant(variant);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -113,7 +115,7 @@ function AdminMetricsContent() {
 
       <ToastNotification
         isOpen={!!toastMessage}
-        variant="success"
+        variant={toastVariant}
         message={toastMessage}
         onClose={() => setToastMessage(null)}
       />

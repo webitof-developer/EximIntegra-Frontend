@@ -33,7 +33,7 @@ interface RolePermissionsTabProps {
   modules: RBACModule[];
   isLoading?: boolean;
   onSaveRBAC: (roles: RolePermissionItem[]) => Promise<any>;
-  showToast: (msg: string) => void;
+  showToast: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
 const CATEGORY_DISPLAY_CONFIG: Record<string, { label: string; order: number }> = {
@@ -277,7 +277,7 @@ export function RolePermissionsTab({
       showToast(`Permissions saved successfully for ${permissionsModalRole.roleName}.`);
       setPermissionsModalRole(null);
     } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to persist permissions.");
+      showToast(err?.data?.message || err?.message || "Failed to persist permissions.", "error");
     } finally {
       setIsSavingPermissions(false);
     }
@@ -329,7 +329,7 @@ export function RolePermissionsTab({
     e.preventDefault();
     if (!roleToEdit) return;
     if (!editRoleName.trim()) {
-      showToast("Role Display Name cannot be empty.");
+      showToast("Role Display Name cannot be empty.", "warning");
       return;
     }
 
@@ -348,7 +348,7 @@ export function RolePermissionsTab({
       setRoleToEdit(null);
       showToast(`Updated details for ${editRoleName.trim()}.`);
     } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to update role details.");
+      showToast(err?.data?.message || err?.message || "Failed to update role details.", "error");
     }
   };
 

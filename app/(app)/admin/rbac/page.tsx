@@ -10,12 +10,13 @@ import {
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { RolePermissionsTab } from "./RolePermissionsTab";
-import { ToastNotification } from "@/components/ui";
+import { ToastNotification, ToastVariant } from "@/components/ui";
 import { ShieldAlert } from "lucide-react";
 
 export default function AdminRBACPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -31,8 +32,9 @@ export default function AdminRBACPage() {
 
   const [updateRBAC] = useUpdateRBACMatrixMutation();
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, variant: ToastVariant = "success") => {
     setToastMessage(msg);
+    setToastVariant(variant);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -105,7 +107,7 @@ export default function AdminRBACPage() {
 
       <ToastNotification
         isOpen={!!toastMessage}
-        variant="success"
+        variant={toastVariant}
         message={toastMessage}
         onClose={() => setToastMessage(null)}
       />

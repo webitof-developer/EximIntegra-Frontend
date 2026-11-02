@@ -12,12 +12,13 @@ import {
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { UserDirectoryTab } from "./UserDirectoryTab";
-import { ToastNotification } from "@/components/ui";
+import { ToastNotification, ToastVariant } from "@/components/ui";
 import { ShieldAlert } from "lucide-react";
 
 export default function AdminUsersPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -34,8 +35,9 @@ export default function AdminUsersPage() {
   const [updateUser] = useUpdateAdminUserMutation();
   const [deleteUser] = useDeleteAdminUserMutation();
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, variant: ToastVariant = "success") => {
     setToastMessage(msg);
+    setToastVariant(variant);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -112,7 +114,7 @@ export default function AdminUsersPage() {
 
       <ToastNotification
         isOpen={!!toastMessage}
-        variant="success"
+        variant={toastVariant}
         message={toastMessage}
         onClose={() => setToastMessage(null)}
       />

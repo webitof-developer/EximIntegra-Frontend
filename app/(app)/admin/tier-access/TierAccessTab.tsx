@@ -41,7 +41,7 @@ interface TierAccessTabProps {
   onSaveGates: (gates: TierPageAccessGate[]) => Promise<any>;
   onCreateGate?: (gate: TierPageAccessGate) => Promise<any>;
   onDeleteGate?: (gateId: string) => Promise<any>;
-  showToast: (msg: string) => void;
+  showToast: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
 export function TierAccessTab({
@@ -190,7 +190,7 @@ export function TierAccessTab({
       await onSaveGates(gates);
       setIsDirty(false);
     } catch (err: any) {
-      showToast("Failed to save tier access rules: " + (err?.message || "Unknown error"));
+      showToast("Failed to save tier access rules: " + (err?.message || "Unknown error"), "error");
     } finally {
       setIsSaving(false);
     }

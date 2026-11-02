@@ -42,7 +42,7 @@ interface UserDirectoryTabProps {
     tier?: AdminUserItem["tier"];
   }) => Promise<any>;
   onDeleteUser: (userId: string) => Promise<any>;
-  showToast: (msg: string) => void;
+  showToast: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
 export function UserDirectoryTab({
@@ -141,7 +141,7 @@ export function UserDirectoryTab({
       showToast(`User ${editName} updated successfully.`);
       setEditingUserItem(null);
     } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to update user profile.");
+      showToast(err?.data?.message || err?.message || "Failed to update user profile.", "error");
     } finally {
       setUpdatingUser(false);
     }
@@ -155,7 +155,7 @@ export function UserDirectoryTab({
       showToast(`User ${deletingUserItem.name} has been removed.`);
       setDeletingUserItem(null);
     } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to delete user account.");
+      showToast(err?.data?.message || err?.message || "Failed to delete user account.", "error");
     } finally {
       setDeletingUser(false);
     }

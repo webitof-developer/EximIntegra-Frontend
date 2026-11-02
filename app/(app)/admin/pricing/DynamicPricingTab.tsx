@@ -37,7 +37,7 @@ interface DynamicPricingTabProps {
   isLoading?: boolean;
   onSavePricing: (plans: PricingPlan[]) => Promise<any>;
   onDeletePlan?: (planId: string) => Promise<any>;
-  showToast: (msg: string) => void;
+  showToast: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
 const TIER_BADGE_PRESETS = [
@@ -182,7 +182,8 @@ export function DynamicPricingTab({
       );
     } catch (err: any) {
       showToast(
-        `Failed to update default trial: ${err?.data?.message || err?.message || "Unknown error"}`
+        `Failed to update default trial: ${err?.data?.message || err?.message || "Unknown error"}`,
+        "error"
       );
     }
   };
@@ -237,7 +238,7 @@ export function DynamicPricingTab({
       setTimeout(() => setPricingNotice(null), 4000);
       showToast("Pricing plans saved successfully.");
     } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to update pricing.");
+      showToast(err?.data?.message || err?.message || "Failed to update pricing.", "error");
     } finally {
       setIsUpdating(false);
     }
@@ -252,12 +253,12 @@ export function DynamicPricingTab({
       .replace(/-+/g, "-");
 
     if (!cleanId) {
-      showToast("Please enter a valid Plan Name or Identifier.");
+      showToast("Please enter a valid Plan Name or Identifier.", "warning");
       return;
     }
 
     if (editablePlans.some((p) => p.id === cleanId)) {
-      showToast(`A plan with ID '${cleanId}' already exists.`);
+      showToast(`A plan with ID '${cleanId}' already exists.`, "warning");
       return;
     }
 
@@ -333,7 +334,8 @@ export function DynamicPricingTab({
       showToast(`Plan "${createdPlan.name}" created and saved successfully.`);
     } catch (err: any) {
       showToast(
-        `Failed to save plan: ${err?.data?.message || err?.message || "Unknown error"}`
+        `Failed to save plan: ${err?.data?.message || err?.message || "Unknown error"}`,
+        "error"
       );
     } finally {
       setIsCreating(false);
@@ -358,7 +360,8 @@ export function DynamicPricingTab({
       setPlanToDelete(null);
     } catch (err: any) {
       showToast(
-        `Failed to delete plan: ${err?.data?.message || err?.message || "Unknown error"}`
+        `Failed to delete plan: ${err?.data?.message || err?.message || "Unknown error"}`,
+        "error"
       );
     } finally {
       setIsDeleting(false);

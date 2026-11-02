@@ -12,12 +12,13 @@ import {
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { TierAccessTab } from "./TierAccessTab";
-import { ToastNotification } from "@/components/ui";
+import { ToastNotification, ToastVariant } from "@/components/ui";
 import { ShieldAlert, RefreshCw } from "lucide-react";
 
 export default function AdminTierAccessPage() {
   const user = useAppSelector((state) => state.auth.user);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -37,8 +38,9 @@ export default function AdminTierAccessPage() {
   const [createGate] = useCreateTierAccessGateMutation();
   const [deleteGate] = useDeleteTierAccessGateMutation();
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, variant: ToastVariant = "success") => {
     setToastMessage(msg);
+    setToastVariant(variant);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
@@ -119,13 +121,12 @@ export default function AdminTierAccessPage() {
           showToast={showToast}
         />
 
-        {toastMessage && (
-          <ToastNotification
-            message={toastMessage}
-            variant="success"
-            onClose={() => setToastMessage(null)}
-          />
-        )}
+        <ToastNotification
+          isOpen={!!toastMessage}
+          message={toastMessage}
+          variant={toastVariant}
+          onClose={() => setToastMessage(null)}
+        />
       </div>
     </AppShell>
   );
