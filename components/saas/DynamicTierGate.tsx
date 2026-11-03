@@ -20,6 +20,8 @@ interface DynamicTierGateProps {
 const tierWeights: Record<string, number> = {
   ALL: 0,
   FREE: 0,
+  FREE_TRIAL: 1,
+  TRIAL: 1,
   STARTER: 1,
   PROFESSIONAL: 2,
   ENTERPRISE: 3,
@@ -64,23 +66,40 @@ export function DynamicTierGate({
 
   const category = matchingGate?.category || defaultCategory;
 
+  const currentTier = (user?.tier || "STARTER").toUpperCase();
+
   // 1. Super Admin bypass: Always allow platform administrators
   if (user?.role === "ADMIN") {
     return <>{children}</>;
   }
 
-  // 2. If Super Admin deactivated this gate, it is open to all users
+  // 2. Subscription expiration: Expired plans lose access to gated features
+  if (user?.isSubscriptionExpired && requiredTier !== "ALL" && requiredTier !== "FREE") {
+    return (
+      <PlanGateTemplate
+        requiredTier={requiredTier}
+        featureName={featureTitle}
+        description={`Your ${currentTier} subscription has expired${
+          user.subscriptionExpiresAt ? ` on ${new Date(user.subscriptionExpiresAt).toLocaleDateString()}` : ""
+        }. Please renew your plan in Settings to continue using this feature.`}
+        category={category}
+        pagePath={pagePath || matchingGate?.pagePath}
+        fallbackMode={fallbackMode}
+      />
+    );
+  }
+
+  // 3. If Super Admin deactivated this gate, it is open to all users
   if (!isGateActive) {
     return <>{children}</>;
   }
 
-  // 3. If tier is ALL or FREE, it is open
+  // 4. If tier is ALL or FREE, it is open
   if (requiredTier === "ALL" || requiredTier === "FREE") {
     return <>{children}</>;
   }
 
-  // 4. Compare current user tier against required tier
-  const currentTier = (user?.tier || "STARTER").toUpperCase();
+  // 5. Compare current user tier against required tier
   const currentWeight = tierWeights[currentTier] ?? 1;
   const requiredWeight = tierWeights[requiredTier] ?? 2;
 
