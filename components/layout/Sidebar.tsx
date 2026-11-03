@@ -34,6 +34,7 @@ import {
   CreditCard,
   TableProperties,
   LogOut,
+  LayoutTemplate,
 } from "lucide-react";
 import { StatusPill } from "../ui/StatusPill";
 import { TierBadge } from "@/components/saas/TierBadge";
@@ -229,6 +230,13 @@ const adminNavSections: NavSection[] = [
         href: "/admin/feature-matrix",
         icon: <TableProperties className="w-4 h-4 text-emerald-400" />,
         glyph: "MTX",
+      },
+      {
+        id: "admin-content",
+        title: "Landing & Pricing Content",
+        href: "/admin/content",
+        icon: <LayoutTemplate className="w-4 h-4 text-pink-400" />,
+        glyph: "CMS",
       },
       {
         id: "admin-llm",

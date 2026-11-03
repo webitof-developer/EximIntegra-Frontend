@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ProvenanceBadge, StatusPill } from "@/components/ui";
+import { useGetPublicContentQuery } from "@/store/adminApi";
 import {
   Calculator,
   ArrowRight,
@@ -94,6 +95,15 @@ export function InteractiveTariffDemo() {
     setValueUsd(p.defaultValUsd);
   };
 
+  const { data: contentData } = useGetPublicContentQuery();
+  const demoContent = contentData?.landing?.interactiveDemo;
+
+  const badgeText = demoContent?.badge || "TARIFF & LANDED COST SIMULATOR";
+  const titleText = demoContent?.title || "Statutory Tariff & Landed Cost Simulator";
+  const subtitleText =
+    demoContent?.subtitle ||
+    "Instant customs duty calculations, multimodal logistics, and landed economics across origins.";
+
   return (
     <section id="interactive-demo" className="py-16 bg-panel border-b border-line">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -101,13 +111,13 @@ export function InteractiveTariffDemo() {
         <div className="text-center space-y-2 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-dim text-blue border border-blue/20 text-xs font-mono font-semibold">
             <span className="w-2 h-2 rounded-full bg-blue" />
-            <span>TARIFF & LANDED COST SIMULATOR</span>
+            <span>{badgeText}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-ink tracking-tight">
-            Statutory Tariff &amp; Landed Cost Simulator
+            {titleText}
           </h2>
           <p className="text-xs sm:text-sm text-muted">
-            Instant customs duty calculations, multimodal logistics, and landed economics across origins.
+            {subtitleText}
           </p>
         </div>
 

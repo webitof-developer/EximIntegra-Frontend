@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { StatusPill } from "@/components/ui";
+import { useGetPublicContentQuery } from "@/store/adminApi";
 import {
   Search,
   Calculator,
@@ -123,71 +124,88 @@ const features: FeatureCardItem[] = [
 ];
 
 export function FeaturesSection() {
+  const { data: contentData } = useGetPublicContentQuery();
+  const featuresContent = contentData?.landing?.features;
+
+  const badgeText = featuresContent?.badge || "Modular Trade Intelligence Suite";
+  const titleText = featuresContent?.title || "Six Specialized Engines in One Unified Platform";
+  const subtitleText =
+    featuresContent?.subtitle ||
+    "Deterministic statutory calculations and landed cost modeling synchronized across every workflow.";
+
   return (
     <section id="features" className="py-20 bg-bg border-b border-line">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Section Header */}
         <div className="text-center space-y-3 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-dim text-blue border border-blue/20 text-xs font-mono font-bold uppercase tracking-wider">
-            <span>Modular Trade Intelligence Suite</span>
+            <span>{badgeText}</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-bold text-ink tracking-tight">
-            Six Specialized Engines in One Unified Platform
+            {titleText}
           </h2>
           <p className="text-sm text-muted leading-relaxed">
-            Deterministic statutory calculations and landed cost modeling synchronized across every workflow.
+            {subtitleText}
           </p>
         </div>
 
         {/* 6-Grid Features */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((f, i) => (
-            <div
-              key={i}
-              className="p-6 bg-panel border border-line rounded-2xl shadow-xs hover:shadow-sm hover:border-line/80 transition-all flex flex-col justify-between space-y-5"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${f.iconBg}`}
-                  >
-                    {f.icon}
+          {features.map((f, i) => {
+            const dynamicEng = featuresContent?.engines?.[i];
+            const title = dynamicEng?.title || f.title;
+            const description = dynamicEng?.description || f.description;
+            const badge = dynamicEng?.badge || f.badge;
+            const link = dynamicEng?.href || f.link;
+
+            return (
+              <div
+                key={i}
+                className="p-6 bg-panel border border-line rounded-2xl shadow-xs hover:shadow-sm hover:border-line/80 transition-all flex flex-col justify-between space-y-5"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs ${f.iconBg}`}
+                    >
+                      {f.icon}
+                    </div>
+                    <span className="text-[10px] font-mono font-bold bg-bg text-muted px-2 py-0.5 rounded border border-line">
+                      {badge}
+                    </span>
                   </div>
-                  <span className="text-[10px] font-mono font-bold bg-bg text-muted px-2 py-0.5 rounded border border-line">
-                    {f.badge}
-                  </span>
+
+                  <div className="space-y-1.5">
+                    <h3 className="text-base font-bold text-ink tracking-tight">
+                      {title}
+                    </h3>
+                    <p className="text-xs text-muted leading-relaxed">
+                      {description}
+                    </p>
+                  </div>
+
+                  <ul className="space-y-2 pt-2 border-t border-line text-xs text-ink/90">
+                    {f.bullets.map((b, bIdx) => (
+                      <li key={bIdx} className="flex items-start gap-2">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue shrink-0 mt-0.5" />
+                        <span className="leading-snug text-muted">{b}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
 
-                <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-ink tracking-tight">
-                    {f.title}
-                  </h3>
-                  <p className="text-xs text-muted leading-relaxed">
-                    {f.description}
-                  </p>
+                <div className="pt-3 border-t border-line">
+                  <Link
+                    href={link}
+                    className="text-xs font-semibold text-blue hover:text-blue-dark inline-flex items-center gap-1 transition-colors"
+                  >
+                    <span>{f.linkText}</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
                 </div>
-
-                <ul className="space-y-2 pt-2 border-t border-line text-xs text-ink/90">
-                  {f.bullets.map((b, bIdx) => (
-                    <li key={bIdx} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-blue shrink-0 mt-0.5" />
-                      <span className="leading-snug text-muted">{b}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
-
-              <div className="pt-3 border-t border-line">
-                <Link
-                  href={f.link}
-                  className="text-xs font-semibold text-blue hover:text-blue-dark inline-flex items-center gap-1 transition-colors"
-                >
-                  <span>{f.linkText}</span>
-                  <ArrowRight className="w-3 h-3" />
-                </Link>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

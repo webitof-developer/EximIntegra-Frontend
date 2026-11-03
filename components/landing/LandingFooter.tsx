@@ -4,11 +4,22 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShieldCheck, Scale, Globe, Lock } from "lucide-react";
-import { useGetPricingPlansQuery } from "@/store/adminApi";
+import { useGetPricingPlansQuery, useGetPublicContentQuery } from "@/store/adminApi";
 
 export function LandingFooter() {
   const { data: pricingData } = useGetPricingPlansQuery();
+  const { data: contentData } = useGetPublicContentQuery();
   const trialDays = pricingData?.trialDays ?? 14;
+
+  const footerContent = contentData?.landing?.footer;
+  const brandDescription =
+    footerContent?.brandDescription ||
+    "Deterministic statutory customs duty calculation, sequential GIR HS classification, and multimodal landed cost modeling for Indian importers and customs brokers.";
+  const scheduleStatus = footerContent?.scheduleStatus || "CBIC Tariff Schedule v2026.03 Active";
+  const disclaimer =
+    footerContent?.disclaimer ||
+    "Statutory Disclaimer: EximIntegra computes statutory tariff assessments based on published gazette schedules. Final valuation, classification, and duty liability are determined upon official Bill of Entry examination by proper customs officers under the Customs Act, 1962.";
+  const copyright = footerContent?.copyright || `© ${new Date().getFullYear()} EximIntegra Inc. All rights reserved.`;
 
   return (
     <footer className="bg-panel border-t border-line text-xs">
@@ -31,14 +42,12 @@ export function LandingFooter() {
             </Link>
 
             <p className="text-muted leading-relaxed max-w-sm text-xs">
-              Deterministic statutory customs duty calculation, sequential GIR HS
-              classification, and multimodal landed cost modeling for Indian importers
-              and customs brokers.
+              {brandDescription}
             </p>
 
             <div className="flex items-center gap-2 pt-1 font-mono text-[11px] text-muted">
               <span className="w-2 h-2 rounded-full bg-green" />
-              <span>CBIC Tariff Schedule v2026.03 Active</span>
+              <span>{scheduleStatus}</span>
             </div>
           </div>
 
@@ -134,15 +143,11 @@ export function LandingFooter() {
         {/* Bottom Disclaimer & Copyright */}
         <div className="pt-8 border-t border-line flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-muted text-[11px]">
           <p className="max-w-3xl leading-relaxed">
-            <strong>Statutory Disclaimer:</strong> EximIntegra computes statutory tariff
-            assessments based on published gazette schedules. Final valuation, classification,
-            and duty liability are determined upon official Bill of Entry examination by
-            proper customs officers under the Customs Act, 1962.
+            {disclaimer}
           </p>
 
           <div className="flex items-center gap-4 shrink-0 font-mono">
-            <span>&copy; 2026 EximIntegra Inc.</span>
-            <span>All rights reserved.</span>
+            <span>{copyright}</span>
           </div>
         </div>
       </div>

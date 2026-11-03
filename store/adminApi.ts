@@ -9,6 +9,9 @@ import {
   PublicRoleItem,
   FeatureMatrixItem,
   FeatureMatrixResponse,
+  PlatformContentResponse,
+  LandingPageContent,
+  PricingPageContent,
 } from "@/lib/types";
 
 export interface UpdateAdminUserRequest {
@@ -263,6 +266,46 @@ export const adminApi = api.injectEndpoints({
       }),
       invalidatesTags: ["FeatureMatrix"],
     }),
+    getPublicContent: builder.query<PlatformContentResponse, void>({
+      query: () => "/content",
+      providesTags: ["Content"],
+    }),
+    getAdminContent: builder.query<PlatformContentResponse, void>({
+      query: () => "/admin/content",
+      providesTags: ["Content"],
+    }),
+    updateLandingContent: builder.mutation<
+      { success: boolean; message: string; data: LandingPageContent },
+      Partial<LandingPageContent>
+    >({
+      query: (body) => ({
+        url: "/admin/content/landing",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Content"],
+    }),
+    updatePricingContent: builder.mutation<
+      { success: boolean; message: string; data: PricingPageContent },
+      Partial<PricingPageContent>
+    >({
+      query: (body) => ({
+        url: "/admin/content/pricing",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Content"],
+    }),
+    resetContentToDefault: builder.mutation<
+      { success: boolean; message: string; data: any },
+      "landing" | "pricing"
+    >({
+      query: (key) => ({
+        url: `/admin/content/reset/${key}`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Content"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -320,5 +363,10 @@ export const {
   useToggleFeatureVisibilityMutation,
   useDeleteFeatureMatrixRowMutation,
   useSyncFeatureMatrixPlansMutation,
+  useGetPublicContentQuery,
+  useGetAdminContentQuery,
+  useUpdateLandingContentMutation,
+  useUpdatePricingContentMutation,
+  useResetContentToDefaultMutation,
 } = adminApi;
 

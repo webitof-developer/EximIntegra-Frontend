@@ -680,3 +680,131 @@ export interface TierPageAccessGate {
   isActive: boolean;
   updatedAt?: string;
 }
+
+/* Platform Content Management (CMS) Types */
+export interface LandingHeroMetric {
+  label: string;
+  sublabel: string;
+  accent?: string;
+}
+
+export interface LandingHeroContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  primaryCtaText: string;
+  primaryCtaHref: string;
+  secondaryCtaText: string;
+  secondaryCtaHref: string;
+  tertiaryCtaText: string;
+  tertiaryCtaHref: string;
+  globeBadge: string;
+  globeNote: string;
+  metrics: LandingHeroMetric[];
+}
+
+export interface LandingInteractiveDemoContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  note: string;
+}
+
+export interface LandingEngineCard {
+  id: string;
+  number: string;
+  title: string;
+  description: string;
+  badge: string;
+  href: string;
+}
+
+export interface LandingFeaturesContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  engines: LandingEngineCard[];
+}
+
+export interface LandingGovernanceCard {
+  title: string;
+  description: string;
+  icon?: string;
+}
+
+export interface LandingGovernanceCta {
+  title: string;
+  subtitle: string;
+  primaryBtnText: string;
+  primaryBtnHref: string;
+  secondaryBtnText: string;
+  secondaryBtnHref: string;
+}
+
+export interface LandingGovernanceContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  cards: LandingGovernanceCard[];
+  cta: LandingGovernanceCta;
+}
+
+export interface LandingFooterContent {
+  brandDescription: string;
+  scheduleStatus: string;
+  disclaimer: string;
+  copyright: string;
+}
+
+export interface LandingPageContent {
+  hero: LandingHeroContent;
+  interactiveDemo: LandingInteractiveDemoContent;
+  features: LandingFeaturesContent;
+  governance: LandingGovernanceContent;
+  footer: LandingFooterContent;
+}
+
+export interface PricingHeaderContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+}
+
+export interface PricingMatrixHeaderContent {
+  title: string;
+  subtitle: string;
+}
+
+export interface PricingFaqItem {
+  question: string;
+  answer: string;
+}
+
+export interface PricingFaqContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  items: PricingFaqItem[];
+}
+
+export interface PricingEnterpriseCtaContent {
+  badge: string;
+  title: string;
+  subtitle: string;
+  btnText: string;
+  btnHref: string;
+}
+
+export interface PricingPageContent {
+  header: PricingHeaderContent;
+  matrixHeader: PricingMatrixHeaderContent;
+  faqs: PricingFaqContent;
+  enterpriseCta: PricingEnterpriseCtaContent;
+}
+
+export interface PlatformContentResponse {
+  landing: LandingPageContent;
+  pricing: PricingPageContent;
+  updatedAt?: string;
+}
+

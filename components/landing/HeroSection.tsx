@@ -18,11 +18,27 @@ import {
   Cpu,
   Layers,
 } from "lucide-react";
-import { useGetPricingPlansQuery } from "@/store/adminApi";
+import { useGetPricingPlansQuery, useGetPublicContentQuery } from "@/store/adminApi";
 
 export function HeroSection() {
   const { data: pricingData } = useGetPricingPlansQuery();
+  const { data: contentData } = useGetPublicContentQuery();
   const trialDays = pricingData?.trialDays ?? 14;
+  const hero = contentData?.landing?.hero;
+
+  const badgeText = hero?.badge || "CBIC ICEGATE 2.0 • CUSTOMS TARIFF ACT 2026 ACTIVE";
+  const titleText = hero?.title || "Deterministic Cross-Border Trade Compliance & Sourcing Intelligence";
+  const subtitleText =
+    hero?.subtitle ||
+    "Statutory customs tariffs, automated 8-digit HS classification, and multimodal landed cost modeling for international trade.";
+  const primaryCta = hero?.primaryCtaText || `Start ${trialDays}-Day Free Trial`;
+  const primaryHref = hero?.primaryCtaHref || "/register";
+  const secondaryCta = hero?.secondaryCtaText || "Interactive Calculator";
+  const secondaryHref = hero?.secondaryCtaHref || "#interactive-demo";
+  const tertiaryCta = hero?.tertiaryCtaText || "View SaaS Plans";
+  const tertiaryHref = hero?.tertiaryCtaHref || "/pricing";
+  const globeBadge = hero?.globeBadge || "Interactive 3D Trade Engine";
+  const globeNote = hero?.globeNote || "Move cursor over globe to tilt & navigate routes";
 
   return (
     <section className="relative overflow-hidden pt-12 pb-16 md:pt-16 md:pb-24 border-b border-line bg-bg/40">
@@ -33,46 +49,42 @@ export function HeroSection() {
         {/* Eyebrow Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-dim text-blue border border-blue/20 text-xs font-mono font-semibold shadow-2xs animate-in fade-in duration-500">
           <span className="w-2 h-2 rounded-full bg-blue animate-pulse" />
-          <span>CBIC ICEGATE 2.0 &bull; CUSTOMS TARIFF ACT 2026 ACTIVE</span>
+          <span>{badgeText}</span>
         </div>
 
         {/* Hero Title */}
         <h1 className="text-2xl sm:text-4xl lg:text-[42px] font-bold text-ink tracking-tight leading-[1.22] max-w-3xl mx-auto">
-          Deterministic Trade Intelligence &amp; <br className="hidden sm:inline" />
-          <span className="text-blue">
-            Landed Cost Engine
-          </span>{" "}
-          for Modern Exim
+          {titleText}
         </h1>
 
         {/* Hero Subtitle */}
         <p className="text-sm sm:text-base text-muted max-w-2xl mx-auto leading-relaxed">
-          Statutory customs tariffs, automated 8-digit HS classification, and multimodal landed cost modeling for international trade.
+          {subtitleText}
         </p>
 
         {/* Action CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
           <Link
-            href="/register"
+            href={primaryHref}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-blue hover:bg-blue-dark text-white text-sm font-semibold shadow-xs hover:shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
-            <span>Start {trialDays}-Day Free Trial</span>
+            <span>{primaryCta}</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
 
           <a
-            href="#interactive-demo"
+            href={secondaryHref}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-bg hover:bg-line border border-line text-ink text-sm font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Calculator className="w-4 h-4 text-blue" />
-            <span>Interactive Calculator</span>
+            <span>{secondaryCta}</span>
           </a>
 
           <Link
-            href="/pricing"
+            href={tertiaryHref}
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl text-muted hover:text-ink text-sm font-semibold transition-colors"
           >
-            <span>View SaaS Plans</span>
+            <span>{tertiaryCta}</span>
           </Link>
         </div>
 
@@ -87,10 +99,10 @@ export function HeroSection() {
             <div className="px-5 py-3 border-b border-line/60 flex items-center justify-between text-xs font-mono text-muted bg-panel/70">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-green animate-ping" />
-                <span className="font-semibold text-ink">Interactive 3D Trade Engine</span>
+                <span className="font-semibold text-ink">{globeBadge}</span>
               </div>
               <span className="hidden sm:inline text-[11px] text-muted">
-                Move cursor over globe to tilt & navigate routes
+                {globeNote}
               </span>
             </div>
 
@@ -175,77 +187,42 @@ export function HeroSection() {
 
         {/* Key Metrics Strip */}
         <div className="pt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
-          {/* Card 1: Statutory Tariffs */}
-          <div className="group relative p-5 rounded-2xl bg-panel/90 border border-line shadow-2xs hover:shadow-md hover:border-blue/40 transition-all duration-200 hover:-translate-y-0.5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted font-mono">
-                Statutory Tariffs
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-blue-dim text-blue border border-blue/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Scale className="w-4 h-4" />
+          {(hero?.metrics && hero.metrics.length === 4
+            ? hero.metrics
+            : [
+                { label: "100% Gazette", sublabel: "CBIC ICEGATE & SWS 10%" },
+                { label: "Sequential GIR 1–6", sublabel: "General Rules of Interpretation" },
+                { label: "5 Jurisdictions", sublabel: "CEPA 0% vs MFN 2.5% BCD" },
+                { label: "Grounded Akshara", sublabel: "Auditable Tool-Call Logs" },
+              ]
+          ).map((m, idx) => {
+            const icons = [
+              <Scale key="0" className="w-4 h-4" />,
+              <Layers key="1" className="w-4 h-4" />,
+              <Globe2 key="2" className="w-4 h-4" />,
+              <Sparkles key="3" className="w-4 h-4" />,
+            ];
+            const titles = ["Statutory Tariffs", "Classification", "Arbitrage Engine", "AI Trade Copilot"];
+            return (
+              <div
+                key={idx}
+                className="group relative p-5 rounded-2xl bg-panel/90 border border-line shadow-2xs hover:shadow-md hover:border-blue/40 transition-all duration-200 hover:-translate-y-0.5"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted font-mono">
+                    {titles[idx] || `Metric ${idx + 1}`}
+                  </span>
+                  <div className="w-8 h-8 rounded-xl bg-blue-dim text-blue border border-blue/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    {icons[idx]}
+                  </div>
+                </div>
+                <div className="text-xl font-bold text-ink tracking-tight mb-1 group-hover:text-blue transition-colors">
+                  {m.label}
+                </div>
+                <p className="text-xs text-muted leading-relaxed">{m.sublabel}</p>
               </div>
-            </div>
-            <div className="text-xl font-bold text-ink tracking-tight mb-1 group-hover:text-blue transition-colors">
-              100% Gazette
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              CBIC ICEGATE & SWS 10%
-            </p>
-          </div>
-
-          {/* Card 2: Classification Accuracy */}
-          <div className="group relative p-5 rounded-2xl bg-panel/90 border border-line shadow-2xs hover:shadow-md hover:border-blue/40 transition-all duration-200 hover:-translate-y-0.5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted font-mono">
-                Classification
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/60 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Layers className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-xl font-bold text-ink tracking-tight mb-1 group-hover:text-indigo-600 transition-colors">
-              Sequential GIR 1–6
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              General Rules of Interpretation
-            </p>
-          </div>
-
-          {/* Card 3: Arbitrage Engine */}
-          <div className="group relative p-5 rounded-2xl bg-panel/90 border border-line shadow-2xs hover:shadow-md hover:border-green/40 transition-all duration-200 hover:-translate-y-0.5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted font-mono">
-                Arbitrage Engine
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Globe2 className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-xl font-bold text-ink tracking-tight mb-1 group-hover:text-emerald-600 transition-colors">
-              5 Jurisdictions
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              CEPA 0% vs MFN 2.5% BCD
-            </p>
-          </div>
-
-          {/* Card 4: AI Copilot */}
-          <div className="group relative p-5 rounded-2xl bg-panel/90 border border-line shadow-2xs hover:shadow-md hover:border-amber/40 transition-all duration-200 hover:-translate-y-0.5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted font-mono">
-                AI Trade Copilot
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 border border-amber-200/60 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                <Sparkles className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-xl font-bold text-ink tracking-tight mb-1 group-hover:text-amber-600 transition-colors">
-              Grounded Akshara
-            </div>
-            <p className="text-xs text-muted leading-relaxed">
-              Auditable Tool-Call Logs
-            </p>
-          </div>
+            );
+          })}
         </div>
       </div>
     </section>

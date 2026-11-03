@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { useGetPricingPlansQuery } from "@/store/adminApi";
+import { useGetPricingPlansQuery, useGetPublicContentQuery } from "@/store/adminApi";
 
 interface FaqItem {
   question: string;
@@ -12,9 +12,17 @@ interface FaqItem {
 export function PricingFaq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const { data: pricingData } = useGetPricingPlansQuery();
+  const { data: contentData } = useGetPublicContentQuery();
   const trialDays = pricingData?.trialDays ?? 14;
 
-  const faqs: FaqItem[] = [
+  const faqContent = contentData?.pricing?.faqs;
+  const badgeText = faqContent?.badge || "FAQ";
+  const titleText = faqContent?.title || "Frequently Asked Questions";
+  const subtitleText =
+    faqContent?.subtitle ||
+    "Everything you need to know about our plans, statutory coverage, and billing.";
+
+  const defaultFaqs: FaqItem[] = [
     {
       question: `How does the ${trialDays}-day free trial work?`,
       answer:
@@ -42,6 +50,8 @@ export function PricingFaq() {
     },
   ];
 
+  const faqs = faqContent?.items && faqContent.items.length > 0 ? faqContent.items : defaultFaqs;
+
   const toggle = (idx: number) => {
     setOpenIndex(openIndex === idx ? null : idx);
   };
@@ -49,11 +59,16 @@ export function PricingFaq() {
   return (
     <div className="space-y-6 pt-12 max-w-3xl mx-auto">
       <div className="text-center space-y-2">
+        {badgeText && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-dim text-blue border border-blue/20 text-xs font-mono font-semibold mb-1">
+            <span>{badgeText}</span>
+          </div>
+        )}
         <h3 className="text-2xl font-bold text-ink tracking-tight">
-          Frequently Asked Questions
+          {titleText}
         </h3>
         <p className="text-xs text-muted">
-          Everything you need to know about our plans, statutory coverage, and billing.
+          {subtitleText}
         </p>
       </div>
 

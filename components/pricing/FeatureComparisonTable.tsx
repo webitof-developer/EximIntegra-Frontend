@@ -3,7 +3,7 @@
 import React, { useMemo } from "react";
 import { Check, Minus } from "lucide-react";
 import { TableContainer, Table } from "@/components/ui/Table";
-import { useGetPublicFeatureMatrixQuery } from "@/store/adminApi";
+import { useGetPublicFeatureMatrixQuery, useGetPublicContentQuery } from "@/store/adminApi";
 import { FeatureMatrixItem, PricingPlan } from "@/lib/types";
 
 // Static fallback data if database is initialising or offline
@@ -274,6 +274,13 @@ const fallbackItems: FeatureMatrixItem[] = [
 
 export function FeatureComparisonTable() {
   const { data: matrixData } = useGetPublicFeatureMatrixQuery();
+  const { data: contentData } = useGetPublicContentQuery();
+
+  const matrixTitle =
+    contentData?.pricing?.matrixHeader?.title || "Comprehensive Feature Matrix";
+  const matrixSubtitle =
+    contentData?.pricing?.matrixHeader?.subtitle ||
+    "Compare engine capabilities and developer limits across all three tiers.";
 
   // Resolve dynamic plans: strictly keep only the single DEFAULT Free Trial plan, followed by subscription plans
   const plans = useMemo(() => {
@@ -496,10 +503,10 @@ export function FeatureComparisonTable() {
     <div className="space-y-6 pt-10">
       <div className="text-center space-y-2">
         <h3 className="text-2xl font-bold text-ink tracking-tight">
-          Comprehensive Feature Matrix
+          {matrixTitle}
         </h3>
         <p className="text-xs text-muted">
-          Compare engine capabilities and developer limits across all three tiers.
+          {matrixSubtitle}
         </p>
       </div>
 

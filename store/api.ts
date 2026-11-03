@@ -87,6 +87,7 @@ export const api = createApi({
     "Payments",
     "Team",
     "FeatureMatrix",
+    "Content",
   ],
   endpoints: () => ({}),
 });
