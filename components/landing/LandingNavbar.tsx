@@ -27,13 +27,48 @@ export function LandingNavbar() {
   const { data: pricingData } = useGetPricingPlansQuery();
   const trialDays = pricingData?.trialDays ?? 14;
 
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
+    if (isHome) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const targetId = hash.replace(/^#/, "");
+      const elem = document.getElementById(targetId);
+
+      if (elem) {
+        if (typeof window !== "undefined" && window.__lenis) {
+          window.__lenis.scrollTo(elem, {
+            offset: -75,
+            immediate: false,
+          });
+        } else {
+          const y = elem.getBoundingClientRect().top + window.pageYOffset - 75;
+          window.scrollTo({ top: y, behavior: "smooth" });
+        }
+        window.history.pushState(null, "", hash);
+      }
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 bg-panel/90 backdrop-blur-md border-b border-line">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 group select-none"
+          onClick={(e) => {
+            if (isHome) {
+              e.preventDefault();
+              e.stopPropagation();
+              if (typeof window !== "undefined" && window.__lenis) {
+                window.__lenis.scrollTo(0, { immediate: false });
+              } else {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+              window.history.pushState(null, "", "/");
+            }
+          }}
+          className="flex items-center gap-2 group select-none cursor-pointer"
           title="EximIntegra — Trade Intelligence & Landed Cost"
         >
           <Image
@@ -53,25 +88,33 @@ export function LandingNavbar() {
         <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-muted">
           <Link
             href={getSectionHref("#interactive-demo")}
-            className="hover:text-ink transition-colors flex items-center gap-1"
+            onClick={(e) => scrollToSection(e, "#interactive-demo")}
+            scroll={false}
+            className="hover:text-ink transition-colors flex items-center gap-1 cursor-pointer"
           >
             <span>Tariff Calculator</span>
           </Link>
           <Link
             href={getSectionHref("#features")}
-            className="hover:text-ink transition-colors"
+            onClick={(e) => scrollToSection(e, "#features")}
+            scroll={false}
+            className="hover:text-ink transition-colors cursor-pointer"
           >
             Engines & Features
           </Link>
           <Link
             href={getSectionHref("#statutory")}
-            className="hover:text-ink transition-colors"
+            onClick={(e) => scrollToSection(e, "#statutory")}
+            scroll={false}
+            className="hover:text-ink transition-colors cursor-pointer"
           >
             Statutory Coverage
           </Link>
           <Link
             href={getSectionHref("#security")}
-            className="hover:text-ink transition-colors flex items-center gap-1"
+            onClick={(e) => scrollToSection(e, "#security")}
+            scroll={false}
+            className="hover:text-ink transition-colors flex items-center gap-1 cursor-pointer"
           >
             <span>Security & BYOK</span>
           </Link>
@@ -134,24 +177,47 @@ export function LandingNavbar() {
         <div className="md:hidden border-b border-line bg-panel px-4 py-4 space-y-3 text-xs font-semibold text-ink">
           <Link
             href={getSectionHref("#interactive-demo")}
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-1 text-muted hover:text-ink"
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              scrollToSection(e, "#interactive-demo");
+            }}
+            scroll={false}
+            className="block py-1 text-muted hover:text-ink cursor-pointer"
           >
             Tariff Calculator
           </Link>
           <Link
             href={getSectionHref("#features")}
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-1 text-muted hover:text-ink"
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              scrollToSection(e, "#features");
+            }}
+            scroll={false}
+            className="block py-1 text-muted hover:text-ink cursor-pointer"
           >
             Engines & Features
           </Link>
           <Link
             href={getSectionHref("#statutory")}
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-1 text-muted hover:text-ink"
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              scrollToSection(e, "#statutory");
+            }}
+            scroll={false}
+            className="block py-1 text-muted hover:text-ink cursor-pointer"
           >
             Statutory Coverage
+          </Link>
+          <Link
+            href={getSectionHref("#security")}
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              scrollToSection(e, "#security");
+            }}
+            scroll={false}
+            className="block py-1 text-muted hover:text-ink cursor-pointer"
+          >
+            Security & BYOK
           </Link>
           <Link
             href="/pricing"
@@ -161,13 +227,6 @@ export function LandingNavbar() {
             }`}
           >
             Pricing & Plans
-          </Link>
-          <Link
-            href={getSectionHref("#security")}
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-1 text-muted hover:text-ink"
-          >
-            Security & BYOK
           </Link>
 
           <div className="pt-3 border-t border-line flex flex-col gap-2">

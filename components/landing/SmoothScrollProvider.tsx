@@ -20,20 +20,18 @@ export function SmoothScrollProvider({
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    // 1. Initialize Lenis with optimized physics-based lerp for buttery smooth scrolling
+    // 1. Initialize Lenis with optimized physics-based lerp for fluid gliding
     const lenis = new Lenis({
       lerp: 0.085, // Physics-based linear interpolation for fluid, cinematic glide
       smoothWheel: true,
       wheelMultiplier: 1.05, // Immediate, natural wheel response on desktop
       touchMultiplier: 1.8,
       syncTouch: false, // Maintain smooth native touch feel on phones/tablets
-      respectReducedMotion: false, // Ensure smooth scroll is not disabled by Windows OS reduced-motion flags
+      respectReducedMotion: false, // Ensure smooth scroll is not disabled by OS flags
       autoResize: true, // Automatically recalculate dimensions on layout changes
       autoRaf: true, // High-performance internal requestAnimationFrame loop
-      allowNestedScroll: true, // Allow inner scroll areas (e.g. pricing card lists) to scroll without freezing page
-      anchors: {
-        offset: -75, // Accurate offset for fixed sticky navigation bar
-      },
+      allowNestedScroll: true, // Allow inner scroll areas to scroll without freezing page
+      anchors: false, // Disable Lenis internal click handler; we handle anchor scrolling directly with capture-phase intercept
     });
 
     lenisRef.current = lenis;
@@ -43,7 +41,8 @@ export function SmoothScrollProvider({
     const tryScrollToHash = (hash: string) => {
       if (!hash) return;
       try {
-        const elem = document.querySelector(hash);
+        const id = hash.replace(/^#/, "");
+        const elem = document.getElementById(id) || document.querySelector(hash);
         if (elem && lenisRef.current) {
           lenisRef.current.scrollTo(elem as HTMLElement, {
             offset: -75,
@@ -59,9 +58,9 @@ export function SmoothScrollProvider({
     const timers: NodeJS.Timeout[] = [];
     if (typeof window !== "undefined" && window.location.hash) {
       const hash = window.location.hash;
-      timers.push(setTimeout(() => tryScrollToHash(hash), 80));
-      timers.push(setTimeout(() => tryScrollToHash(hash), 250));
-      timers.push(setTimeout(() => tryScrollToHash(hash), 600));
+      timers.push(setTimeout(() => tryScrollToHash(hash), 100));
+      timers.push(setTimeout(() => tryScrollToHash(hash), 350));
+      timers.push(setTimeout(() => tryScrollToHash(hash), 750));
     } else {
       // If navigating between pages without a hash, reset scroll position cleanly
       lenis.scrollTo(0, { immediate: true });
@@ -77,7 +76,7 @@ export function SmoothScrollProvider({
     timers.push(setTimeout(() => lenis.resize(), 400));
     timers.push(setTimeout(() => lenis.resize(), 1200));
 
-    // 4. Intercept in-page and cross-page anchor clicks (#features, /#interactive-demo, etc.)
+    // 4. Intercept in-page anchor clicks in CAPTURE phase so we intercept before Next.js Link router or native jumps
     const handleAnchorClick = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("a");
       if (!target) return;
@@ -93,10 +92,12 @@ export function SmoothScrollProvider({
 
       if (hash) {
         try {
-          const elem = document.querySelector(hash);
-          if (elem) {
+          const id = hash.replace(/^#/, "");
+          const elem = document.getElementById(id) || document.querySelector(hash);
+          if (elem && lenisRef.current) {
             e.preventDefault();
-            lenis.scrollTo(elem as HTMLElement, { offset: -75 });
+            e.stopPropagation();
+            lenisRef.current.scrollTo(elem as HTMLElement, { offset: -75, immediate: false });
             window.history.pushState(null, "", hash);
           }
         } catch {
@@ -111,13 +112,13 @@ export function SmoothScrollProvider({
       }
     };
 
-    document.addEventListener("click", handleAnchorClick);
+    document.addEventListener("click", handleAnchorClick, { capture: true });
     window.addEventListener("hashchange", handleHashChange);
 
     return () => {
       timers.forEach(clearTimeout);
       window.removeEventListener("resize", handleResize);
-      document.removeEventListener("click", handleAnchorClick);
+      document.removeEventListener("click", handleAnchorClick, { capture: true });
       window.removeEventListener("hashchange", handleHashChange);
       lenis.destroy();
       lenisRef.current = null;

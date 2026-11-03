@@ -26,7 +26,7 @@ export function LandingFooter() {
                 alt="EximIntegra — Trade Intelligence & Landed Cost"
                 width={180}
                 height={60}
-                className="h-9 w-auto object-contain group-hover:opacity-90 transition-opacity"
+                className="h-10 w-auto object-contain group-hover:opacity-90 transition-opacity"
               />
             </Link>
 
