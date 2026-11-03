@@ -31,7 +31,6 @@ export const authApi = api.injectEndpoints({
         email?: string;
         gstin?: string;
         billingEmail?: string;
-        tier?: "ENTERPRISE" | "PROFESSIONAL" | "STARTER";
       }
     >({
       query: (data) => ({

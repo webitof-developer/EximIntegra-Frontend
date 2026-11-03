@@ -378,7 +378,15 @@ export function SubscriptionBillingSection() {
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {
-        // Sandbox Simulation Mode (keys not yet configured or in test sandbox)
+        // Sandbox Simulation Mode is strictly restricted to development environments
+        if (process.env.NEXT_PUBLIC_ENABLE_PAYMENT_SIMULATION !== "true") {
+          showNotice(
+            "Live Razorpay payment gateway is required. Payment simulation is disabled in production."
+          );
+          return;
+        }
+
+        // Sandbox Simulation Mode (only when explicitly enabled via env)
         const verifyRes = await verifyPaymentMutation({
           razorpayOrderId: orderData.orderId,
           razorpayPaymentId: `pay_sim_${Date.now()}`,
@@ -403,7 +411,7 @@ export function SubscriptionBillingSection() {
         setIsChangePlanOpen(false);
         refetchInvoices();
         showNotice(
-          `(Razorpay Gateway) Subscription upgraded to ${plan.name} Tier (${
+          `(Razorpay Gateway Simulation) Subscription updated to ${plan.name} Tier (${
             modalCurrency === "INR" ? "₹" : "$"
           }${Number(orderData.amount / 100).toLocaleString()}).`
         );
