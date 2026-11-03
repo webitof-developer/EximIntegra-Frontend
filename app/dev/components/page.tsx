@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { notFound } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import {
   Card,
@@ -29,6 +30,10 @@ import {
 import { formatCurrency, formatHsCode, formatPercent } from "@/lib/formatters";
 
 export default function ComponentsShowcasePage() {
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   const [activeTab, setActiveTab] = useState("overview");
 
   return (

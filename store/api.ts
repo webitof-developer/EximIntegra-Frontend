@@ -6,6 +6,7 @@ import {
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
 import { getStoredToken, setStoredToken, clearStoredAuth } from "@/lib/auth";
+import { setCredentials, logout } from "./authSlice";
 
 /**
  * Base HTTP query with credentials (cookies) and Bearer token injection
@@ -48,14 +49,18 @@ const baseQueryWithReauth: BaseQueryFn<
     );
 
     if (refreshResult.data) {
-      const data = refreshResult.data as { access_token: string };
+      const data = refreshResult.data as { access_token: string; user?: any };
       if (data.access_token) {
         setStoredToken(data.access_token);
+        if (data.user) {
+          apiInstance.dispatch(setCredentials({ token: data.access_token, user: data.user }));
+        }
       }
       // Retry original request with newly acquired token
       result = await rawBaseQuery(args, apiInstance, extraOptions);
     } else {
       clearStoredAuth();
+      apiInstance.dispatch(logout());
     }
   }
 

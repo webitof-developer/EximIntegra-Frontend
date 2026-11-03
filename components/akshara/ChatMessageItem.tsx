@@ -35,7 +35,51 @@ export function ChatMessageItem({
     }
   };
 
-  // Simple Markdown parsing for clean presentation of sections and bullets
+  // Safe inline formatting parser (bold, italic, code) into React elements — 100% immune to XSS
+  const parseInline = (text: string): React.ReactNode[] => {
+    const tokens: React.ReactNode[] = [];
+    const regex = /(\*\*.*?\*\*|`.*?`|\*.*?\*)/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        tokens.push(text.slice(lastIndex, match.index));
+      }
+      const token = match[0];
+      const key = `${match.index}-${token}`;
+      if (token.startsWith("**") && token.endsWith("**") && token.length >= 4) {
+        tokens.push(
+          <strong key={key} className="font-bold text-ink">
+            {token.slice(2, -2)}
+          </strong>
+        );
+      } else if (token.startsWith("`") && token.endsWith("`") && token.length >= 2) {
+        tokens.push(
+          <code key={key} className="font-mono bg-bg-canvas border border-line px-1 py-0.5 rounded text-blue">
+            {token.slice(1, -1)}
+          </code>
+        );
+      } else if (token.startsWith("*") && token.endsWith("*") && token.length >= 2) {
+        tokens.push(
+          <em key={key} className="italic text-muted">
+            {token.slice(1, -1)}
+          </em>
+        );
+      } else {
+        tokens.push(token);
+      }
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      tokens.push(text.slice(lastIndex));
+    }
+
+    return tokens;
+  };
+
+  // Safe structured Markdown parsing for sections, bullets, and paragraphs
   const renderFormattedContent = (text: string) => {
     const lines = text.split("\n");
     return (
@@ -52,14 +96,14 @@ export function ChatMessageItem({
             return (
               <div key={idx} className="flex items-start gap-2 pl-2">
                 <span className="text-blue font-bold">&bull;</span>
-                <span dangerouslySetInnerHTML={{ __html: formatInline(line.replace("- ", "")) }} />
+                <span>{parseInline(line.replace("- ", ""))}</span>
               </div>
             );
           }
           if (line.match(/^\d+\.\s/)) {
             return (
               <div key={idx} className="flex items-start gap-2 pl-2">
-                <span dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+                <span>{parseInline(line)}</span>
               </div>
             );
           }
@@ -67,17 +111,11 @@ export function ChatMessageItem({
             return <div key={idx} className="h-1" />;
           }
           return (
-            <p key={idx} dangerouslySetInnerHTML={{ __html: formatInline(line) }} />
+            <p key={idx}>{parseInline(line)}</p>
           );
         })}
       </div>
     );
-  };
-
-  const formatInline = (text: string) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-ink">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic text-muted">$1</em>');
   };
 
   return (

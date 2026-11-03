@@ -19,6 +19,13 @@ export const authApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Auth"],
     }),
+    refreshToken: builder.mutation<AuthResponse, void>({
+      query: () => ({
+        url: "/auth/refresh",
+        method: "POST",
+      }),
+      invalidatesTags: ["Auth"],
+    }),
     getProfile: builder.query<UserProfile, void>({
       query: () => "/auth/me",
       providesTags: ["Auth"],
@@ -47,6 +54,7 @@ export const authApi = api.injectEndpoints({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  useRefreshTokenMutation,
   useGetProfileQuery,
   useUpdateProfileMutation,
 } = authApi;

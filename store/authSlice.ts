@@ -29,15 +29,9 @@ export const authSlice = createSlice({
     initializeAuth: (state) => {
       const token = getStoredToken();
       const user = getStoredUser();
-      if (token) {
-        state.token = token;
-        state.user = user;
-        state.isAuthenticated = true;
-      } else {
-        state.token = null;
-        state.user = null;
-        state.isAuthenticated = false;
-      }
+      state.token = token;
+      state.user = user;
+      state.isAuthenticated = Boolean(token);
       state.isInitialized = true;
     },
     setCredentials: (
