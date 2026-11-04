@@ -42,6 +42,7 @@ function LoginForm() {
         setCredentials({
           token: response.access_token,
           user: response.user,
+          refreshToken: response.refresh_token,
         })
       );
 

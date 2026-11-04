@@ -82,6 +82,7 @@ export interface AuthResponse {
   access_token: string;
   token_type: string;
   user: UserProfile;
+  refresh_token?: string;
 }
 
 /* Classification Types */

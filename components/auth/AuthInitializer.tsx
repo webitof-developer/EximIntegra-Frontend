@@ -4,7 +4,12 @@ import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { initializeAuth, setCredentials, updateUser, logout } from "@/store/authSlice";
 import { useGetProfileQuery, useRefreshTokenMutation } from "@/store/authApi";
-import { getStoredToken, getStoredUser, clearStoredAuth, setStoredToken } from "@/lib/auth";
+import {
+  getStoredUser,
+  getStoredRefreshToken,
+  clearStoredAuth,
+  setStoredToken,
+} from "@/lib/auth";
 
 export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -17,41 +22,56 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     dispatch(initializeAuth());
   }, [dispatch]);
 
-  // When loaded with empty in-memory token, attempt silent restore via httpOnly refresh cookie
-  // Only attempt restore if a user session was previously stored and not on public auth pages
+  // When loaded without an active token in memory/storage, attempt silent restore
   useEffect(() => {
-    if (isInitialized && !token && !refreshAttempted.current) {
+    if (!token && !refreshAttempted.current) {
       refreshAttempted.current = true;
 
-      if (typeof window !== "undefined") {
-        const path = window.location.pathname;
-        if (path === "/login" || path === "/register") {
-          return;
-        }
-      }
-
       const storedUser = getStoredUser();
-      if (!storedUser) {
+      const storedRefreshToken = getStoredRefreshToken();
+
+      // If neither user profile nor fallback refresh token exists, no session to restore
+      if (!storedUser && !storedRefreshToken) {
+        if (!isInitialized) {
+          dispatch(logout());
+        }
         return;
       }
 
-      refreshToken()
+      // Fallback timeout to prevent permanent spinner if backend is unreachable
+      const timeoutId = setTimeout(() => {
+        clearStoredAuth();
+        dispatch(logout());
+      }, 8000);
+
+      refreshToken(storedRefreshToken ? { refresh_token: storedRefreshToken } : undefined)
         .unwrap()
         .then((res) => {
+          clearTimeout(timeoutId);
           if (res?.access_token) {
             setStoredToken(res.access_token);
-            if (res.user) {
-              dispatch(setCredentials({ token: res.access_token, user: res.user }));
+            const userToSet = res.user || storedUser;
+            if (userToSet) {
+              dispatch(
+                setCredentials({
+                  token: res.access_token,
+                  user: userToSet,
+                  refreshToken: res.refresh_token || storedRefreshToken || undefined,
+                })
+              );
             }
+          } else {
+            clearStoredAuth();
+            dispatch(logout());
           }
         })
         .catch(() => {
-          // No active session or expired refresh cookie
+          clearTimeout(timeoutId);
           clearStoredAuth();
           dispatch(logout());
         });
     }
-  }, [isInitialized, token, refreshToken, dispatch]);
+  }, [token, isInitialized, refreshToken, dispatch]);
 
   // Synchronize and validate session with backend when token is present
   const { data: profile, error } = useGetProfileQuery(undefined, {

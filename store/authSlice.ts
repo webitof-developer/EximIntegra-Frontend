@@ -3,6 +3,7 @@ import { UserProfile } from "@/lib/types";
 import {
   getStoredToken,
   getStoredUser,
+  getStoredRefreshToken,
   setStoredUser,
   setStoredAuth,
   clearStoredAuth,
@@ -29,20 +30,24 @@ export const authSlice = createSlice({
     initializeAuth: (state) => {
       const token = getStoredToken();
       const user = getStoredUser();
+      const refreshToken = getStoredRefreshToken();
       state.token = token;
       state.user = user;
       state.isAuthenticated = Boolean(token);
-      state.isInitialized = true;
+      // If we have an active token, or if the visitor has no stored user/refresh token (guest), mark initialized.
+      // If a user profile or refresh token exists but token is null, keep initialized false
+      // so AuthGuard waits for AuthInitializer to perform silent token restoration without redirecting.
+      state.isInitialized = Boolean(token) || (!user && !refreshToken);
     },
     setCredentials: (
       state,
-      action: PayloadAction<{ token: string; user: UserProfile }>
+      action: PayloadAction<{ token: string; user: UserProfile; refreshToken?: string }>
     ) => {
       state.token = action.payload.token;
       state.user = action.payload.user;
       state.isAuthenticated = true;
       state.isInitialized = true;
-      setStoredAuth(action.payload.token, action.payload.user);
+      setStoredAuth(action.payload.token, action.payload.user, action.payload.refreshToken);
     },
     updateUser: (state, action: PayloadAction<UserProfile>) => {
       state.user = action.payload;

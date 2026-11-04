@@ -5,7 +5,12 @@ import {
   FetchArgs,
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
-import { getStoredToken, setStoredToken, clearStoredAuth } from "@/lib/auth";
+import {
+  getStoredToken,
+  setStoredToken,
+  getStoredRefreshToken,
+  clearStoredAuth,
+} from "@/lib/auth";
 import type { UserProfile } from "@/lib/types";
 import { setCredentials, logout } from "./authSlice";
 
@@ -43,18 +48,33 @@ const baseQueryWithReauth: BaseQueryFn<
     url.includes("/auth/register");
 
   if (result.error && result.error.status === 401 && !isAuthRoute) {
+    const storedRefresh = getStoredRefreshToken();
     const refreshResult = await rawBaseQuery(
-      { url: "/auth/refresh", method: "POST" },
+      {
+        url: "/auth/refresh",
+        method: "POST",
+        body: storedRefresh ? { refresh_token: storedRefresh } : undefined,
+      },
       apiInstance,
       extraOptions
     );
 
     if (refreshResult.data) {
-      const data = refreshResult.data as { access_token: string; user?: UserProfile };
+      const data = refreshResult.data as {
+        access_token: string;
+        refresh_token?: string;
+        user?: UserProfile;
+      };
       if (data.access_token) {
         setStoredToken(data.access_token);
         if (data.user) {
-          apiInstance.dispatch(setCredentials({ token: data.access_token, user: data.user }));
+          apiInstance.dispatch(
+            setCredentials({
+              token: data.access_token,
+              user: data.user,
+              refreshToken: data.refresh_token || storedRefresh || undefined,
+            })
+          );
         }
       }
       // Retry original request with newly acquired token

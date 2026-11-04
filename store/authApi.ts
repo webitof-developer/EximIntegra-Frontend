@@ -19,10 +19,11 @@ export const authApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Auth"],
     }),
-    refreshToken: builder.mutation<AuthResponse, void>({
-      query: () => ({
+    refreshToken: builder.mutation<AuthResponse, { refresh_token?: string } | void>({
+      query: (body) => ({
         url: "/auth/refresh",
         method: "POST",
+        body: body || undefined,
       }),
       invalidatesTags: ["Auth"],
     }),

@@ -2,26 +2,66 @@ import { UserProfile } from "./types";
 
 const TOKEN_KEY = "exim_token";
 const USER_KEY = "exim_user";
+const REFRESH_KEY = "exim_refresh_token_fallback";
 
-// In-memory access token storage (never stored in localStorage or sessionStorage for XSS immunity)
+// In-memory access token storage
 let inMemoryAccessToken: string | null = null;
 
 export function getStoredToken(): string | null {
-  return inMemoryAccessToken;
+  if (inMemoryAccessToken) return inMemoryAccessToken;
+  if (typeof window !== "undefined") {
+    try {
+      const sessionToken = sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+      if (sessionToken) {
+        inMemoryAccessToken = sessionToken;
+        return sessionToken;
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  return null;
 }
 
 export function setStoredToken(token: string | null): void {
   inMemoryAccessToken = token;
-  // Ensure no sensitive tokens remain in localStorage or sessionStorage
   if (typeof window !== "undefined") {
     try {
+      if (token) {
+        sessionStorage.setItem(TOKEN_KEY, token);
+      } else {
+        sessionStorage.removeItem(TOKEN_KEY);
+      }
       localStorage.removeItem(TOKEN_KEY);
-      sessionStorage.removeItem(TOKEN_KEY);
-      // Clean up any legacy document cookies
+      // Clean up legacy cookies
       document.cookie = "exim_token=; path=/; max-age=0; SameSite=Lax";
     } catch {
       // Ignore storage errors in restricted contexts
     }
+  }
+}
+
+export function getStoredRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return sessionStorage.getItem(REFRESH_KEY) || localStorage.getItem(REFRESH_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredRefreshToken(refreshToken: string | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (refreshToken) {
+      sessionStorage.setItem(REFRESH_KEY, refreshToken);
+      localStorage.setItem(REFRESH_KEY, refreshToken);
+    } else {
+      sessionStorage.removeItem(REFRESH_KEY);
+      localStorage.removeItem(REFRESH_KEY);
+    }
+  } catch {
+    // Ignore
   }
 }
 
@@ -58,9 +98,12 @@ export function setStoredUser(user: UserProfile | null): void {
   }
 }
 
-export function setStoredAuth(token: string, user: UserProfile): void {
+export function setStoredAuth(token: string, user: UserProfile, refreshToken?: string): void {
   setStoredToken(token);
   setStoredUser(user);
+  if (refreshToken) {
+    setStoredRefreshToken(refreshToken);
+  }
 }
 
 export function clearStoredAuth(): void {
@@ -69,7 +112,9 @@ export function clearStoredAuth(): void {
   try {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(REFRESH_KEY);
     document.cookie = "exim_token=; path=/; max-age=0; SameSite=Lax";
   } catch {
     // Ignore
