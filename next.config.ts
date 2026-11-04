@@ -1,6 +1,45 @@
 import type { NextConfig } from "next";
 
-const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:5000";
+function extractOrigin(urlStr?: string): string | null {
+  if (!urlStr || urlStr.startsWith("/")) return null;
+  try {
+    const parsed = new URL(urlStr);
+    return parsed.origin;
+  } catch {
+    return null;
+  }
+}
+
+const rawBackendUrl = process.env.BACKEND_URL;
+const rawPublicApiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+const backendUrl =
+  rawBackendUrl ||
+  extractOrigin(rawPublicApiUrl) ||
+  "http://127.0.0.1:5000";
+
+const customOrigins = [
+  extractOrigin(rawBackendUrl),
+  extractOrigin(rawPublicApiUrl),
+].filter((url): url is string => Boolean(url));
+
+const connectSources = Array.from(
+  new Set([
+    "'self'",
+    ...customOrigins,
+    "https://eximintegra-backend.onrender.com",
+    "https://*.onrender.com",
+    "https://*.vercel.app",
+    "https://*.eximintegra.com",
+    "https://eximintegra.com",
+    "http://127.0.0.1:5000",
+    "http://localhost:5000",
+    "https://api.razorpay.com",
+    "https://checkout.razorpay.com",
+    "https://lumberjack.razorpay.com",
+    "https://api.frankfurter.dev",
+  ])
+).join(" ");
 
 const nextConfig: NextConfig = {
   async rewrites() {
@@ -48,8 +87,8 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' http://127.0.0.1:5000 http://localhost:5000 https://api.razorpay.com https://lumberjack.razorpay.com https://api.frankfurter.dev",
-              "frame-src https://api.razorpay.com",
+              `connect-src ${connectSources}`,
+              "frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com",
               "object-src 'none'",
               "base-uri 'self'",
             ].join("; "),
