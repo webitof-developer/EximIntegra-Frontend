@@ -13,6 +13,9 @@ import { AdminNav } from "../AdminNav";
 import { DynamicPricingTab } from "./DynamicPricingTab";
 import { ToastNotification, ToastVariant } from "@/components/ui";
 import { ShieldAlert } from "lucide-react";
+import { PricingPlan } from "@/lib/types";
+
+const EMPTY_PLANS: PricingPlan[] = [];
 
 export default function AdminPricingPage() {
   const user = useAppSelector((state) => state.auth.user);
@@ -95,7 +98,7 @@ export default function AdminPricingPage() {
         />
 
         <DynamicPricingTab
-          pricingPlans={pricingData?.plans || []}
+          pricingPlans={pricingData?.plans ?? EMPTY_PLANS}
           isLoading={pricingLoading}
           onSavePricing={async (plans) => {
             const res = await updatePricing({ plans }).unwrap();

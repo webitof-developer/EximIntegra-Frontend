@@ -66,6 +66,16 @@ const calculateDaysFromDate = (dateStr: string): number => {
   return Math.max(1, diff);
 };
 
+const sanitizePlans = (plans: PricingPlan[]): PricingPlan[] => {
+  if (!plans || plans.length === 0) return [];
+  return plans.map((p) => {
+    if (p.planType === "trial") {
+      return { ...p, tierBadge: "FREE_TRIAL", isPopular: false };
+    }
+    return p;
+  });
+};
+
 export function DynamicPricingTab({
   pricingPlans,
   isLoading,
@@ -73,8 +83,16 @@ export function DynamicPricingTab({
   onDeletePlan,
   showToast,
 }: DynamicPricingTabProps) {
-  const [editablePlans, setEditablePlans] = useState<PricingPlan[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>("professional");
+  const [editablePlans, setEditablePlans] = useState<PricingPlan[]>(() =>
+    sanitizePlans(pricingPlans)
+  );
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(() => {
+    if (pricingPlans && pricingPlans.length > 0) {
+      const prof = pricingPlans.find((p) => p.id === "professional");
+      return prof ? prof.id : pricingPlans[0].id;
+    }
+    return "professional";
+  });
   const [categoryFilter, setCategoryFilter] = useState<"ALL" | "SUBSCRIPTION" | "TRIAL">("ALL");
   const [pricingNotice, setPricingNotice] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -119,15 +137,13 @@ export function DynamicPricingTab({
 
   // Synchronize incoming plans during render without useEffect
   const [prevPricingPlans, setPrevPricingPlans] = useState(pricingPlans);
-  if (pricingPlans !== prevPricingPlans) {
+  if (
+    pricingPlans !== prevPricingPlans ||
+    (editablePlans.length === 0 && pricingPlans && pricingPlans.length > 0)
+  ) {
     setPrevPricingPlans(pricingPlans);
     if (pricingPlans && pricingPlans.length > 0) {
-      const sanitized = pricingPlans.map((p) => {
-        if (p.planType === "trial") {
-          return { ...p, tierBadge: "FREE_TRIAL", isPopular: false };
-        }
-        return p;
-      });
+      const sanitized = sanitizePlans(pricingPlans);
       setEditablePlans(JSON.parse(JSON.stringify(sanitized)));
       if (!selectedPlanId || !pricingPlans.some((p) => p.id === selectedPlanId)) {
         setSelectedPlanId(pricingPlans[0].id);
@@ -553,7 +569,7 @@ export function DynamicPricingTab({
             type="button"
             onClick={() => {
               if (pricingPlans) {
-                setEditablePlans(JSON.parse(JSON.stringify(pricingPlans)));
+                setEditablePlans(JSON.parse(JSON.stringify(sanitizePlans(pricingPlans))));
                 showToast("Form reloaded from database.");
               }
             }}
