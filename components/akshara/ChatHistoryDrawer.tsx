@@ -15,15 +15,20 @@ import {
   RefreshCw,
   Loader2,
   ChevronRight,
+  Share2,
+  Check,
 } from "lucide-react";
 import {
   useGetConversationsQuery,
   useLazyGetConversationQuery,
   useDeleteConversationMutation,
   useClearAllConversationsMutation,
+  useShareConversationMutation,
   AksharaConversationSummary,
   AksharaConversationDetail,
 } from "@/store/aksharaApi";
+import { useAppSelector } from "@/store";
+import { getApiErrorMessage } from "@/lib/utils";
 
 interface ChatHistoryDrawerProps {
   isOpen: boolean;
@@ -31,6 +36,7 @@ interface ChatHistoryDrawerProps {
   activeConversationId: string;
   onSelectConversation: (detail: AksharaConversationDetail) => void;
   onNewChat: () => void;
+  showToast?: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
 interface DateGroupedSessions {
@@ -96,7 +102,9 @@ export function ChatHistoryDrawer({
   activeConversationId,
   onSelectConversation,
   onNewChat,
+  showToast,
 }: ChatHistoryDrawerProps) {
+  const user = useAppSelector((state) => state.auth.user);
   const {
     data: dbSessions,
     isLoading,
@@ -104,14 +112,24 @@ export function ChatHistoryDrawer({
     refetch,
   } = useGetConversationsQuery(undefined, { skip: !isOpen });
 
-  const [fetchConversationDetail, { isLoading: isLoadingDetail }] = useLazyGetConversationQuery();
+  const [fetchConversationDetail] = useLazyGetConversationQuery();
   const [deleteConversation, { isLoading: isDeleting }] = useDeleteConversationMutation();
   const [clearAllConversations, { isLoading: isClearing }] = useClearAllConversationsMutation();
+  const [shareConversation] = useShareConversationMutation();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [confirmClear, setConfirmClear] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
+  const [feedbackNotice, setFeedbackNotice] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  // Helper: check if conversation is owned by the logged-in user
+  const isOwnedByCurrentUser = (s: AksharaConversationSummary) => {
+    if (!s.userId || !user?.id) return true;
+    return s.userId === user.id;
+  };
 
   // Handle escape key
   useEffect(() => {
@@ -131,7 +149,10 @@ export function ChatHistoryDrawer({
     if (!isOpen) {
       setConfirmClear(false);
       setDeletingId(null);
+      setSharingId(null);
+      setCopiedId(null);
       setLoadingSessionId(null);
+      setFeedbackNotice(null);
     }
   }
 
@@ -166,6 +187,47 @@ export function ChatHistoryDrawer({
       console.error("Failed to load conversation details", err);
     } finally {
       setLoadingSessionId(null);
+    }
+  };
+
+  const handleShare = async (e: React.MouseEvent, session: AksharaConversationSummary) => {
+    e.stopPropagation();
+
+    // Strict ownership verification: user can only share their own chat history
+    if (session.userId && user?.id && session.userId !== user.id) {
+      const errorMsg = "You can only share your own chat history with Akshara.";
+      setFeedbackNotice({ message: errorMsg, type: "error" });
+      if (showToast) showToast(errorMsg, "error");
+      setTimeout(() => setFeedbackNotice(null), 3500);
+      return;
+    }
+
+    try {
+      setSharingId(session.id);
+      const res = await shareConversation(session.id).unwrap();
+
+      // Copy markdown consultation summary to clipboard
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(res.formattedMarkdown);
+      }
+
+      setCopiedId(session.id);
+      const successMsg = `Consultation "${session.title || "Consultation"}" copied to clipboard. Ready to share!`;
+      setFeedbackNotice({ message: successMsg, type: "success" });
+      if (showToast) showToast(successMsg, "success");
+
+      setTimeout(() => {
+        setCopiedId(null);
+        setFeedbackNotice(null);
+      }, 3500);
+    } catch (err: unknown) {
+      console.error("Failed to share conversation", err);
+      const errMsg = getApiErrorMessage(err, "Failed to share consultation.");
+      setFeedbackNotice({ message: errMsg, type: "error" });
+      if (showToast) showToast(errMsg, "error");
+      setTimeout(() => setFeedbackNotice(null), 3500);
+    } finally {
+      setSharingId(null);
     }
   };
 
@@ -247,6 +309,33 @@ export function ChatHistoryDrawer({
             </button>
           </div>
         </div>
+
+        {/* Feedback / Notification Banner */}
+        {feedbackNotice && (
+          <div
+            className={`mx-3.5 mt-3 p-2.5 rounded-xl border text-xs flex items-center justify-between gap-2 animate-in fade-in duration-200 ${
+              feedbackNotice.type === "success"
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                : "bg-red/10 border-red/30 text-red"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {feedbackNotice.type === "success" ? (
+                <Check className="w-3.5 h-3.5 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              )}
+              <span className="line-clamp-1">{feedbackNotice.message}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFeedbackNotice(null)}
+              className="text-xs hover:opacity-80 cursor-pointer"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
 
         {/* Action Bar: New Chat & Search */}
         <div className="p-3.5 border-b border-line space-y-2.5 bg-bg/40">
@@ -366,46 +455,83 @@ export function ChatHistoryDrawer({
                               <span className="text-[10px] font-mono text-muted/70">
                                 &bull; {s.messageCount} {s.messageCount === 1 ? "msg" : "msgs"}
                               </span>
+                              {s.isShared && (
+                                <span className="inline-flex items-center gap-0.5 text-[9px] font-mono bg-emerald-500/10 text-emerald-500 px-1.5 py-0.2 rounded border border-emerald-500/20">
+                                  Shared
+                                </span>
+                              )}
                             </div>
                           </div>
 
-                          {/* Delete Action (visible on hover or when confirming) */}
+                          {/* Action Buttons: Share & Delete */}
                           <div className="shrink-0 flex items-center gap-1">
                             {isCardLoading ? (
                               <Loader2 className="w-3.5 h-3.5 animate-spin text-blue" />
-                            ) : deletingId === s.id ? (
-                              <div
-                                className="flex items-center gap-1 bg-red-dim border border-red/30 p-1 rounded-md"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <button
-                                  type="button"
-                                  onClick={(e) => handleDelete(e, s.id)}
-                                  disabled={isDeleting}
-                                  className="text-[10px] font-bold text-red hover:underline px-1 cursor-pointer"
-                                >
-                                  Delete
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setDeletingId(null)}
-                                  className="text-[10px] text-muted hover:text-ink px-1 cursor-pointer"
-                                >
-                                  Cancel
-                                </button>
-                              </div>
                             ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setDeletingId(s.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-muted hover:text-red hover:bg-red/10 transition-all cursor-pointer"
-                                title="Delete this consultation"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              <>
+                                {/* Share Button: User can only share their own consultation */}
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleShare(e, s)}
+                                  disabled={sharingId === s.id}
+                                  className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                                    copiedId === s.id
+                                      ? "text-emerald-500 bg-emerald-500/10 opacity-100"
+                                      : isOwnedByCurrentUser(s)
+                                      ? "text-muted hover:text-blue hover:bg-blue/10 opacity-0 group-hover:opacity-100"
+                                      : "text-muted/40 cursor-not-allowed opacity-0 group-hover:opacity-100"
+                                  }`}
+                                  title={
+                                    isOwnedByCurrentUser(s)
+                                      ? "Share consultation (copy markdown & link)"
+                                      : "You can only share your own chat history"
+                                  }
+                                >
+                                  {sharingId === s.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue" />
+                                  ) : copiedId === s.id ? (
+                                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                  ) : (
+                                    <Share2 className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
+
+                                {/* Delete Action (visible on hover or when confirming) */}
+                                {deletingId === s.id ? (
+                                  <div
+                                    className="flex items-center gap-1 bg-red-dim border border-red/30 p-1 rounded-md"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleDelete(e, s.id)}
+                                      disabled={isDeleting}
+                                      className="text-[10px] font-bold text-red hover:underline px-1 cursor-pointer"
+                                    >
+                                      Delete
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setDeletingId(null)}
+                                      className="text-[10px] text-muted hover:text-ink px-1 cursor-pointer"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDeletingId(s.id);
+                                    }}
+                                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md text-muted hover:text-red hover:bg-red/10 transition-all cursor-pointer"
+                                    title="Delete this consultation"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </>
                             )}
                           </div>
                         </div>

@@ -8,21 +8,34 @@ import {
 
 export interface AksharaConversationSummary {
   id: string;
+  userId?: string;
   title: string;
   activeContext?: Partial<MaterialContext>;
   createdAt?: string;
   updatedAt?: string;
   messageCount: number;
   lastMessageSnippet?: string;
+  isShared?: boolean;
 }
 
 export interface AksharaConversationDetail {
   id: string;
+  userId?: string;
   title: string;
   activeContext?: Partial<MaterialContext>;
   createdAt?: string;
   updatedAt?: string;
   messages: AksharaMessage[];
+  isShared?: boolean;
+}
+
+export interface ShareConversationResponse {
+  status: string;
+  conversationId: string;
+  title: string;
+  messageCount: number;
+  formattedMarkdown: string;
+  shareUrl: string;
 }
 
 export const aksharaApi = api.injectEndpoints({
@@ -60,6 +73,18 @@ export const aksharaApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Akshara"],
     }),
+
+    shareConversation: builder.mutation<ShareConversationResponse, string>({
+      query: (id) => ({
+        url: `/akshara/conversations/${id}/share`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Akshara"],
+    }),
+
+    getSharedConversation: builder.query<AksharaConversationDetail, string>({
+      query: (id) => `/akshara/shared/${id}`,
+    }),
   }),
   overrideExisting: false,
 });
@@ -71,4 +96,7 @@ export const {
   useLazyGetConversationQuery,
   useDeleteConversationMutation,
   useClearAllConversationsMutation,
+  useShareConversationMutation,
+  useGetSharedConversationQuery,
+  useLazyGetSharedConversationQuery,
 } = aksharaApi;

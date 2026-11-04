@@ -6,13 +6,19 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { setMaterialContext } from "@/store/contextSlice";
-import { useSendChatMessageMutation, useGetConversationsQuery, AksharaConversationDetail } from "@/store/aksharaApi";
+import {
+  useSendChatMessageMutation,
+  useGetConversationsQuery,
+  useLazyGetSharedConversationQuery,
+  AksharaConversationDetail,
+} from "@/store/aksharaApi";
 import { useGetActiveLlmProviderQuery } from "@/store/adminApi";
 import { AksharaMessage, ContextUpdateAction, AksharaRequest } from "@/lib/types";
 import { getApiErrorMessage } from "@/lib/utils";
 import { ChatMessageItem } from "@/components/akshara/ChatMessageItem";
 import { ChatInput } from "@/components/akshara/ChatInput";
 import { ChatHistoryDrawer } from "@/components/akshara/ChatHistoryDrawer";
+import { ToastNotification, ToastVariant } from "@/components/ui";
 import {
   Sparkles,
   ArrowRight,
@@ -77,6 +83,16 @@ export default function AksharaPage() {
   const [sendChatMessage, { isLoading }] = useSendChatMessageMutation();
   const { data: dbActiveLlm } = useGetActiveLlmProviderQuery();
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
+  const [fetchSharedConversation] = useLazyGetSharedConversationQuery();
+
+  const showToast = (msg: string, variant: ToastVariant = "success") => {
+    setToastMessage(msg);
+    setToastVariant(variant);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
   const [activeLlm, setActiveLlm] = useState<ActiveLlmInfo | null>(getActiveLlmFromStorage);
   const [conversationId, setConversationId] = useState<string>(() => `conv_${Date.now()}`);
   const [messages, setMessages] = useState<AksharaMessage[]>([
@@ -103,6 +119,29 @@ export default function AksharaPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  // Load shared consultation if opened via shared link
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const sharedId = params.get("shared");
+    if (!sharedId) return;
+
+    fetchSharedConversation(sharedId)
+      .unwrap()
+      .then((detail) => {
+        setConversationId(detail.id);
+        setMessages(detail.messages || []);
+        if (detail.activeContext) {
+          dispatch(setMaterialContext(detail.activeContext));
+        }
+        showToast(`Loaded shared consultation: "${detail.title || "Customs Consultation"}"`, "info");
+      })
+      .catch((err) => {
+        console.error("Failed to load shared consultation", err);
+        showToast("Shared consultation could not be found or sharing has ended.", "warning");
+      });
+  }, [fetchSharedConversation, dispatch]);
 
   const handleSendMessage = async (text: string) => {
     const currentActiveLlm = getActiveLlmFromStorage();
@@ -316,6 +355,14 @@ export default function AksharaPage() {
           activeConversationId={conversationId}
           onSelectConversation={handleSelectConversation}
           onNewChat={handleStartNewChat}
+          showToast={showToast}
+        />
+
+        <ToastNotification
+          isOpen={!!toastMessage}
+          variant={toastVariant}
+          message={toastMessage}
+          onClose={() => setToastMessage(null)}
         />
       </AppShell>
     </AuthGuard>
