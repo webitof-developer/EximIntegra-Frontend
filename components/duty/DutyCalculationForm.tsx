@@ -5,6 +5,7 @@ import { DutyCalculationRequest } from "@/lib/types";
 import { ProvenanceBadge } from "@/components/ui/ProvenanceBadge";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { CustomDropdown } from "@/components/ui";
+import { useGetDatasetVersionsQuery } from "@/store/reportsApi";
 import {
   Calculator,
   Globe,
@@ -48,6 +49,10 @@ export function DutyCalculationForm({
   const [insuranceAmount, setInsuranceAmount] = useState<number>(0);
   const [quantity, setQuantity] = useState<number>(initialQuantity);
   const [unit, setUnit] = useState(initialUnit);
+
+  const { data: datasetVersions } = useGetDatasetVersionsQuery();
+  const tariffDataset = datasetVersions?.find((d) => d.source_name === "cbic_tariff");
+  const tariffProv = tariffDataset?.provenance;
 
   // Sync if initial props change via Redux contextSlice
   useEffect(() => {
@@ -247,7 +252,13 @@ export function DutyCalculationForm({
       <div className="pt-2 flex items-center justify-between border-t border-line">
         <div className="flex items-center gap-2 text-[11px] text-muted font-mono">
           <span>CBIC Tariff Gateway:</span>
-          <ProvenanceBadge type="LIVE" source="Customs First Schedule" compact />
+          <ProvenanceBadge
+            type={tariffProv?.type || "UNKNOWN"}
+            source={tariffProv?.source || "Customs First Schedule"}
+            dataset_version={tariffDataset?.version}
+            stale={tariffProv?.stale}
+            compact
+          />
         </div>
 
         <button

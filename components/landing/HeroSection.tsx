@@ -19,14 +19,20 @@ import {
   Layers,
 } from "lucide-react";
 import { useGetPricingPlansQuery, useGetPublicContentQuery } from "@/store/adminApi";
+import { useGetDatasetVersionsQuery } from "@/store/reportsApi";
 
 export function HeroSection() {
   const { data: pricingData } = useGetPricingPlansQuery();
   const { data: contentData } = useGetPublicContentQuery();
+  const { data: datasetVersions } = useGetDatasetVersionsQuery();
+  const tariffDataset = datasetVersions?.find((d) => d.source_name === "cbic_tariff");
   const trialDays = pricingData?.trialDays ?? 14;
   const hero = contentData?.landing?.hero;
 
-  const badgeText = hero?.badge || "CBIC ICEGATE 2.0 • CUSTOMS TARIFF ACT 2026 ACTIVE";
+  const activeTariffBadge = tariffDataset?.version
+    ? `CBIC TARIFF ${tariffDataset.version} ACTIVE`
+    : null;
+  const badgeText = hero?.badge || activeTariffBadge || "CBIC ICEGATE 2.0 • CUSTOMS TARIFF ACT 2026 ACTIVE";
   const titleText = hero?.title || "Deterministic Cross-Border Trade Compliance & Sourcing Intelligence";
   const subtitleText =
     hero?.subtitle ||
@@ -43,7 +49,7 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden pt-12 pb-16 md:pt-16 md:pb-24 border-b border-line bg-bg/40">
       {/* High-End Modern Animated Background (Interactive Grid, Flowing Packets & Fluid Glows) */}
-      <HeroBackgroundAnimation />
+      <HeroBackgroundAnimation tariffVersion={tariffDataset?.version} />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
         {/* Eyebrow Pill */}

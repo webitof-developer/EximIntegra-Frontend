@@ -60,7 +60,12 @@ export function DutyBreakdownView({
             <span className="text-xs font-mono uppercase text-muted font-semibold">
               Assessable CIF Value
             </span>
-            <ProvenanceBadge type="LIVE" source="CBIC Exchange Rate" compact />
+            <ProvenanceBadge
+              type={calculation.exchange_rate_provenance?.type || "UNKNOWN"}
+              source={calculation.exchange_rate_provenance?.source || "CBIC Exchange Rate"}
+              stale={calculation.exchange_rate_provenance?.stale}
+              compact
+            />
           </div>
           <div className="space-y-0.5">
             <div className="text-2xl font-bold font-data text-ink">

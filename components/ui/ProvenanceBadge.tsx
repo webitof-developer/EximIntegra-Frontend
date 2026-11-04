@@ -10,6 +10,7 @@ export interface ProvenanceBadgeProps
   effectiveDate?: string;
   confidenceScore?: number;
   dataset_version?: string;
+  stale?: boolean;
   compact?: boolean;
   showTooltip?: boolean;
 }
@@ -57,6 +58,14 @@ const config: Record<
     icon: AlertCircle,
     defaultDescription: "Data source temporarily degraded or unmapped.",
   },
+  UNKNOWN: {
+    label: "UNKNOWN",
+    bgClass: "bg-slate-100",
+    textClass: "text-slate-600",
+    borderClass: "border-slate-300",
+    icon: Info,
+    defaultDescription: "Provenance not established. Treat as unverified.",
+  },
 };
 
 export function ProvenanceBadge({
@@ -65,16 +74,18 @@ export function ProvenanceBadge({
   effectiveDate,
   confidenceScore,
   dataset_version,
+  stale = false,
   compact = false,
   showTooltip = true,
   className,
   ...props
 }: ProvenanceBadgeProps) {
-  const current = config[type] || config.ILLUSTRATIVE;
+  const current = config[type] || config.UNKNOWN;
   const IconComponent = current.icon;
 
   const tooltipText = [
     `${current.label} PROVENANCE: ${current.defaultDescription}`,
+    stale ? "WARNING: Dataset is past staleness threshold" : null,
     source ? `Source: ${source}` : null,
     dataset_version ? `Version: ${dataset_version}` : null,
     effectiveDate ? `Effective: ${effectiveDate}` : null,
@@ -100,6 +111,11 @@ export function ProvenanceBadge({
     >
       <IconComponent className={compact ? "w-3 h-3 shrink-0" : "w-3.5 h-3.5 shrink-0"} />
       <span className="tracking-wide font-semibold">{current.label}</span>
+      {stale && (
+        <span className="bg-amber-500/20 text-amber-700 text-[9px] font-mono font-bold px-1 py-0.2 rounded border border-amber-500/30">
+          STALE
+        </span>
+      )}
       {source && !compact && (
         <span className="opacity-75 text-[11px] font-sans font-normal border-l border-current/20 pl-1.5">
           {source}

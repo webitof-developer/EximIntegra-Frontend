@@ -282,7 +282,7 @@ export function InteractiveTariffDemo() {
                   (Saving ₹{Math.round(cifInr * selectedPreset.bcdMfn).toLocaleString("en-IN")} vs MFN).
                 </span>
               </div>
-              <ProvenanceBadge type="LIVE" source="India-UAE CEPA 2026" compact />
+              <ProvenanceBadge type="ILLUSTRATIVE" source="Example: India-UAE CEPA (Demo)" compact />
             </div>
           ) : (
             <div className="p-3.5 bg-amber-dim/50 border border-amber/30 rounded-xl flex items-center justify-between text-xs text-amber font-semibold">
@@ -292,7 +292,7 @@ export function InteractiveTariffDemo() {
                   <strong>MFN Standard Tariff:</strong> Switch origin to UAE to see 0% preferential duty under CEPA.
                 </span>
               </div>
-              <ProvenanceBadge type="LIVE" source="First Schedule 2026" compact />
+              <ProvenanceBadge type="ILLUSTRATIVE" source="Example: First Schedule (Demo)" compact />
             </div>
           )}
 

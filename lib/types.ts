@@ -2,7 +2,7 @@
  * EximIntegra Core Frontend & Backend Integration Types
  */
 
-export type ProvenanceType = "LIVE" | "ILLUSTRATIVE" | "BYOK" | "UNAVAILABLE";
+export type ProvenanceType = "LIVE" | "ILLUSTRATIVE" | "BYOK" | "UNAVAILABLE" | "UNKNOWN";
 
 export interface ProvenanceMetadata {
   type: ProvenanceType;
@@ -201,6 +201,7 @@ export interface DutyCalculationResponse {
   coverage?: "COVERED" | "NOT_COVERED";
   coverage_note?: string;
   statutory_bcd_rate?: number;
+  exchange_rate_provenance?: ProvenanceMetadata;
 }
 
 /* Landed Cost Engine Types */
@@ -512,6 +513,7 @@ export interface AksharaSession {
 /* Phase 7: History & Data Provenance Types (§7) */
 export interface DatasetVersion {
   id: string;
+  source_name?: string;
   name: string;
   authority: string;
   reference_code: string;

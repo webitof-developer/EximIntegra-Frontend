@@ -23,7 +23,7 @@ interface BeaconNode {
   color: string;
 }
 
-export function HeroBackgroundAnimation() {
+export function HeroBackgroundAnimation({ tariffVersion }: { tariffVersion?: string } = {}) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -363,7 +363,7 @@ export function HeroBackgroundAnimation() {
       <div className="hidden 2xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-panel/90 backdrop-blur-md border border-line shadow-xs text-[10px] font-mono text-muted absolute top-72 left-6">
         <Scale className="w-3 h-3 text-amber" />
         <span>CBIC Gazette</span>
-        <span className="text-ink font-bold font-mono">v2026.03</span>
+        <span className="text-ink font-bold font-mono">{tariffVersion || "v2026.03"}</span>
         <span className="w-1.5 h-1.5 rounded-full bg-green" />
       </div>
 

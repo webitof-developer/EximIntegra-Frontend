@@ -114,8 +114,9 @@ export function SchemeEligibilityView({
 
               <div className="shrink-0">
                 <ProvenanceBadge
-                  type={data.policy.provenance?.type || "LIVE"}
+                  type={data.policy.provenance?.type || "UNKNOWN"}
                   source={data.policy.provenance?.source || "DGFT ITC(HS)"}
+                  stale={data.policy.provenance?.stale}
                   compact
                 />
               </div>
@@ -150,8 +151,9 @@ export function SchemeEligibilityView({
                           dot
                         />
                         <ProvenanceBadge
-                          type={scheme.provenance?.type || "LIVE"}
+                          type={scheme.provenance?.type || "UNKNOWN"}
                           source={scheme.provenance?.source || "CBIC Gazette"}
+                          stale={scheme.provenance?.stale}
                           compact
                         />
                       </div>
@@ -331,8 +333,9 @@ export function SchemeEligibilityView({
                       <div className="flex items-center gap-2 text-[10px] font-mono text-muted">
                         <span>Effective: {scheme.effective_date || "2023-04-01"}</span>
                         <ProvenanceBadge
-                          type={scheme.provenance?.type || "LIVE"}
+                          type={scheme.provenance?.type || "UNKNOWN"}
                           source={scheme.provenance?.source || "DGFT FTP 2023"}
+                          stale={scheme.provenance?.stale}
                           compact
                         />
                       </div>
@@ -386,8 +389,9 @@ export function SchemeEligibilityView({
                     <div className="pt-2 flex items-center justify-between border-t border-line/60 text-[10px] font-mono text-muted">
                       <span>Mandatory: {reg.mandatory ? "Yes" : "No"}</span>
                       <ProvenanceBadge
-                        type={reg.provenance?.type || "LIVE"}
+                        type={reg.provenance?.type || "UNKNOWN"}
                         source={reg.provenance?.source || reg.agency}
+                        stale={reg.provenance?.stale}
                         compact
                       />
                     </div>

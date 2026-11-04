@@ -217,9 +217,9 @@ export function PricingCards() {
             }`}
           >
             <span>Annual Billing</span>
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-green text-white">
+            {/*<span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-green text-white">
               SAVE 20%
-            </span>
+            </span>*/}
           </button>
         </div>
 
@@ -552,9 +552,9 @@ export function PricingCards() {
               })}
             </div>
 
-            <p className="text-[11px] font-mono text-muted text-center">
+            {/* <p className="text-[11px] font-mono text-muted text-center">
               Click any card or use <kbd className="px-1.5 py-0.5 bg-panel border border-line rounded text-[10px]">←</kbd> <kbd className="px-1.5 py-0.5 bg-panel border border-line rounded text-[10px]">→</kbd> arrow keys to animate through plans
-            </p>
+            </p> */}
           </div>
         </div>
       ) : (

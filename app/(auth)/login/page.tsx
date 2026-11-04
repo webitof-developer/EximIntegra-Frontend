@@ -230,7 +230,7 @@ function LoginForm() {
           </div>
         </div>
 
-        {/* Security & Provenance Footer directly below form container */}
+        {/* Security Footer directly below form container */}
         <div className="mt-3 sm:mt-4 flex items-center justify-center gap-4 sm:gap-6 text-xs text-[#475569]">
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 rounded-full bg-[#E7F7ED] flex items-center justify-center text-[#16A34A]">
@@ -242,11 +242,10 @@ function LoginForm() {
           <span className="text-[#94A3B8]">•</span>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#E7F7ED] border border-[#BBF7D0] text-[#16A34A] text-[11px] font-bold font-mono">
-              <CheckCircle2 className="w-3 h-3" />
-              LIVE
-            </span>
-            <span className="font-medium text-[#334155]">CBIC Live Gateway</span>
+            <div className="w-5 h-5 rounded-full bg-[#EEF2F6] flex items-center justify-center text-[#475569]">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+            <span className="font-medium text-[#334155]">Statutory Trade Platform</span>
           </div>
         </div>
       </div>
