@@ -38,6 +38,10 @@ const connectSources = Array.from(
     "https://checkout.razorpay.com",
     "https://lumberjack.razorpay.com",
     "https://api.frankfurter.dev",
+    "https://cdn.jsdelivr.net",
+    "https://*.jsdelivr.net",
+    "https://cdnjs.cloudflare.com",
+    "https://unpkg.com",
   ])
 ).join(" ");
 
@@ -84,7 +88,7 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://checkout.razorpay.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
               `connect-src ${connectSources}`,

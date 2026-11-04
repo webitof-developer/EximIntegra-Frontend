@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { initializeAuth, setCredentials, updateUser, logout } from "@/store/authSlice";
 import { useGetProfileQuery, useRefreshTokenMutation } from "@/store/authApi";
-import { setStoredToken } from "@/lib/auth";
+import { getStoredToken, getStoredUser, clearStoredAuth, setStoredToken } from "@/lib/auth";
 
 export function AuthInitializer({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
@@ -18,9 +18,23 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
   }, [dispatch]);
 
   // When loaded with empty in-memory token, attempt silent restore via httpOnly refresh cookie
+  // Only attempt restore if a user session was previously stored and not on public auth pages
   useEffect(() => {
     if (isInitialized && !token && !refreshAttempted.current) {
       refreshAttempted.current = true;
+
+      if (typeof window !== "undefined") {
+        const path = window.location.pathname;
+        if (path === "/login" || path === "/register") {
+          return;
+        }
+      }
+
+      const storedUser = getStoredUser();
+      if (!storedUser) {
+        return;
+      }
+
       refreshToken()
         .unwrap()
         .then((res) => {
@@ -33,6 +47,8 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
         })
         .catch(() => {
           // No active session or expired refresh cookie
+          clearStoredAuth();
+          dispatch(logout());
         });
     }
   }, [isInitialized, token, refreshToken, dispatch]);
