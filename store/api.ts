@@ -6,6 +6,7 @@ import {
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
 import { getStoredToken, setStoredToken, clearStoredAuth } from "@/lib/auth";
+import type { UserProfile } from "@/lib/types";
 import { setCredentials, logout } from "./authSlice";
 
 /**
@@ -49,7 +50,7 @@ const baseQueryWithReauth: BaseQueryFn<
     );
 
     if (refreshResult.data) {
-      const data = refreshResult.data as { access_token: string; user?: any };
+      const data = refreshResult.data as { access_token: string; user?: UserProfile };
       if (data.access_token) {
         setStoredToken(data.access_token);
         if (data.user) {

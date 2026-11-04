@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppSelector } from "@/store";
@@ -15,6 +15,7 @@ import {
 import { AdminNav } from "../AdminNav";
 import { FeatureMatrixItem, PricingPlan } from "@/lib/types";
 import { ToastNotification, ToastVariant, CustomDropdown } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/utils";
 import {
   TableProperties,
   Plus,
@@ -41,7 +42,11 @@ import {
 
 export default function AdminFeatureMatrixPage() {
   const user = useAppSelector((state) => state.auth.user);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastVariant, setToastVariant] = useState<ToastVariant>("success");
 
@@ -65,10 +70,6 @@ export default function AdminFeatureMatrixPage() {
   const [formSortOrder, setFormSortOrder] = useState<number>(1);
   const [formIsVisible, setFormIsVisible] = useState(true);
   const [formPlanValues, setFormPlanValues] = useState<Record<string, { mode: "bool" | "text"; boolVal: boolean; textVal: string }>>({});
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const {
     data: matrixData,
@@ -95,8 +96,8 @@ export default function AdminFeatureMatrixPage() {
       const res = await syncPlans({ forceRefreshAll: true }).unwrap();
       await refetch();
       showToast(res.message || "Plan configurations auto-fetched and synced into feature matrix!");
-    } catch (err: any) {
-      showToast(err?.data?.message || "Failed to auto-sync plans into feature matrix.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to auto-sync plans into feature matrix."), "error");
     }
   };
 
@@ -361,8 +362,8 @@ export default function AdminFeatureMatrixPage() {
         showToast(`Feature '${formName}' created successfully.`);
       }
       setIsEditModalOpen(false);
-    } catch (err: any) {
-      showToast(err?.data?.message || "Failed to save feature row.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to save feature row."), "error");
     }
   };
 
@@ -375,8 +376,8 @@ export default function AdminFeatureMatrixPage() {
       }).unwrap();
       const statusText = res.item.isVisible ? "Visible" : "Hidden";
       showToast(`'${item.name}' is now ${statusText} on /pricing.`);
-    } catch (err: any) {
-      showToast(err?.data?.message || "Failed to toggle visibility.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to toggle visibility."), "error");
     }
   };
 
@@ -388,8 +389,8 @@ export default function AdminFeatureMatrixPage() {
       showToast(`Feature '${deletingItem.name}' removed successfully.`);
       setIsDeleteModalOpen(false);
       setDeletingItem(null);
-    } catch (err: any) {
-      showToast(err?.data?.message || "Failed to delete feature row.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to delete feature row."), "error");
     }
   };
 
@@ -1265,7 +1266,7 @@ export default function AdminFeatureMatrixPage() {
                 <h3 className="text-base font-bold text-ink">Delete Feature Row</h3>
                 <p className="text-xs text-muted leading-relaxed">
                   Are you sure you want to permanently delete{" "}
-                  <strong className="text-ink font-semibold">"{deletingItem.name}"</strong>?
+                  <strong className="text-ink font-semibold">&ldquo;{deletingItem.name}&rdquo;</strong>?
                   This row will be immediately removed from the live public <span className="font-mono text-blue">/pricing</span> feature comparison table.
                 </p>
               </div>

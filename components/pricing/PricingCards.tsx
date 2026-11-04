@@ -138,12 +138,10 @@ export function PricingCards() {
 
   const [activeIndex, setActiveIndex] = useState<number>(defaultIndex);
 
-  // Re-sync active index when plans list updates
-  useEffect(() => {
-    if (activeIndex >= displayPlans.length) {
-      setActiveIndex(Math.max(0, displayPlans.length - 1));
-    }
-  }, [displayPlans.length, activeIndex]);
+  // Adjust activeIndex during render if out of bounds without useEffect
+  if (displayPlans.length > 0 && activeIndex >= displayPlans.length) {
+    setActiveIndex(displayPlans.length - 1);
+  }
 
   const handlePrev = () => {
     setActiveIndex((prev) => (prev > 0 ? prev - 1 : displayPlans.length - 1));

@@ -36,9 +36,9 @@ export const notificationsApi = api.injectEndpoints({
       { module?: string } | void
     >({
       query: (arg) => {
-        const module = arg?.module && arg.module !== "all" ? `?module=${arg.module}` : "";
+        const moduleParam = arg?.module && arg.module !== "all" ? `?module=${arg.module}` : "";
         return {
-          url: `/notifications/mark-all-read${module}`,
+          url: `/notifications/mark-all-read${moduleParam}`,
           method: "POST",
         };
       },
@@ -79,7 +79,7 @@ export const notificationsApi = api.injectEndpoints({
         type?: string;
         link?: string;
         link_text?: string;
-        extra_data?: Record<string, any>;
+        extra_data?: Record<string, unknown>;
       }
     >({
       query: (body) => ({

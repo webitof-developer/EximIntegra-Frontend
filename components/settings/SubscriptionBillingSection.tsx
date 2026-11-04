@@ -121,6 +121,15 @@ const fallbackPlans: PricingPlan[] = [
   },
 ];
 
+function getDaysUntilExpiry(expires: Date): number {
+  const diffMs = expires.getTime() - Date.now();
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function generateSimulatedPaymentId(): string {
+  return `pay_sim_${Date.now()}`;
+}
+
 export function SubscriptionBillingSection() {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
@@ -165,15 +174,17 @@ export function SubscriptionBillingSection() {
       ? pricingData.plans.filter((p) => p.isActive !== false)
       : fallbackPlans;
 
-  // Keep state synced with user profile
-  useEffect(() => {
+  // Keep state synced with user profile during render without useEffect
+  const [prevUser, setPrevUser] = useState(user);
+  if (user !== prevUser) {
+    setPrevUser(user);
     if (user) {
       if (user.tier) setCurrentPlan(user.tier);
       if (user.billingCycle) setIsAnnual(user.billingCycle === "annual");
       setEditGstin(user.gstin || "");
       setEditBillingEmail(user.billingEmail || user.email || "");
     }
-  }, [user]);
+  }
 
   // Close Change Plan modal on Escape key
   useEffect(() => {
@@ -228,9 +239,7 @@ export function SubscriptionBillingSection() {
     year: "numeric",
   });
 
-  const nowTime = Date.now();
-  const diffMs = subExpires.getTime() - nowTime;
-  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const daysLeft = getDaysUntilExpiry(subExpires);
   const isExpired = user?.isSubscriptionExpired || daysLeft <= 0;
   const isExpiringSoon = !isExpired && daysLeft <= 7 && daysLeft >= 0;
 
@@ -389,7 +398,7 @@ export function SubscriptionBillingSection() {
         // Sandbox Simulation Mode (only when explicitly enabled via env)
         const verifyRes = await verifyPaymentMutation({
           razorpayOrderId: orderData.orderId,
-          razorpayPaymentId: `pay_sim_${Date.now()}`,
+          razorpayPaymentId: generateSimulatedPaymentId(),
           razorpaySignature: "simulated_signature",
           planId: plan.id,
           billingCycle: cycle,

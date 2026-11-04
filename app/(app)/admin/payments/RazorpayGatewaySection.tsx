@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import {
   CreditCard,
   Key,
@@ -24,6 +24,7 @@ import {
   useGetAdminTransactionsQuery,
   AdminTransactionItem,
 } from "@/store/paymentsApi";
+import { useAppSelector } from "@/store";
 
 interface RazorpayGatewaySectionProps {
   onSuccess: (msg: string) => void;
@@ -34,17 +35,28 @@ export function RazorpayGatewaySection({
   onSuccess,
   onError,
 }: RazorpayGatewaySectionProps) {
+  const { user, token } = useAppSelector((state) => state.auth);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
   const {
     data: config,
     isLoading: isLoadingConfig,
     refetch: refetchConfig,
-  } = useGetAdminPaymentConfigQuery();
+  } = useGetAdminPaymentConfigQuery(undefined, {
+    skip: !mounted || !token || user?.role !== "ADMIN",
+  });
 
   const {
     data: rawTransactions,
     isLoading: isLoadingTx,
     refetch: refetchTx,
-  } = useGetAdminTransactionsQuery();
+  } = useGetAdminTransactionsQuery(undefined, {
+    skip: !mounted || !token || user?.role !== "ADMIN",
+  });
 
   const transactions: AdminTransactionItem[] = Array.isArray(rawTransactions)
     ? rawTransactions
@@ -69,8 +81,10 @@ export function RazorpayGatewaySection({
   const [showSecret, setShowSecret] = useState(false);
   const [showWebhookSecret, setShowWebhookSecret] = useState(false);
 
-  // Sync state when config loads from backend
-  useEffect(() => {
+  // Sync state when config loads from backend during render without useEffect
+  const [prevConfig, setPrevConfig] = useState(config);
+  if (config !== prevConfig) {
+    setPrevConfig(config);
     if (config) {
       setKeyId(config.keyId || "");
       setKeySecret(config.keySecret || "");
@@ -81,7 +95,7 @@ export function RazorpayGatewaySection({
       setCurrencyUsdEnabled(config.currencyUsdEnabled ?? true);
       setAutoCapture(config.autoCapture ?? true);
     }
-  }, [config]);
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -499,7 +513,7 @@ export function RazorpayGatewaySection({
           </div>
           <p className="text-xs text-muted leading-relaxed">
             Every transaction undergoes HMAC-SHA256 signature verification comparing
-            <code className="text-ink font-mono text-[11px]"> razorpay_order_id + "|" + razorpay_payment_id</code> against the stored secret key. Once verified, the user&apos;s organization subscription tier is atomically upgraded in PostgreSQL.
+            <code className="text-ink font-mono text-[11px]"> razorpay_order_id + &quot;|&quot; + razorpay_payment_id</code> against the stored secret key. Once verified, the user&apos;s organization subscription tier is atomically upgraded in PostgreSQL.
           </p>
           <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
             <CheckCircle2 className="w-4 h-4 shrink-0" />

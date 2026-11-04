@@ -17,25 +17,33 @@ export function getApiErrorMessage(
   if (!err) return fallback;
   if (typeof err === "string") return err;
 
-  const anyErr = err as Record<string, any>;
+  if (typeof err === "object" && err !== null) {
+    const objErr = err as Record<string, unknown>;
 
-  // Check err.data (RTK Query API response)
-  if (anyErr.data) {
-    if (typeof anyErr.data === "string") return anyErr.data;
+    // Check err.data (RTK Query API response)
+    if (objErr.data) {
+      if (typeof objErr.data === "string") return objErr.data;
 
-    // Flask standard error envelope: { error: { code, message, details }, message: "..." }
-    if (typeof anyErr.data.message === "string" && anyErr.data.message) {
-      return anyErr.data.message;
+      // Flask standard error envelope: { error: { code, message, details }, message: "..." }
+      if (typeof objErr.data === "object" && objErr.data !== null) {
+        const dataObj = objErr.data as Record<string, unknown>;
+        if (typeof dataObj.message === "string" && dataObj.message) {
+          return dataObj.message;
+        }
+        if (dataObj.error) {
+          if (typeof dataObj.error === "string") return dataObj.error;
+          if (typeof dataObj.error === "object" && dataObj.error !== null) {
+            const errField = dataObj.error as Record<string, unknown>;
+            if (typeof errField.message === "string") return errField.message;
+          }
+        }
+      }
     }
-    if (anyErr.data.error) {
-      if (typeof anyErr.data.error === "string") return anyErr.data.error;
-      if (typeof anyErr.data.error.message === "string") return anyErr.data.error.message;
-    }
+
+    // Check top-level error / message properties
+    if (typeof objErr.message === "string" && objErr.message) return objErr.message;
+    if (typeof objErr.error === "string" && objErr.error) return objErr.error;
   }
-
-  // Check top-level error / message properties
-  if (typeof anyErr.message === "string" && anyErr.message) return anyErr.message;
-  if (typeof anyErr.error === "string" && anyErr.error) return anyErr.error;
 
   return fallback;
 }

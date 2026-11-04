@@ -95,7 +95,7 @@ export const adminApi = api.injectEndpoints({
     }),
     createCustomRole: builder.mutation<
       { matrix: RBACMatrixResponse; message: string },
-      { role: string; roleName: string; description?: string; baseRole?: string; permissions?: any }
+      { role: string; roleName: string; description?: string; baseRole?: string; permissions?: Record<string, boolean> }
     >({
       query: (body) => ({
         url: "/admin/rbac/roles",
@@ -297,7 +297,7 @@ export const adminApi = api.injectEndpoints({
       invalidatesTags: ["Content"],
     }),
     resetContentToDefault: builder.mutation<
-      { success: boolean; message: string; data: any },
+      { success: boolean; message: string; data: unknown },
       "landing" | "pricing"
     >({
       query: (key) => ({

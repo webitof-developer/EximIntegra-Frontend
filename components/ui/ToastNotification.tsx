@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Check, AlertCircle, AlertTriangle, Info, X } from "lucide-react";
 
@@ -70,15 +70,15 @@ export function ToastNotification({
   title,
   className = "",
 }: ToastNotificationProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [isPaused, setIsPaused] = useState(false);
   const remainingTimeRef = useRef<number>(duration);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Timer management with pause/resume support on hover
   useEffect(() => {

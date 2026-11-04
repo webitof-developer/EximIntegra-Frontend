@@ -267,7 +267,7 @@ function CompareContent() {
           });
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (reqId === latestRequestId.current) {
         setErrorState(
           getApiErrorMessage(

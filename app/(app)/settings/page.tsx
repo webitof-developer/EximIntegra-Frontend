@@ -80,37 +80,21 @@ function SettingsContent() {
     router.replace(`/settings?tab=${tabId}`, { scroll: false });
   };
 
+  const currentUrlTab = resolveTab(tabParam);
+  const [prevTabParam, setPrevTabParam] = useState(tabParam);
+  if (tabParam !== prevTabParam) {
+    setPrevTabParam(tabParam);
+    if (currentUrlTab) {
+      setActiveTab(currentUrlTab);
+    }
+  }
+
   useEffect(() => {
     const rawTab = searchParams.get("tab");
-    const fromUrl = resolveTab(rawTab);
-
-    if (fromUrl) {
-      setActiveTab(fromUrl);
-      if (typeof window !== "undefined") {
-        try {
-          sessionStorage.setItem("exim_settings_tab", fromUrl);
-        } catch {}
-      }
-    } else if (rawTab === "llm" || rawTab === "ai") {
+    if (rawTab === "llm" || rawTab === "ai") {
       // AI/LLM configuration has moved to the Super Admin Cockpit
       if (user?.role === "ADMIN") {
         router.push("/admin/llm");
-      } else {
-        setActiveTab(SHOW_TRADE_GATEWAYS ? "gateways" : "contracts");
-      }
-    } else {
-      // When no URL query param is present on refresh or direct navigation, restore saved tab
-      if (typeof window !== "undefined") {
-        try {
-          const saved = sessionStorage.getItem("exim_settings_tab");
-          const fromSaved = resolveTab(saved);
-          if (fromSaved) {
-            setActiveTab(fromSaved);
-            const url = new URL(window.location.href);
-            url.searchParams.set("tab", fromSaved);
-            window.history.replaceState(null, "", url.toString());
-          }
-        } catch {}
       }
     }
   }, [searchParams, user, router]);
@@ -205,10 +189,10 @@ function SettingsContent() {
           </span>
           <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
             <Ship className="w-3.5 h-3.5 text-amber" />
-            <span>BYOK Rates</span>
+            <span>BYOK Freight</span>
           </div>
           <span className="text-[10px] text-muted font-mono block mt-0.5">
-            Ocean Freight & Yield
+            Logistics & Yield Customization
           </span>
         </div>
 
@@ -222,10 +206,10 @@ function SettingsContent() {
             </span>
             <div className="text-sm font-bold text-ink mt-0.5 flex items-center gap-1.5">
               <Key className="w-3.5 h-3.5 text-blue" />
-              <span>2 Active Keys</span>
+              <span>API Credentials</span>
             </div>
-            <span className="text-[10px] text-green font-mono block mt-0.5">
-              Webhooks Synced
+            <span className="text-[10px] text-muted font-mono block mt-0.5">
+              Developer Keys & Webhooks
             </span>
           </div>
         ) : (

@@ -71,13 +71,15 @@ export function CustomDateInput({
   const [viewYear, setViewYear] = useState<number>(() => parsedValue?.year ?? today.getFullYear());
   const [viewMonth, setViewMonth] = useState<number>(() => parsedValue?.month ?? today.getMonth());
 
-  // Sync view when value changes from outside
-  useEffect(() => {
+  // Sync view when value changes from outside during render without useEffect
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
     if (parsedValue) {
       setViewYear(parsedValue.year);
       setViewMonth(parsedValue.month);
     }
-  }, [value]);
+  }
 
   // Close on outside click
   useEffect(() => {

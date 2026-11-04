@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useId } from "react";
+import React, { useState, useRef, useEffect, useId, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Check, Search, X } from "lucide-react";
 
@@ -61,7 +61,7 @@ export function CustomDropdown<T extends string = string>({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
   const [menuCoords, setMenuCoords] = useState<{
     top: number;
     left: number;
@@ -80,10 +80,6 @@ export function CustomDropdown<T extends string = string>({
   const listRef = useRef<HTMLUListElement>(null);
   const generatedId = useId();
   const dropdownId = id || generatedId;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const updateMenuPosition = () => {
     if (!containerRef.current) return;
@@ -168,6 +164,18 @@ export function CustomDropdown<T extends string = string>({
     };
   }, [isOpen]);
 
+  // Synchronize highlighted index upon open or search change during render
+  const [prevIsOpen, setPrevIsOpen] = useState(false);
+  const [prevSearchQuery, setPrevSearchQuery] = useState("");
+  if (isOpen !== prevIsOpen || (isOpen && searchQuery !== prevSearchQuery)) {
+    setPrevIsOpen(isOpen);
+    setPrevSearchQuery(searchQuery);
+    if (isOpen) {
+      const initialIdx = filteredOptions.findIndex((opt) => opt.value === value);
+      setHighlightedIndex(initialIdx >= 0 ? initialIdx : 0);
+    }
+  }
+
   // Focus search input when opened
   useEffect(() => {
     if (isOpen && searchable && searchInputRef.current) {
@@ -175,11 +183,7 @@ export function CustomDropdown<T extends string = string>({
         searchInputRef.current?.focus();
       }, 50);
     }
-    if (isOpen) {
-      const initialIdx = filteredOptions.findIndex((opt) => opt.value === value);
-      setHighlightedIndex(initialIdx >= 0 ? initialIdx : 0);
-    }
-  }, [isOpen, searchable, value, filteredOptions]);
+  }, [isOpen, searchable]);
 
   // Scroll highlighted item into view
   useEffect(() => {

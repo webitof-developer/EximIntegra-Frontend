@@ -74,7 +74,7 @@ export default function RegisterPage() {
         })
       );
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg(
         getApiErrorMessage(err, "Registration failed. Please check inputs and retry.")
       );

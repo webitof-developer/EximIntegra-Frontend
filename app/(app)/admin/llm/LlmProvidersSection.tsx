@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { StatusPill, CustomDropdown, ToastNotification } from "@/components/ui";
 import {
@@ -31,6 +31,7 @@ import {
   useBulkUpdateLlmProvidersMutation,
   useTestLlmProviderMutation,
 } from "@/store/adminApi";
+import { useAppSelector } from "@/store";
 
 interface LlmProviderConfig {
   id: string;
@@ -117,7 +118,16 @@ const initialProviders: LlmProviderConfig[] = [
 ];
 
 export function LlmProvidersSection() {
-  const { data: dbProviders, isLoading: isLoadingDb } = useGetLlmProvidersQuery();
+  const { user, token } = useAppSelector((state) => state.auth);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const { data: dbProviders, isLoading: isLoadingDb } = useGetLlmProvidersQuery(
+    undefined,
+    { skip: !mounted || !token || user?.role !== "ADMIN" }
+  );
   const [updateLlmProviderMutation, { isLoading: isUpdatingDb }] = useUpdateLlmProviderMutation();
   const [bulkUpdateLlmProvidersMutation] = useBulkUpdateLlmProvidersMutation();
   const [testLlmProviderMutation] = useTestLlmProviderMutation();
@@ -145,14 +155,11 @@ export function LlmProvidersSection() {
   } | null>(null);
   const [filterType, setFilterType] = useState<"ALL" | "CONFIGURED" | "ACTIVE">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Hydrate from PostgreSQL database when query resolves
-  useEffect(() => {
+  // Synchronize from database query during render without useEffect
+  const [prevDbProviders, setPrevDbProviders] = useState(dbProviders);
+  if (dbProviders !== prevDbProviders) {
+    setPrevDbProviders(dbProviders);
     if (dbProviders && Array.isArray(dbProviders) && dbProviders.length > 0) {
       setProviders((prev) =>
         prev.map((initP) => {
@@ -175,43 +182,8 @@ export function LlmProvidersSection() {
           return initP;
         })
       );
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dbProviders));
-      } catch (e) {}
-    } else {
-      // Local cache fallback on initial load before DB returns
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setProviders((prev) =>
-              prev.map((initP) => {
-                const savedP = parsed.find((p: any) => p.id === initP.id);
-                if (savedP) {
-                  return {
-                    ...initP,
-                    apiKey: savedP.apiKey !== undefined ? savedP.apiKey : initP.apiKey,
-                    baseUrl: savedP.baseUrl || initP.baseUrl,
-                    defaultModel: savedP.defaultModel || initP.defaultModel,
-                    models:
-                      Array.isArray(savedP.models) && savedP.models.length > 0
-                        ? Array.from(new Set([...savedP.models, ...initP.models]))
-                        : initP.models,
-                    isConfigured: savedP.isConfigured !== undefined ? savedP.isConfigured : initP.isConfigured,
-                    isActiveCopilot: savedP.isActiveCopilot !== undefined ? savedP.isActiveCopilot : initP.isActiveCopilot,
-                  };
-                }
-                return initP;
-              })
-            );
-          }
-        }
-      } catch (e) {
-        console.error("Failed to load saved LLM providers from localStorage", e);
-      }
     }
-  }, [dbProviders]);
+  }
 
   const saveToStorage = (updated: LlmProviderConfig[]) => {
     try {
@@ -240,7 +212,7 @@ export function LlmProvidersSection() {
       if (customMsg) {
         showNotice(customMsg);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to save provider to PostgreSQL database", err);
       showNotice("Failed to sync changes with database.", "error");
     }

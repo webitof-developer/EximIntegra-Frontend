@@ -124,14 +124,16 @@ export function ChatHistoryDrawer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Reset confirmation state when closing
-  useEffect(() => {
+  // Reset confirmation state when closing without useEffect
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (!isOpen) {
       setConfirmClear(false);
       setDeletingId(null);
       setLoadingSessionId(null);
     }
-  }, [isOpen]);
+  }
 
   const sessions = useMemo(() => {
     return Array.isArray(dbSessions) ? dbSessions : [];

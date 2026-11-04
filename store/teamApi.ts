@@ -54,7 +54,7 @@ export const teamApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getTeamMembers: builder.query<TeamResponse, void>({
       query: () => "/settings/team",
-      transformResponse: (response: any) => {
+      transformResponse: (response: TeamResponse | TeamMember[]) => {
         if (Array.isArray(response)) {
           return {
             members: response,

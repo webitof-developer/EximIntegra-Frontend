@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAppSelector } from "@/store";
@@ -13,6 +13,7 @@ import {
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { ToastNotification, ToastVariant } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/utils";
 import {
   LandingPageContent,
   PricingPageContent,
@@ -41,7 +42,11 @@ import {
 
 export default function AdminContentPage() {
   const user = useAppSelector((state) => state.auth.user);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [activeTab, setActiveTab] = useState<"landing" | "pricing">("landing");
 
   // Toast State
@@ -58,10 +63,6 @@ export default function AdminContentPage() {
   // Accordion collapsed state for sections
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const {
     data: contentData,
     isLoading,
@@ -71,22 +72,26 @@ export default function AdminContentPage() {
     skip: !mounted || user?.role !== "ADMIN",
   });
 
-  const { data: pricingPlansData } = useGetPricingPlansQuery();
-  const trialDays = pricingPlansData?.trialDays ?? 14;
-
-  const [updateLanding, { isLoading: isUpdatingLanding }] = useUpdateLandingContentMutation();
-  const [updatePricing, { isLoading: isUpdatingPricing }] = useUpdatePricingContentMutation();
-  const [resetContent, { isLoading: isResetting }] = useResetContentToDefaultMutation();
-
-  // Initialize form state when query resolves
-  useEffect(() => {
+  // Initialize/synchronize form state during render without useEffect
+  const [prevContentData, setPrevContentData] = useState(contentData);
+  if (contentData !== prevContentData) {
+    setPrevContentData(contentData);
     if (contentData?.landing) {
       setLandingForm(JSON.parse(JSON.stringify(contentData.landing)));
     }
     if (contentData?.pricing) {
       setPricingForm(JSON.parse(JSON.stringify(contentData.pricing)));
     }
-  }, [contentData]);
+  }
+
+  const { data: pricingPlansData } = useGetPricingPlansQuery(undefined, {
+    skip: !mounted || user?.role !== "ADMIN",
+  });
+  const trialDays = pricingPlansData?.trialDays ?? 14;
+
+  const [updateLanding, { isLoading: isUpdatingLanding }] = useUpdateLandingContentMutation();
+  const [updatePricing, { isLoading: isUpdatingPricing }] = useUpdatePricingContentMutation();
+  const [resetContent, { isLoading: isResetting }] = useResetContentToDefaultMutation();
 
   const showToast = (text: string, type: ToastVariant = "success") => {
     setToastMessage(text);
@@ -109,8 +114,8 @@ export default function AdminContentPage() {
         const res = await updatePricing(pricingForm).unwrap();
         showToast(res.message || "Pricing page content successfully saved and published!");
       }
-    } catch (err: any) {
-      showToast(err?.data?.message || "Failed to save content configuration.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to save content configuration."), "error");
     }
   };
 
@@ -125,13 +130,13 @@ export default function AdminContentPage() {
       }
       setIsResetModalOpen(false);
       showToast(res.message || `Reset ${activeTab} page to standard defaults.`);
-    } catch (err: any) {
-      showToast(err?.data?.message || "Failed to reset content.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to reset content."), "error");
     }
   };
 
   // Helpers to mutate landing form
-  const updateLandingHero = (field: string, val: any) => {
+  const updateLandingHero = (field: string, val: unknown) => {
     if (!landingForm) return;
     setLandingForm({
       ...landingForm,
@@ -157,7 +162,7 @@ export default function AdminContentPage() {
     });
   };
 
-  const updateLandingFeatures = (field: string, val: any) => {
+  const updateLandingFeatures = (field: string, val: unknown) => {
     if (!landingForm) return;
     setLandingForm({
       ...landingForm,
@@ -175,7 +180,7 @@ export default function AdminContentPage() {
     });
   };
 
-  const updateLandingGovernance = (field: string, val: any) => {
+  const updateLandingGovernance = (field: string, val: unknown) => {
     if (!landingForm) return;
     setLandingForm({
       ...landingForm,

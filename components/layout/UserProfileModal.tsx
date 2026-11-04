@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import {
   User,
@@ -37,7 +37,11 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
@@ -51,12 +55,10 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
     router.push("/settings?tab=billing");
   };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Populate initial values when user changes or modal opens
-  useEffect(() => {
+  // Populate initial values when user changes or modal opens during render without useEffect
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
     if (user && isOpen) {
       setName(user.name || "");
       setCompany(user.company || "");
@@ -64,7 +66,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
       setErrorMsg(null);
       setSuccessMsg(null);
     }
-  }, [user, isOpen]);
+  }
 
   // Lock body scroll and handle escape key
   useEffect(() => {
@@ -167,7 +169,7 @@ export function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
       setTimeout(() => {
         onClose();
       }, 1200);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg(
         getApiErrorMessage(err, "Failed to update profile. Please verify your details and retry.")
       );

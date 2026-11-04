@@ -70,7 +70,7 @@ function LoginForm() {
       }
 
       router.push(destination);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorMsg(
         getApiErrorMessage(err, "Invalid credentials. Please verify your email and password.")
       );

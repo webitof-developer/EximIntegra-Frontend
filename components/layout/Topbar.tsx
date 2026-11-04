@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -112,12 +112,19 @@ export function Topbar() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Close profile dropdown on route change without useEffect
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setMenuOpen(false);
+  }
 
   // Close profile dropdown when clicking outside or pressing Escape
   useEffect(() => {
@@ -146,11 +153,6 @@ export function Topbar() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [menuOpen]);
-
-  // Close profile dropdown on route change
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   const matchedPath =
     Object.keys(pageMeta).find((path) => pathname === path || pathname.startsWith(path + "/")) ||

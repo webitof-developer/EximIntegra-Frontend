@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { PricingPlan } from "@/lib/types";
 import { TierBadge } from "@/components/saas/TierBadge";
 import { CustomDropdown, CustomDateInput } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/utils";
 import {
   Save,
   CheckCircle2,
@@ -35,8 +36,8 @@ import {
 interface DynamicPricingTabProps {
   pricingPlans: PricingPlan[];
   isLoading?: boolean;
-  onSavePricing: (plans: PricingPlan[]) => Promise<any>;
-  onDeletePlan?: (planId: string) => Promise<any>;
+  onSavePricing: (plans: PricingPlan[]) => Promise<unknown>;
+  onDeletePlan?: (planId: string) => Promise<unknown>;
   showToast: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
@@ -116,7 +117,10 @@ export function DynamicPricingTab({
   // Delete confirmation modal state
   const [planToDelete, setPlanToDelete] = useState<PricingPlan | null>(null);
 
-  useEffect(() => {
+  // Synchronize incoming plans during render without useEffect
+  const [prevPricingPlans, setPrevPricingPlans] = useState(pricingPlans);
+  if (pricingPlans !== prevPricingPlans) {
+    setPrevPricingPlans(pricingPlans);
     if (pricingPlans && pricingPlans.length > 0) {
       const sanitized = pricingPlans.map((p) => {
         if (p.planType === "trial") {
@@ -129,7 +133,7 @@ export function DynamicPricingTab({
         setSelectedPlanId(pricingPlans[0].id);
       }
     }
-  }, [pricingPlans]);
+  }
 
   const activePlanIndex = editablePlans.findIndex((p) => p.id === selectedPlanId);
   const activePlan = activePlanIndex >= 0 ? editablePlans[activePlanIndex] : editablePlans[0];
@@ -137,10 +141,10 @@ export function DynamicPricingTab({
   const handlePlanFieldChange = (
     index: number,
     field: keyof PricingPlan,
-    value: any
+    value: PricingPlan[keyof PricingPlan]
   ) => {
     const updated = [...editablePlans];
-    updated[index] = { ...updated[index], [field]: value };
+    updated[index] = { ...updated[index], [field]: value } as PricingPlan;
     if (updated[index].planType === "trial") {
       updated[index].tierBadge = "FREE_TRIAL";
       updated[index].isPopular = false;
@@ -180,9 +184,9 @@ export function DynamicPricingTab({
           ? `"${editablePlans[planIndex].name}" is now the active default trial.`
           : `Default trial disabled for "${editablePlans[planIndex].name}".`
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast(
-        `Failed to update default trial: ${err?.data?.message || err?.message || "Unknown error"}`,
+        `Failed to update default trial: ${getApiErrorMessage(err, "Unknown error")}`,
         "error"
       );
     }
@@ -237,8 +241,8 @@ export function DynamicPricingTab({
       setPricingNotice("All pricing plans updated and published successfully.");
       setTimeout(() => setPricingNotice(null), 4000);
       showToast("Pricing plans saved successfully.");
-    } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to update pricing.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to update pricing."), "error");
     } finally {
       setIsUpdating(false);
     }
@@ -332,9 +336,9 @@ export function DynamicPricingTab({
       setNewPlanFeatureInput("");
 
       showToast(`Plan "${createdPlan.name}" created and saved successfully.`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast(
-        `Failed to save plan: ${err?.data?.message || err?.message || "Unknown error"}`,
+        `Failed to save plan: ${getApiErrorMessage(err, "Unknown error")}`,
         "error"
       );
     } finally {
@@ -358,9 +362,9 @@ export function DynamicPricingTab({
       }
       showToast(`Plan "${planName}" deleted successfully.`);
       setPlanToDelete(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast(
-        `Failed to delete plan: ${err?.data?.message || err?.message || "Unknown error"}`,
+        `Failed to delete plan: ${getApiErrorMessage(err, "Unknown error")}`,
         "error"
       );
     } finally {

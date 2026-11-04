@@ -43,6 +43,7 @@ import {
   TeamMember,
 } from "@/store/teamApi";
 import { useGetAvailableRolesQuery } from "@/store/adminApi";
+import { getApiErrorMessage } from "@/lib/utils";
 import { useAppSelector } from "@/store";
 
 export const ASSIGNABLE_ROLE_OPTIONS: { value: RoleType; label: string }[] = [
@@ -202,12 +203,11 @@ export function TeamWorkspaceSection() {
       setInviteConfirmPassword("");
       setShowPassword(false);
       setIsInviteOpen(false);
-    } catch (err: any) {
-      const msg =
-        err?.data?.message ||
-        err?.data?.detail ||
-        err?.message ||
-        "Failed to invite team member. Please verify the email and try again.";
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(
+        err,
+        "Failed to invite team member. Please verify the email and try again."
+      );
       setInviteError(msg);
       showToast(msg, "error");
     }
@@ -224,8 +224,8 @@ export function TeamWorkspaceSection() {
         `Updated ${member.name}'s role to ${roleDetails[newRole]?.label || newRole}.`,
         "success"
       );
-    } catch (err: any) {
-      const msg = err?.data?.message || err?.message || "Failed to update member role.";
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(err, "Failed to update member role.");
       showToast(msg, "error");
     }
   };
@@ -286,8 +286,8 @@ export function TeamWorkspaceSection() {
 
       showToast(`Member ID & details for ${cleanName} (${cleanEmail}) updated successfully.`, "success");
       setMemberToEdit(null);
-    } catch (err: any) {
-      const msg = err?.data?.message || err?.data?.detail || err?.message || "Failed to update member ID and details.";
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(err, "Failed to update member ID and details.");
       setEditError(msg);
       showToast(msg, "error");
     }
@@ -299,8 +299,8 @@ export function TeamWorkspaceSection() {
       await removeMember(memberToDelete.id).unwrap();
       showToast(`Removed ${memberToDelete.name} from the workspace.`, "success");
       setMemberToDelete(null);
-    } catch (err: any) {
-      const msg = err?.data?.message || err?.message || "Failed to remove member.";
+    } catch (err: unknown) {
+      const msg = getApiErrorMessage(err, "Failed to remove member.");
       showToast(msg, "error");
     }
   };

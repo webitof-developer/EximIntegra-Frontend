@@ -45,11 +45,14 @@ function DutyCalculatorContent() {
       skip: !paramCalcId,
     });
 
-  useEffect(() => {
+  // Synchronize fetchedCalc during render without useEffect
+  const [prevFetchedCalc, setPrevFetchedCalc] = useState(fetchedCalc);
+  if (fetchedCalc !== prevFetchedCalc) {
+    setPrevFetchedCalc(fetchedCalc);
     if (fetchedCalc) {
       setCalculationResult(fetchedCalc);
     }
-  }, [fetchedCalc]);
+  }
 
   const handleCalculate = async (req: DutyCalculationRequest) => {
     try {
@@ -70,7 +73,7 @@ function DutyCalculatorContent() {
           dutyCalculationId: res.calculation_id,
         })
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorState(
         getApiErrorMessage(
           err,

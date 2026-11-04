@@ -84,7 +84,7 @@ export default function ClassifyPage() {
           })
         );
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorState(
         getApiErrorMessage(
           err,

@@ -8,7 +8,8 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { setMaterialContext } from "@/store/contextSlice";
 import { useSendChatMessageMutation, useGetConversationsQuery, AksharaConversationDetail } from "@/store/aksharaApi";
 import { useGetActiveLlmProviderQuery } from "@/store/adminApi";
-import { AksharaMessage, ContextUpdateAction } from "@/lib/types";
+import { AksharaMessage, ContextUpdateAction, AksharaRequest } from "@/lib/types";
+import { getApiErrorMessage } from "@/lib/utils";
 import { ChatMessageItem } from "@/components/akshara/ChatMessageItem";
 import { ChatInput } from "@/components/akshara/ChatInput";
 import { ChatHistoryDrawer } from "@/components/akshara/ChatHistoryDrawer";
@@ -76,7 +77,7 @@ export default function AksharaPage() {
   const [sendChatMessage, { isLoading }] = useSendChatMessageMutation();
   const { data: dbActiveLlm } = useGetActiveLlmProviderQuery();
 
-  const [activeLlm, setActiveLlm] = useState<ActiveLlmInfo | null>(null);
+  const [activeLlm, setActiveLlm] = useState<ActiveLlmInfo | null>(getActiveLlmFromStorage);
   const [conversationId, setConversationId] = useState<string>(() => `conv_${Date.now()}`);
   const [messages, setMessages] = useState<AksharaMessage[]>([
     {
@@ -98,10 +99,6 @@ export default function AksharaPage() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
-  useEffect(() => {
-    setActiveLlm(getActiveLlmFromStorage());
-  }, []);
 
   useEffect(() => {
     scrollToBottom();
@@ -145,7 +142,7 @@ export default function AksharaPage() {
     }
 
     try {
-      const payload: any = {
+      const payload: AksharaRequest = {
         message: text,
         conversation_id: conversationId,
         active_context: currentContext,
@@ -174,9 +171,11 @@ export default function AksharaPage() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
-    } catch (err: any) {
-      const errDetail =
-        err?.data?.message || err?.message || "Unable to reach the live consultation endpoints.";
+    } catch (err: unknown) {
+      const errDetail = getApiErrorMessage(
+        err,
+        "Unable to reach the live consultation endpoints."
+      );
       const errorMsg: AksharaMessage = {
         id: `err_${Date.now()}`,
         role: "assistant",

@@ -30,6 +30,7 @@ import {
   ShieldCheck,
   Lock,
 } from "lucide-react";
+import { getApiErrorMessage } from "@/lib/utils";
 
 interface UserDirectoryTabProps {
   users: AdminUserItem[];
@@ -40,8 +41,8 @@ interface UserDirectoryTabProps {
     company?: string;
     role?: AdminUserItem["role"];
     tier?: AdminUserItem["tier"];
-  }) => Promise<any>;
-  onDeleteUser: (userId: string) => Promise<any>;
+  }) => Promise<unknown>;
+  onDeleteUser: (userId: string) => Promise<unknown>;
   showToast: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
@@ -140,8 +141,8 @@ export function UserDirectoryTab({
       });
       showToast(`User ${editName} updated successfully.`);
       setEditingUserItem(null);
-    } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to update user profile.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to update user profile."), "error");
     } finally {
       setUpdatingUser(false);
     }
@@ -154,8 +155,8 @@ export function UserDirectoryTab({
       await onDeleteUser(deletingUserItem.id);
       showToast(`User ${deletingUserItem.name} has been removed.`);
       setDeletingUserItem(null);
-    } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to delete user account.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to delete user account."), "error");
     } finally {
       setDeletingUser(false);
     }

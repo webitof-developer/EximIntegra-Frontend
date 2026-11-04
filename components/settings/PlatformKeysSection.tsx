@@ -54,6 +54,35 @@ const initialKeys: ApiKeyItem[] = [];
 
 const initialWebhooks: WebhookEndpoint[] = [];
 
+function generateApiKey(name: string, scope: string): ApiKeyItem {
+  const randomSuffix = Math.random().toString(36).substring(2, 10);
+  return {
+    id: `key_${Date.now()}`,
+    name,
+    prefix: `exim_live_${randomSuffix.substring(0, 5)}...`,
+    fullKey: `exim_live_${randomSuffix}${Math.random().toString(36).substring(2, 12)}`,
+    createdAt: new Date().toISOString().split("T")[0],
+    lastUsed: "Never",
+    scopes:
+      scope === "all"
+        ? ["classify:*", "duty:*", "landed_cost:*", "reports:*"]
+        : ["duty:calculate", "reports:read"],
+    status: "ACTIVE",
+  };
+}
+
+function generateWebhookEndpoint(url: string, description: string): WebhookEndpoint {
+  return {
+    id: `wh_${Date.now()}`,
+    url,
+    description: description || "Custom webhook endpoint",
+    secret: `whsec_${Math.random().toString(36).substring(2, 10)}...`,
+    events: ["duty.calculated", "landed_cost.completed"],
+    status: "ACTIVE",
+    lastDelivery: "Pending initial test",
+  };
+}
+
 export function PlatformKeysSection() {
   const [keys, setKeys] = useState<ApiKeyItem[]>(initialKeys);
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>(initialWebhooks);
@@ -86,20 +115,7 @@ export function PlatformKeysSection() {
     e.preventDefault();
     if (!newKeyName.trim()) return;
 
-    const randomSuffix = Math.random().toString(36).substring(2, 10);
-    const newKey: ApiKeyItem = {
-      id: `key_${Date.now()}`,
-      name: newKeyName,
-      prefix: `exim_live_${randomSuffix.substring(0, 5)}...`,
-      fullKey: `exim_live_${randomSuffix}${Math.random().toString(36).substring(2, 12)}`,
-      createdAt: new Date().toISOString().split("T")[0],
-      lastUsed: "Never",
-      scopes:
-        newKeyScope === "all"
-          ? ["classify:*", "duty:*", "landed_cost:*", "reports:*"]
-          : ["duty:calculate", "reports:read"],
-      status: "ACTIVE",
-    };
+    const newKey = generateApiKey(newKeyName, newKeyScope);
 
     setKeys((prev) => [newKey, ...prev]);
     setNewKeyName("");
@@ -111,15 +127,7 @@ export function PlatformKeysSection() {
     e.preventDefault();
     if (!newWhUrl.trim()) return;
 
-    const newWh: WebhookEndpoint = {
-      id: `wh_${Date.now()}`,
-      url: newWhUrl,
-      description: newWhDesc || "Custom webhook endpoint",
-      secret: `whsec_${Math.random().toString(36).substring(2, 10)}...`,
-      events: ["duty.calculated", "landed_cost.completed"],
-      status: "ACTIVE",
-      lastDelivery: "Pending initial test",
-    };
+    const newWh = generateWebhookEndpoint(newWhUrl, newWhDesc);
 
     setWebhooks((prev) => [newWh, ...prev]);
     setNewWhUrl("");

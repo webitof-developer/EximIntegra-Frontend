@@ -27,12 +27,13 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { CustomDropdown } from "@/components/ui";
+import { getApiErrorMessage } from "@/lib/utils";
 
 interface RolePermissionsTabProps {
   roles: RolePermissionItem[];
   modules: RBACModule[];
   isLoading?: boolean;
-  onSaveRBAC: (roles: RolePermissionItem[]) => Promise<any>;
+  onSaveRBAC: (roles: RolePermissionItem[]) => Promise<unknown>;
   showToast: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
@@ -117,7 +118,10 @@ export function RolePermissionsTab({
   const [roleFilterType, setRoleFilterType] = useState<"ALL" | "CORE" | "CUSTOM">("ALL");
 
   // Active Role in Permissions Popup Modal
-  const [permissionsModalRole, setPermissionsModalRole] = useState<RolePermissionItem | null>(null);
+  const [permissionsModalRoleCode, setPermissionsModalRoleCode] = useState<string | null>(null);
+  const permissionsModalRole = permissionsModalRoleCode
+    ? editableRoles.find((r) => r.role === permissionsModalRoleCode) || null
+    : null;
   const [modalModuleSearch, setModalModuleSearch] = useState("");
   const [isSavingPermissions, setIsSavingPermissions] = useState(false);
 
@@ -139,21 +143,14 @@ export function RolePermissionsTab({
   const [createCustomRole, { isLoading: isCreatingRole }] = useCreateCustomRoleMutation();
   const [deleteCustomRole, { isLoading: isDeletingRole }] = useDeleteCustomRoleMutation();
 
-  useEffect(() => {
+  // Synchronize incoming roles during render without useEffect
+  const [prevRoles, setPrevRoles] = useState(roles);
+  if (roles !== prevRoles) {
+    setPrevRoles(roles);
     if (roles && roles.length > 0) {
       setEditableRoles(JSON.parse(JSON.stringify(roles)));
     }
-  }, [roles]);
-
-  // Keep modal role synchronized with editableRoles
-  useEffect(() => {
-    if (permissionsModalRole) {
-      const updated = editableRoles.find((r) => r.role === permissionsModalRole.role);
-      if (updated) {
-        setPermissionsModalRole(updated);
-      }
-    }
-  }, [editableRoles]);
+  }
 
   // Quick Counts
   const totalRolesCount = editableRoles.length;
@@ -275,9 +272,9 @@ export function RolePermissionsTab({
     try {
       await onSaveRBAC(editableRoles);
       showToast(`Permissions saved successfully for ${permissionsModalRole.roleName}.`);
-      setPermissionsModalRole(null);
-    } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to persist permissions.", "error");
+      setPermissionsModalRoleCode(null);
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to persist permissions."), "error");
     } finally {
       setIsSavingPermissions(false);
     }
@@ -319,8 +316,8 @@ export function RolePermissionsTab({
       setNewRoleCode("");
       setNewRoleName("");
       setNewRoleDesc("");
-    } catch (err: any) {
-      setCreateError(err?.data?.message || err?.message || "Failed to create custom role.");
+    } catch (err: unknown) {
+      setCreateError(getApiErrorMessage(err, "Failed to create custom role."));
     }
   };
 
@@ -347,8 +344,8 @@ export function RolePermissionsTab({
       setEditableRoles(updatedRoles);
       setRoleToEdit(null);
       showToast(`Updated details for ${editRoleName.trim()}.`);
-    } catch (err: any) {
-      showToast(err?.data?.message || err?.message || "Failed to update role details.", "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to update role details."), "error");
     }
   };
 
@@ -360,8 +357,8 @@ export function RolePermissionsTab({
       await deleteCustomRole(roleToDelete.role).unwrap();
       showToast(`Custom role '${roleToDelete.roleName}' deleted.`);
       setRoleToDelete(null);
-    } catch (err: any) {
-      setDeleteError(err?.data?.message || err?.message || "Failed to delete custom role.");
+    } catch (err: unknown) {
+      setDeleteError(getApiErrorMessage(err, "Failed to delete custom role."));
     }
   };
 
@@ -679,7 +676,7 @@ export function RolePermissionsTab({
                   <button
                     type="button"
                     onClick={() => {
-                      setPermissionsModalRole(rRecord);
+                      setPermissionsModalRoleCode(rRecord.role);
                       setModalModuleSearch("");
                     }}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-bg hover:bg-panel border border-line hover:border-blue/40 text-ink text-xs font-bold transition-all shadow-2xs group-hover:bg-blue group-hover:text-white group-hover:border-blue cursor-pointer"
@@ -752,7 +749,7 @@ export function RolePermissionsTab({
 
               <button
                 type="button"
-                onClick={() => setPermissionsModalRole(null)}
+                onClick={() => setPermissionsModalRoleCode(null)}
                 className="p-1.5 rounded-xl text-muted hover:text-ink hover:bg-bg cursor-pointer transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -915,7 +912,7 @@ export function RolePermissionsTab({
               <div className="flex items-center gap-2.5">
                 <button
                   type="button"
-                  onClick={() => setPermissionsModalRole(null)}
+                  onClick={() => setPermissionsModalRoleCode(null)}
                   className="px-4 py-2 rounded-xl text-xs font-semibold text-muted hover:text-ink hover:bg-bg transition-colors cursor-pointer"
                 >
                   Cancel

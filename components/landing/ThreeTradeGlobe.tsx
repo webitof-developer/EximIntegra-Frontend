@@ -217,7 +217,7 @@ export function ThreeTradeGlobe({ className = "" }: { className?: string }) {
     // 9. Smooth Mouse Interaction (Parallax Damping)
     let mouseX = 0;
     let mouseY = 0;
-    let targetRotX = 0.25;
+    const targetRotX = 0.25;
     let targetRotY = -0.6;
 
     const handlePointerMove = (e: PointerEvent) => {

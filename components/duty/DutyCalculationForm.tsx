@@ -54,13 +54,30 @@ export function DutyCalculationForm({
   const tariffDataset = datasetVersions?.find((d) => d.source_name === "cbic_tariff");
   const tariffProv = tariffDataset?.provenance;
 
-  // Sync if initial props change via Redux contextSlice
-  useEffect(() => {
+  // Sync if initial props change via Redux contextSlice during render without useEffect
+  const [prevInit, setPrevInit] = useState({
+    hs: initialHsCode,
+    origin: initialOrigin,
+    val: initialValue,
+    curr: initialCurrency,
+  });
+  if (
+    initialHsCode !== prevInit.hs ||
+    initialOrigin !== prevInit.origin ||
+    initialValue !== prevInit.val ||
+    initialCurrency !== prevInit.curr
+  ) {
+    setPrevInit({
+      hs: initialHsCode,
+      origin: initialOrigin,
+      val: initialValue,
+      curr: initialCurrency,
+    });
     if (initialHsCode) setHsCode(initialHsCode);
     if (initialOrigin) setCountryOfOrigin(initialOrigin);
     if (initialValue) setAssessableValue(initialValue);
     if (initialCurrency) setCurrency(initialCurrency);
-  }, [initialHsCode, initialOrigin, initialValue, initialCurrency]);
+  }
 
   // Adjust CBIC default exchange rate on currency change
   const handleCurrencyChange = (newCurr: string) => {

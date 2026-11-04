@@ -53,11 +53,26 @@ export function LandedCostForm({
 
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  useEffect(() => {
+  // Sync if initial props change via Redux contextSlice during render without useEffect
+  const [prevInit, setPrevInit] = useState({
+    dutyId: initialDutyId,
+    hs: initialHsCode,
+    qty: initialQuantity,
+  });
+  if (
+    initialDutyId !== prevInit.dutyId ||
+    initialHsCode !== prevInit.hs ||
+    initialQuantity !== prevInit.qty
+  ) {
+    setPrevInit({
+      dutyId: initialDutyId,
+      hs: initialHsCode,
+      qty: initialQuantity,
+    });
     if (initialDutyId) setDutyId(initialDutyId);
     if (initialHsCode) setHsCode(initialHsCode);
     if (initialQuantity) setQuantity(initialQuantity);
-  }, [initialDutyId, initialHsCode, initialQuantity]);
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

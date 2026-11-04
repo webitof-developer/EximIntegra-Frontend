@@ -48,7 +48,6 @@ export async function generateInvoicePdf(data: InvoicePdfData): Promise<void> {
   });
 
   const isINR = data.currency === "INR";
-  const currencyCode = isINR ? "INR" : "USD";
   const symbol = isINR ? "INR " : "USD ";
   const rawAmt = Number(data.amount) || 0;
   // Normalize if raw amount was in paise/cents

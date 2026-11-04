@@ -27,11 +27,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, isInitialized, user } = useAppSelector((state) => state.auth);
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   React.useEffect(() => {
     if (!mounted || !isInitialized) return;

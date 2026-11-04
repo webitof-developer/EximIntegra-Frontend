@@ -90,7 +90,7 @@ export interface ClassificationRequest {
   material_type?: string;
   country_of_origin?: string;
   destination_country?: string;
-  additional_specs?: Record<string, any>;
+  additional_specs?: Record<string, unknown>;
 }
 
 export interface IndicativeDuty {
@@ -426,8 +426,8 @@ export interface CountryComparisonItem {
   savings_vs_mfn_inr: number;
   savings_percentage: number;
   is_recommended_arbitrage: boolean;
-  benchmark?: Record<string, any>;
-  provenance: ProvenanceMetadata | Record<string, any>;
+  benchmark?: Record<string, unknown>;
+  provenance: ProvenanceMetadata;
 }
 
 export interface CountryComparisonResponse {
@@ -454,7 +454,7 @@ export interface AksharaToolCall {
   tool_name: string;
   endpoint: string;
   summary: string;
-  parameters: Record<string, any>;
+  parameters: Record<string, unknown>;
   execution_time_ms: number;
   provenance: ProvenanceMetadata;
 }
@@ -663,7 +663,7 @@ export interface NotificationItem {
   read: boolean;
   link?: string | null;
   linkText?: string | null;
-  extraData?: Record<string, any>;
+  extraData?: Record<string, unknown>;
 }
 
 export interface NotificationListResponse {

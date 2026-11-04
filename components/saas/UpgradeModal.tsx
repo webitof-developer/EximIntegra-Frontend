@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAppDispatch } from "@/store";
@@ -54,11 +54,11 @@ export function UpgradeModal({
   benefits,
 }: UpgradeModalProps) {
   const dispatch = useAppDispatch();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     if (!isOpen) return;
@@ -143,7 +143,7 @@ export function UpgradeModal({
         {/* Key Features Included */}
         <div className="p-4 bg-bg border border-line rounded-xl space-y-3">
           <div className="text-[11px] font-mono uppercase tracking-wider text-muted font-bold flex items-center justify-between">
-            <span>What's included in {requiredTier}:</span>
+            <span>What&apos;s included in {requiredTier}:</span>
             <span className="text-green text-[10px]">Zero Overages</span>
           </div>
 

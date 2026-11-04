@@ -269,11 +269,11 @@ function SidebarInner({
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const isAdminView = pathname.startsWith("/admin") || (mounted && user?.role === "ADMIN");
   const { data: tierGatesData } = useGetTierAccessGatesQuery();

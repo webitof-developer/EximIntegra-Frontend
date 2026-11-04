@@ -33,14 +33,15 @@ import {
   Layers,
   RefreshCw,
 } from "lucide-react";
+import { getApiErrorMessage } from "@/lib/utils";
 
 interface TierAccessTabProps {
   initialGates: TierPageAccessGate[];
   availableTiers?: string[];
   isLoading?: boolean;
-  onSaveGates: (gates: TierPageAccessGate[]) => Promise<any>;
-  onCreateGate?: (gate: TierPageAccessGate) => Promise<any>;
-  onDeleteGate?: (gateId: string) => Promise<any>;
+  onSaveGates: (gates: TierPageAccessGate[]) => Promise<unknown>;
+  onCreateGate?: (gate: TierPageAccessGate) => Promise<unknown>;
+  onDeleteGate?: (gateId: string) => Promise<unknown>;
   showToast: (msg: string, variant?: "success" | "error" | "warning" | "info") => void;
 }
 
@@ -79,12 +80,15 @@ export function TierAccessTab({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeletingGate, setIsDeletingGate] = useState(false);
 
-  useEffect(() => {
+  // Synchronize incoming gates during render without useEffect
+  const [prevInitialGates, setPrevInitialGates] = useState(initialGates);
+  if (initialGates !== prevInitialGates) {
+    setPrevInitialGates(initialGates);
     if (initialGates && initialGates.length > 0) {
       setGates(JSON.parse(JSON.stringify(initialGates)));
       setIsDirty(false);
     }
-  }, [initialGates]);
+  }
 
   // Handle tier change for a gate
   const handleTierChange = (gateId: string, newTier: string) => {
@@ -156,8 +160,8 @@ export function TierAccessTab({
         requiredTier: "PROFESSIONAL",
         isActive: true,
       });
-    } catch (err: any) {
-      setCreateError(err?.data?.error?.message || err?.message || "Failed to create gate.");
+    } catch (err: unknown) {
+      setCreateError(getApiErrorMessage(err, "Failed to create gate."));
     } finally {
       setIsSaving(false);
     }
@@ -176,8 +180,8 @@ export function TierAccessTab({
       }
       setGates((prev) => prev.filter((g) => g.id !== gateToDelete.id));
       setGateToDelete(null);
-    } catch (err: any) {
-      setDeleteError(err?.data?.error?.message || err?.message || "Failed to delete gate.");
+    } catch (err: unknown) {
+      setDeleteError(getApiErrorMessage(err, "Failed to delete gate."));
     } finally {
       setIsDeletingGate(false);
     }
@@ -189,8 +193,8 @@ export function TierAccessTab({
     try {
       await onSaveGates(gates);
       setIsDirty(false);
-    } catch (err: any) {
-      showToast("Failed to save tier access rules: " + (err?.message || "Unknown error"), "error");
+    } catch (err: unknown) {
+      showToast(getApiErrorMessage(err, "Failed to save tier access rules."), "error");
     } finally {
       setIsSaving(false);
     }

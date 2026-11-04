@@ -60,7 +60,7 @@ function LandedCostContent() {
           landedCostCalculationId: res.landed_cost_id,
         })
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       setErrorState(
         getApiErrorMessage(
           err,

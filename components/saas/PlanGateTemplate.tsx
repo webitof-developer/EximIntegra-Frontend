@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -73,11 +73,11 @@ export function PlanGateTemplate({
   const currentTier = (user?.tier || "STARTER") as TierType;
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Lock body scroll and close on Escape when modal is open
   useEffect(() => {
@@ -200,7 +200,7 @@ export function PlanGateTemplate({
           {/* Key Features Included */}
           <div className="p-4 bg-bg border border-line rounded-xl space-y-3">
             <div className="text-[11px] font-mono uppercase tracking-wider text-muted font-bold flex items-center justify-between">
-              <span>What's included in {normalizedRequiredTier}:</span>
+              <span>What&apos;s included in {normalizedRequiredTier}:</span>
               <span className="text-green text-[10px] font-semibold">
                 {isEnterprise ? "ENTERPRISE SUITE" : "PRO FEATURES"}
               </span>
