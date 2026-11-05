@@ -210,12 +210,24 @@ export function DynamicPricingTab({
 
   const handleTrialDaysChange = (planIndex: number, days: number) => {
     const validDays = Math.max(1, days || 1);
-    handlePlanFieldChange(planIndex, "trialDays", validDays);
+    const updated = [...editablePlans];
+    const plan = { ...updated[planIndex], trialDays: validDays };
+    if (plan.ctaLabel && /\b\d+[-\s]day\b/i.test(plan.ctaLabel)) {
+      plan.ctaLabel = plan.ctaLabel.replace(/\b\d+[-\s]day\b/gi, `${validDays}-Day`);
+    }
+    updated[planIndex] = plan;
+    setEditablePlans(updated);
   };
 
   const handleTrialDateChange = (planIndex: number, dateStr: string) => {
     const days = calculateDaysFromDate(dateStr);
-    handlePlanFieldChange(planIndex, "trialDays", days);
+    const updated = [...editablePlans];
+    const plan = { ...updated[planIndex], trialDays: days };
+    if (plan.ctaLabel && /\b\d+[-\s]day\b/i.test(plan.ctaLabel)) {
+      plan.ctaLabel = plan.ctaLabel.replace(/\b\d+[-\s]day\b/gi, `${days}-Day`);
+    }
+    updated[planIndex] = plan;
+    setEditablePlans(updated);
   };
 
   const handleAddFeatureToActive = () => {
@@ -300,7 +312,11 @@ export function DynamicPricingTab({
       priceMonthlyUsd: isTrial ? 0 : Number(newPlanPriceMonthlyUsd) || 0,
       priceAnnualUsd: isTrial ? 0 : Number(newPlanPriceAnnualUsd) || 0,
       features: newPlanFeatures.filter((f) => f.trim().length > 0),
-      ctaLabel: newPlanCtaLabel.trim() || (isTrial ? "Start Free Trial" : "Get Started"),
+      ctaLabel: isTrial
+        ? (newPlanCtaLabel.trim() && newPlanCtaLabel !== "Get Started"
+            ? newPlanCtaLabel.replace(/\b\d+[-\s]day\b/gi, `${newPlanTrialDays}-Day`)
+            : `Start ${newPlanTrialDays}-Day Free Trial`)
+        : newPlanCtaLabel.trim() || "Get Started",
       ctaHref: newPlanCtaHref.trim() || `/register?plan=${cleanId}`,
       maxTeamMembers:
         newPlanMaxTeamMembers === -1

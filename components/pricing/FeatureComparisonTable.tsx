@@ -3,8 +3,9 @@
 import React, { useMemo } from "react";
 import { Check, Minus } from "lucide-react";
 import { TableContainer, Table } from "@/components/ui/Table";
-import { useGetPublicFeatureMatrixQuery, useGetPublicContentQuery } from "@/store/adminApi";
+import { useGetPublicFeatureMatrixQuery, useGetPublicContentQuery, useGetPricingPlansQuery } from "@/store/adminApi";
 import { FeatureMatrixItem, PricingPlan } from "@/lib/types";
+import { resolveTrialDays } from "@/lib/utils";
 
 // Static fallback data if database is initialising or offline
 const fallbackPlans: Partial<PricingPlan>[] = [
@@ -275,6 +276,8 @@ const fallbackItems: FeatureMatrixItem[] = [
 export function FeatureComparisonTable() {
   const { data: matrixData } = useGetPublicFeatureMatrixQuery();
   const { data: contentData } = useGetPublicContentQuery();
+  const { data: pricingData } = useGetPricingPlansQuery();
+  const trialDays = resolveTrialDays(pricingData);
 
   const matrixTitle =
     contentData?.pricing?.matrixHeader?.title || "Comprehensive Feature Matrix";
@@ -522,10 +525,13 @@ export function FeatureComparisonTable() {
                 const isTrial =
                   plan.planType === "trial" ||
                   (plan.tierBadge || "").toUpperCase() === "FREE_TRIAL" ||
-                  plan.id === "free-trial";
+                  plan.id === "free-trial" ||
+                  (plan.id || "").toLowerCase().includes("trial");
+
+                const planTrialDays = plan.trialDays || trialDays;
 
                 const formattedPrice = isTrial
-                  ? `₹0/mo`
+                  ? `₹0 (${planTrialDays}-Day Free Trial)`
                   : plan.priceMonthlyInr !== undefined
                   ? `₹${Number(plan.priceMonthlyInr).toLocaleString()}/mo`
                   : plan.priceMonthlyUsd !== undefined

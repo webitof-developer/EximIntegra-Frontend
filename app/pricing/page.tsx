@@ -12,7 +12,7 @@ import { SmoothScrollProvider } from "@/components/landing/SmoothScrollProvider"
 export const metadata = {
   title: "Pricing & SaaS Plans — EximIntegra Trade Intelligence",
   description:
-    "Transparent pricing for modern importers and customs brokers. Compare Starter, Professional, and Enterprise plans with 14-day free trial.",
+    "Transparent pricing for modern importers and customs brokers. Compare Starter, Professional, and Enterprise plans with complimentary free trial.",
 };
 
 export default function PricingPage() {

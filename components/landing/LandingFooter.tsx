@@ -5,11 +5,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShieldCheck, Scale, Globe, Lock } from "lucide-react";
 import { useGetPricingPlansQuery, useGetPublicContentQuery } from "@/store/adminApi";
+import { resolveTrialDays } from "@/lib/utils";
 
 export function LandingFooter() {
   const { data: pricingData } = useGetPricingPlansQuery();
   const { data: contentData } = useGetPublicContentQuery();
-  const trialDays = pricingData?.trialDays ?? 14;
+  const trialDays = resolveTrialDays(pricingData);
 
   const footerContent = contentData?.landing?.footer;
   const brandDescription =

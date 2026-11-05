@@ -13,7 +13,7 @@ import {
 } from "@/store/adminApi";
 import { AdminNav } from "../AdminNav";
 import { ToastNotification, ToastVariant } from "@/components/ui";
-import { getApiErrorMessage } from "@/lib/utils";
+import { getApiErrorMessage, resolveTrialDays } from "@/lib/utils";
 import {
   LandingPageContent,
   PricingPageContent,
@@ -40,6 +40,63 @@ import {
   ChevronUp,
 } from "lucide-react";
 
+const STORAGE_KEY = "admin_content_collapsed_sections";
+
+const ALL_COLLAPSED_INITIAL: Record<string, boolean> = {
+  hero: true,
+  interactiveDemo: true,
+  features: true,
+  governance: true,
+  footer: true,
+  pricingHeader: true,
+  pricingMatrixHeader: true,
+  pricingFaqs: true,
+  pricingEnterprise: true,
+};
+
+// Module-level in-memory flag: resets to true on full browser reload (F5 / browser refresh)
+// but stays false across Next.js client-side route transitions.
+let isInitialBrowserPageLoad = true;
+
+function checkIsPageReload(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const navEntries = performance.getEntriesByType("navigation") as PerformanceNavigationTiming[];
+    if (navEntries && navEntries.length > 0) {
+      return navEntries[0].type === "reload";
+    }
+    const legacyNav = (performance as unknown as { navigation?: { type?: number } })?.navigation;
+    return legacyNav?.type === 1; // 1 = TYPE_RELOAD
+  } catch {
+    return false;
+  }
+}
+
+function getInitialCollapsedSections(): Record<string, boolean> {
+  if (typeof window === "undefined") {
+    return ALL_COLLAPSED_INITIAL;
+  }
+  const isReload = isInitialBrowserPageLoad && checkIsPageReload();
+  isInitialBrowserPageLoad = false;
+
+  if (isReload) {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          return parsed;
+        }
+      }
+    } catch {}
+  } else {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ALL_COLLAPSED_INITIAL));
+    } catch {}
+  }
+  return ALL_COLLAPSED_INITIAL;
+}
+
 export default function AdminContentPage() {
   const user = useAppSelector((state) => state.auth.user);
   const mounted = useSyncExternalStore(
@@ -60,8 +117,13 @@ export default function AdminContentPage() {
   const [landingForm, setLandingForm] = useState<LandingPageContent | null>(null);
   const [pricingForm, setPricingForm] = useState<PricingPageContent | null>(null);
 
-  // Accordion collapsed state for sections
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  // Accordion collapsed state for sections (defaults to ALL CLOSED when opening the page; restored on refresh)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(getInitialCollapsedSections);
+
+  // Helper to check if a section is collapsed
+  const isSectionCollapsed = (id: string): boolean => {
+    return collapsedSections[id] !== undefined ? collapsedSections[id] : true;
+  };
 
   const {
     data: contentData,
@@ -87,7 +149,7 @@ export default function AdminContentPage() {
   const { data: pricingPlansData } = useGetPricingPlansQuery(undefined, {
     skip: !mounted || user?.role !== "ADMIN",
   });
-  const trialDays = pricingPlansData?.trialDays ?? 14;
+  const trialDays = resolveTrialDays(pricingPlansData);
 
   const [updateLanding, { isLoading: isUpdatingLanding }] = useUpdateLandingContentMutation();
   const [updatePricing, { isLoading: isUpdatingPricing }] = useUpdatePricingContentMutation();
@@ -99,7 +161,38 @@ export default function AdminContentPage() {
   };
 
   const toggleSection = (id: string) => {
-    setCollapsedSections((prev) => ({ ...prev, [id]: !prev[id] }));
+    setCollapsedSections((prev) => {
+      const current = prev[id] !== undefined ? prev[id] : true;
+      const next = { ...prev, [id]: !current };
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
+  };
+
+  const currentTabSectionIds = activeTab === "landing"
+    ? ["hero", "interactiveDemo", "features", "governance", "footer"]
+    : ["pricingHeader", "pricingMatrixHeader", "pricingFaqs", "pricingEnterprise"];
+
+  const areAllCurrentSectionsCollapsed = currentTabSectionIds.every((id) => isSectionCollapsed(id));
+
+  const toggleAllCurrentTabSections = () => {
+    setCollapsedSections((prev) => {
+      const next = { ...prev };
+      const targetState = !areAllCurrentSectionsCollapsed;
+      currentTabSectionIds.forEach((id) => {
+        next[id] = targetState;
+      });
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
   };
 
   const isSaving = isUpdatingLanding || isUpdatingPricing;
@@ -340,6 +433,25 @@ export default function AdminContentPage() {
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={toggleAllCurrentTabSections}
+              className="px-3.5 py-2 bg-bg hover:bg-line/40 border border-line text-ink rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title={areAllCurrentSectionsCollapsed ? "Expand all sections in this tab" : "Collapse all sections in this tab"}
+            >
+              {areAllCurrentSectionsCollapsed ? (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5 text-muted" />
+                  <span>Expand All</span>
+                </>
+              ) : (
+                <>
+                  <ChevronUp className="w-3.5 h-3.5 text-muted" />
+                  <span>Collapse All</span>
+                </>
+              )}
+            </button>
+
             <Link
               href={activeTab === "landing" ? "/" : "/pricing"}
               target="_blank"
@@ -403,14 +515,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["hero"] ? (
+                {isSectionCollapsed("hero") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["hero"] && (
+              {!isSectionCollapsed("hero") && (
                 <div className="p-5 space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -462,11 +574,14 @@ export default function AdminContentPage() {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. Start Free Trial"
+                        placeholder={`e.g. Start ${trialDays}-Day Free Trial (or use {trialDays})`}
                         value={landingForm.hero.primaryCtaText}
                         onChange={(e) => updateLandingHero("primaryCtaText", e.target.value)}
-                        className="w-full bg-panel border border-line px-3 py-1.5 text-xs text-ink rounded-lg mb-1.5"
+                        className="w-full bg-panel border border-line px-3 py-1.5 text-xs text-ink rounded-lg mb-1"
                       />
+                      <p className="text-[10px] text-muted mb-1.5">
+                        Active default trial: <span className="font-semibold text-ink">{trialDays} Days</span>. Any day number (e.g. 14-day, 7-day) or &#123;trialDays&#125; auto-mirrors this value.
+                      </p>
                       <input
                         type="text"
                         placeholder="Link (e.g. /register)"
@@ -569,14 +684,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["interactiveDemo"] ? (
+                {isSectionCollapsed("interactiveDemo") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["interactiveDemo"] && (
+              {!isSectionCollapsed("interactiveDemo") && (
                 <div className="p-5 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -642,14 +757,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["features"] ? (
+                {isSectionCollapsed("features") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["features"] && (
+              {!isSectionCollapsed("features") && (
                 <div className="p-5 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -764,14 +879,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["governance"] ? (
+                {isSectionCollapsed("governance") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["governance"] && (
+              {!isSectionCollapsed("governance") && (
                 <div className="p-5 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -912,14 +1027,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["footer"] ? (
+                {isSectionCollapsed("footer") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["footer"] && (
+              {!isSectionCollapsed("footer") && (
                 <div className="p-5 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -1008,14 +1123,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["pricingHeader"] ? (
+                {isSectionCollapsed("pricingHeader") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["pricingHeader"] && (
+              {!isSectionCollapsed("pricingHeader") && (
                 <div className="p-5 space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-ink">Category Pill Badge Text</label>
@@ -1069,14 +1184,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["pricingMatrixHeader"] ? (
+                {isSectionCollapsed("pricingMatrixHeader") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["pricingMatrixHeader"] && (
+              {!isSectionCollapsed("pricingMatrixHeader") && (
                 <div className="p-5 space-y-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-ink">Matrix Section Heading</label>
@@ -1120,14 +1235,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["pricingFaqs"] ? (
+                {isSectionCollapsed("pricingFaqs") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["pricingFaqs"] && (
+              {!isSectionCollapsed("pricingFaqs") && (
                 <div className="p-5 space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
@@ -1243,14 +1358,14 @@ export default function AdminContentPage() {
                     </p>
                   </div>
                 </div>
-                {collapsedSections["pricingEnterprise"] ? (
+                {isSectionCollapsed("pricingEnterprise") ? (
                   <ChevronDown className="w-4 h-4 text-muted" />
                 ) : (
                   <ChevronUp className="w-4 h-4 text-muted" />
                 )}
               </div>
 
-              {!collapsedSections["pricingEnterprise"] && (
+              {!isSectionCollapsed("pricingEnterprise") && (
                 <div className="p-5 space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">

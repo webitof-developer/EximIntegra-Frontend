@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useGetPricingPlansQuery, useGetPublicContentQuery } from "@/store/adminApi";
+import { resolveTrialDays } from "@/lib/utils";
 
 interface FaqItem {
   question: string;
@@ -13,7 +14,7 @@ export function PricingFaq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const { data: pricingData } = useGetPricingPlansQuery();
   const { data: contentData } = useGetPublicContentQuery();
-  const trialDays = pricingData?.trialDays ?? 14;
+  const trialDays = resolveTrialDays(pricingData);
 
   const faqContent = contentData?.pricing?.faqs;
   const badgeText = faqContent?.badge || "FAQ";
@@ -50,7 +51,16 @@ export function PricingFaq() {
     },
   ];
 
-  const faqs = faqContent?.items && faqContent.items.length > 0 ? faqContent.items : defaultFaqs;
+  const rawFaqs = faqContent?.items && faqContent.items.length > 0 ? faqContent.items : defaultFaqs;
+  const faqs = rawFaqs.map((f) => ({
+    question: f.question
+      .replace(/\{trialDays\}/gi, String(trialDays))
+      .replace(/\b\d+[-\s]day\b/gi, `${trialDays}-day`),
+    answer: f.answer
+      .replace(/\{trialDays\}/gi, String(trialDays))
+      .replace(/\b\d+[-\s]day\b/gi, `${trialDays}-day`)
+      .replace(/\b\d+\s+days\b/gi, `${trialDays} days`),
+  }));
 
   const toggle = (idx: number) => {
     setOpenIndex(openIndex === idx ? null : idx);

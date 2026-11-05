@@ -16,6 +16,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useGetPricingPlansQuery } from "@/store/adminApi";
+import { resolveTrialDays } from "@/lib/utils";
 
 export function LandingNavbar() {
   const pathname = usePathname();
@@ -25,7 +26,7 @@ export function LandingNavbar() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { data: pricingData } = useGetPricingPlansQuery();
-  const trialDays = pricingData?.trialDays ?? 14;
+  const trialDays = resolveTrialDays(pricingData);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, hash: string) => {
     if (isHome) {

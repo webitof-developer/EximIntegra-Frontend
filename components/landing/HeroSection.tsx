@@ -20,13 +20,14 @@ import {
 } from "lucide-react";
 import { useGetPricingPlansQuery, useGetPublicContentQuery } from "@/store/adminApi";
 import { useGetDatasetVersionsQuery } from "@/store/reportsApi";
+import { resolveTrialDays, formatTrialCtaLabel } from "@/lib/utils";
 
 export function HeroSection() {
   const { data: pricingData } = useGetPricingPlansQuery();
   const { data: contentData } = useGetPublicContentQuery();
   const { data: datasetVersions } = useGetDatasetVersionsQuery();
   const tariffDataset = datasetVersions?.find((d) => d.source_name === "cbic_tariff");
-  const trialDays = pricingData?.trialDays ?? 14;
+  const trialDays = resolveTrialDays(pricingData);
   const hero = contentData?.landing?.hero;
 
   const activeTariffBadge = tariffDataset?.version
@@ -37,7 +38,7 @@ export function HeroSection() {
   const subtitleText =
     hero?.subtitle ||
     "Statutory customs tariffs, automated 8-digit HS classification, and multimodal landed cost modeling for international trade.";
-  const primaryCta = hero?.primaryCtaText || `Start ${trialDays}-Day Free Trial`;
+  const primaryCta = formatTrialCtaLabel(hero?.primaryCtaText, trialDays);
   const primaryHref = hero?.primaryCtaHref || "/register";
   const secondaryCta = hero?.secondaryCtaText || "Interactive Calculator";
   const secondaryHref = hero?.secondaryCtaHref || "#interactive-demo";

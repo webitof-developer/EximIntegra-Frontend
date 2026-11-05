@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useGetPricingPlansQuery } from "@/store/adminApi";
 import { TierBadge } from "@/components/saas/TierBadge";
+import { resolveTrialDays, formatTrialCtaLabel } from "@/lib/utils";
 
 export type BillingCycle = "monthly" | "annual";
 export type CurrencyMode = "INR" | "USD";
@@ -119,7 +120,7 @@ export function PricingCards() {
     useState<PresentationMode>("spotlight");
 
   const { data: pricingData } = useGetPricingPlansQuery();
-  const trialDays = pricingData?.trialDays ?? 14;
+  const trialDays = resolveTrialDays(pricingData);
   const rawPlans =
     pricingData?.plans && pricingData.plans.length > 0
       ? pricingData.plans
@@ -468,7 +469,7 @@ export function PricingCards() {
                           >
                             <span>
                               {isCenter
-                                ? p.ctaLabel.replace(/14[-\s]day/gi, `${trialDays}-Day`)
+                                ? formatTrialCtaLabel(p.ctaLabel, trialDays)
                                 : "Select & Focus"}
                             </span>
                             <ArrowRight className="w-3.5 h-3.5" />
@@ -643,7 +644,7 @@ export function PricingCards() {
                         : "bg-bg hover:bg-line border border-line text-ink"
                     }`}
                   >
-                    <span>{p.ctaLabel.replace(/14[-\s]day/gi, `${trialDays}-Day`)}</span>
+                    <span>{formatTrialCtaLabel(p.ctaLabel, trialDays)}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
 

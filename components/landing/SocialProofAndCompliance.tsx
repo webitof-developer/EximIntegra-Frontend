@@ -13,11 +13,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useGetPricingPlansQuery, useGetPublicContentQuery } from "@/store/adminApi";
+import { resolveTrialDays } from "@/lib/utils";
 
 export function SocialProofAndCompliance() {
   const { data: pricingData } = useGetPricingPlansQuery();
   const { data: contentData } = useGetPublicContentQuery();
-  const trialDays = pricingData?.trialDays ?? 14;
+  const trialDays = resolveTrialDays(pricingData);
 
   const govContent = contentData?.landing?.governance;
 
@@ -57,9 +58,12 @@ export function SocialProofAndCompliance() {
   const cards = govContent?.cards && govContent.cards.length > 0 ? govContent.cards : defaultCards;
 
   const ctaTitle = govContent?.cta?.title || "Ready to streamline your cross-border trade operations?";
-  const ctaSubtitle =
+  const rawSubtitle =
     govContent?.cta?.subtitle ||
     `Start your ${trialDays}-day free trial today. Full access to all six engines, no credit card needed.`;
+  const ctaSubtitle = rawSubtitle
+    .replace(/\{trialDays\}/gi, String(trialDays))
+    .replace(/\b\d+[-\s]day\b/gi, `${trialDays}-day`);
   const primaryBtnText = govContent?.cta?.primaryBtnText || "Get Started Free";
   const primaryBtnHref = govContent?.cta?.primaryBtnHref || "/register";
   const secondaryBtnText = govContent?.cta?.secondaryBtnText || "Compare Plans";
