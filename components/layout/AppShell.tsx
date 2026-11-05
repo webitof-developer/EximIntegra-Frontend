@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useSyncExternalStore } from "react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppSelector } from "@/store";
 import { useGetTierAccessGatesQuery } from "@/store/adminApi";
@@ -26,20 +27,113 @@ const tierWeights: Record<string, number> = {
 export function AppShell({ children, fullWidth = false }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const user = useAppSelector((state) => state.auth.user);
+  const { user, isAuthenticated, isInitialized } = useAppSelector((state) => state.auth);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const isFullWidth = fullWidth || pathname?.startsWith("/admin");
 
-  // Fetch live tier page access gates
-  const { data: tierGatesData } = useGetTierAccessGatesQuery();
+  // Fetch live tier page access gates (only when authenticated)
+  const { data: tierGatesData } = useGetTierAccessGatesQuery(undefined, {
+    skip: !mounted || !isAuthenticated,
+  });
 
   useEffect(() => {
-    if (user?.role === "ADMIN" && pathname && !pathname.startsWith("/admin")) {
-      router.replace("/admin");
-    }
-  }, [user?.role, pathname, router]);
+    if (!mounted || !isInitialized) return;
 
+    if (!isAuthenticated) {
+      router.replace(`/login?returnUrl=${encodeURIComponent(pathname || "/dashboard")}`);
+    } else if (user?.role === "ADMIN" && pathname && !pathname.startsWith("/admin")) {
+      router.replace("/admin");
+    } else if (user?.role !== "ADMIN" && pathname && pathname.startsWith("/admin")) {
+      router.replace("/dashboard");
+    }
+  }, [mounted, isInitialized, isAuthenticated, user?.role, pathname, router]);
+
+  // SSR hydration and session verification guard
+  if (!mounted || !isInitialized) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-line bg-panel flex items-center justify-center animate-pulse">
+            <Image
+              src="/eximintegra-logo-mark.png"
+              alt="EximIntegra"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-xs text-muted font-mono">Verifying Session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Unauthenticated / expired token guard: NEVER render panels, sidebar, or topbar
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-line bg-panel flex items-center justify-center animate-pulse">
+            <Image
+              src="/eximintegra-logo-mark.png"
+              alt="EximIntegra"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-xs text-muted font-mono">Session expired. Redirecting to login...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Admin cannot view non-admin user pages
   if (user?.role === "ADMIN" && pathname && !pathname.startsWith("/admin")) {
-    return null;
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-line bg-panel flex items-center justify-center animate-pulse">
+            <Image
+              src="/eximintegra-logo-mark.png"
+              alt="EximIntegra"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-xs text-muted font-mono">Redirecting to Super Admin Cockpit...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Non-admin cannot view admin pages
+  if (user?.role !== "ADMIN" && pathname && pathname.startsWith("/admin")) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-line bg-panel flex items-center justify-center animate-pulse">
+            <Image
+              src="/eximintegra-logo-mark.png"
+              alt="EximIntegra"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-xs text-muted font-mono">Access restricted. Redirecting to dashboard...</span>
+        </div>
+      </div>
+    );
   }
 
   // Check if current route has an active page-level gate for non-admin users

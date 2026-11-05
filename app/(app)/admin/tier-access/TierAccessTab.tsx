@@ -54,7 +54,9 @@ export function TierAccessTab({
   onDeleteGate,
   showToast,
 }: TierAccessTabProps) {
-  const [gates, setGates] = useState<TierPageAccessGate[]>([]);
+  const [gates, setGates] = useState<TierPageAccessGate[]>(() =>
+    initialGates && initialGates.length > 0 ? JSON.parse(JSON.stringify(initialGates)) : []
+  );
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -82,7 +84,10 @@ export function TierAccessTab({
 
   // Synchronize incoming gates during render without useEffect
   const [prevInitialGates, setPrevInitialGates] = useState(initialGates);
-  if (initialGates !== prevInitialGates) {
+  if (
+    initialGates !== prevInitialGates ||
+    (gates.length === 0 && initialGates && initialGates.length > 0)
+  ) {
     setPrevInitialGates(initialGates);
     if (initialGates && initialGates.length > 0) {
       setGates(JSON.parse(JSON.stringify(initialGates)));

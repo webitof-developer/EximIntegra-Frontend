@@ -113,7 +113,9 @@ export function RolePermissionsTab({
   onSaveRBAC,
   showToast,
 }: RolePermissionsTabProps) {
-  const [editableRoles, setEditableRoles] = useState<RolePermissionItem[]>([]);
+  const [editableRoles, setEditableRoles] = useState<RolePermissionItem[]>(() =>
+    roles && roles.length > 0 ? JSON.parse(JSON.stringify(roles)) : []
+  );
   const [roleSearch, setRoleSearch] = useState("");
   const [roleFilterType, setRoleFilterType] = useState<"ALL" | "CORE" | "CUSTOM">("ALL");
 
@@ -145,7 +147,10 @@ export function RolePermissionsTab({
 
   // Synchronize incoming roles during render without useEffect
   const [prevRoles, setPrevRoles] = useState(roles);
-  if (roles !== prevRoles) {
+  if (
+    roles !== prevRoles ||
+    (editableRoles.length === 0 && roles && roles.length > 0)
+  ) {
     setPrevRoles(roles);
     if (roles && roles.length > 0) {
       setEditableRoles(JSON.parse(JSON.stringify(roles)));

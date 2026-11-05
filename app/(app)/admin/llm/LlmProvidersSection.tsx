@@ -132,7 +132,30 @@ export function LlmProvidersSection() {
   const [bulkUpdateLlmProvidersMutation] = useBulkUpdateLlmProvidersMutation();
   const [testLlmProviderMutation] = useTestLlmProviderMutation();
 
-  const [providers, setProviders] = useState<LlmProviderConfig[]>(initialProviders);
+  const [providers, setProviders] = useState<LlmProviderConfig[]>(() => {
+    if (dbProviders && Array.isArray(dbProviders) && dbProviders.length > 0) {
+      return initialProviders.map((initP) => {
+        const dbP = dbProviders.find((p) => p.id === initP.id);
+        if (dbP) {
+          return {
+            ...initP,
+            name: dbP.name || initP.name,
+            apiKey: dbP.apiKey !== undefined ? dbP.apiKey : initP.apiKey,
+            baseUrl: dbP.baseUrl || initP.baseUrl,
+            defaultModel: dbP.defaultModel || initP.defaultModel,
+            models:
+              Array.isArray(dbP.models) && dbP.models.length > 0
+                ? Array.from(new Set([...dbP.models, ...initP.models]))
+                : initP.models,
+            isConfigured: dbP.isConfigured,
+            isActiveCopilot: dbP.isActiveCopilot,
+          };
+        }
+        return initP;
+      });
+    }
+    return initialProviders;
+  });
   const [showKeyMap, setShowKeyMap] = useState<Record<string, boolean>>({});
   const [savedNotification, setSavedNotification] = useState<{
     msg: string;
@@ -158,7 +181,12 @@ export function LlmProvidersSection() {
 
   // Synchronize from database query during render without useEffect
   const [prevDbProviders, setPrevDbProviders] = useState(dbProviders);
-  if (dbProviders !== prevDbProviders) {
+  const needsDbSync =
+    dbProviders &&
+    Array.isArray(dbProviders) &&
+    dbProviders.length > 0 &&
+    (dbProviders !== prevDbProviders || !providers.some((p) => p.isConfigured));
+  if (needsDbSync) {
     setPrevDbProviders(dbProviders);
     if (dbProviders && Array.isArray(dbProviders) && dbProviders.length > 0) {
       setProviders((prev) =>

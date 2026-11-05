@@ -113,18 +113,6 @@ export default function AdminContentPage() {
   // Reset Modal State
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
 
-  // Form State
-  const [landingForm, setLandingForm] = useState<LandingPageContent | null>(null);
-  const [pricingForm, setPricingForm] = useState<PricingPageContent | null>(null);
-
-  // Accordion collapsed state for sections (defaults to ALL CLOSED when opening the page; restored on refresh)
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(getInitialCollapsedSections);
-
-  // Helper to check if a section is collapsed
-  const isSectionCollapsed = (id: string): boolean => {
-    return collapsedSections[id] !== undefined ? collapsedSections[id] : true;
-  };
-
   const {
     data: contentData,
     isLoading,
@@ -134,9 +122,29 @@ export default function AdminContentPage() {
     skip: !mounted || user?.role !== "ADMIN",
   });
 
+  // Form State initialized immediately from cached query data if available
+  const [landingForm, setLandingForm] = useState<LandingPageContent | null>(() =>
+    contentData?.landing ? JSON.parse(JSON.stringify(contentData.landing)) : null
+  );
+  const [pricingForm, setPricingForm] = useState<PricingPageContent | null>(() =>
+    contentData?.pricing ? JSON.parse(JSON.stringify(contentData.pricing)) : null
+  );
+
+  // Accordion collapsed state for sections (defaults to ALL CLOSED when opening the page; restored on refresh)
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(getInitialCollapsedSections);
+
+  // Helper to check if a section is collapsed
+  const isSectionCollapsed = (id: string): boolean => {
+    return collapsedSections[id] !== undefined ? collapsedSections[id] : true;
+  };
+
   // Initialize/synchronize form state during render without useEffect
   const [prevContentData, setPrevContentData] = useState(contentData);
-  if (contentData !== prevContentData) {
+  if (
+    contentData !== prevContentData ||
+    (!landingForm && contentData?.landing) ||
+    (!pricingForm && contentData?.pricing)
+  ) {
     setPrevContentData(contentData);
     if (contentData?.landing) {
       setLandingForm(JSON.parse(JSON.stringify(contentData.landing)));

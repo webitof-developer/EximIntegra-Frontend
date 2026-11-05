@@ -650,7 +650,7 @@ export default function AdminFeatureMatrixPage() {
             <div className="flex items-center bg-bg border border-line p-0.5 rounded-lg text-xs font-semibold">
               <button
                 onClick={() => setVisibilityFilter("ALL")}
-                className={`px-2.5 py-1 rounded-md transition-colors ${
+                className={`px-2.5 py-1 rounded-md transition-colors cursor-pointer ${
                   visibilityFilter === "ALL"
                     ? "bg-blue text-white shadow-xs"
                     : "text-muted hover:text-ink"
@@ -660,7 +660,7 @@ export default function AdminFeatureMatrixPage() {
               </button>
               <button
                 onClick={() => setVisibilityFilter("VISIBLE")}
-                className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer ${
                   visibilityFilter === "VISIBLE"
                     ? "bg-emerald-600 text-white shadow-xs"
                     : "text-muted hover:text-ink"
@@ -671,7 +671,7 @@ export default function AdminFeatureMatrixPage() {
               </button>
               <button
                 onClick={() => setVisibilityFilter("HIDDEN")}
-                className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 ${
+                className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 cursor-pointer ${
                   visibilityFilter === "HIDDEN"
                     ? "bg-amber-600 text-white shadow-xs"
                     : "text-muted hover:text-ink"
@@ -708,7 +708,7 @@ export default function AdminFeatureMatrixPage() {
 
             <button
               onClick={() => handleOpenCreateModal()}
-              className="px-3.5 py-1.5 bg-blue hover:bg-blue-dark text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
+              className="px-3.5 py-1.5 bg-blue hover:bg-blue-dark text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Create Feature Row</span>
@@ -753,7 +753,7 @@ export default function AdminFeatureMatrixPage() {
                   <div className="px-5 py-3.5 bg-bg/80 border-b border-line flex items-center justify-between gap-3">
                     <button
                       onClick={() => toggleCategoryCollapse(category)}
-                      className="flex items-center gap-2.5 text-left group flex-1"
+                      className="flex items-center gap-2.5 text-left group flex-1 cursor-pointer"
                     >
                       {isCollapsed ? (
                         <ChevronDown className="w-4 h-4 text-muted group-hover:text-blue transition-colors" />
@@ -770,7 +770,7 @@ export default function AdminFeatureMatrixPage() {
 
                     <button
                       onClick={() => handleOpenCreateModal(category)}
-                      className="px-2.5 py-1 text-[11px] font-semibold text-muted hover:text-blue hover:bg-blue-dim/40 rounded-lg transition-colors flex items-center gap-1"
+                      className="px-2.5 py-1 text-[11px] font-semibold text-muted hover:text-blue hover:bg-blue-dim/40 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
                       <span>Add to Category</span>
@@ -850,7 +850,7 @@ export default function AdminFeatureMatrixPage() {
                               <td className="py-3 px-3 text-center">
                                 <button
                                   onClick={() => handleToggleVisibility(row)}
-                                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold transition-colors ${
+                                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold transition-colors cursor-pointer ${
                                     row.isVisible
                                       ? "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20"
                                       : "bg-muted/10 text-muted hover:bg-muted/20 border border-muted/20"
@@ -913,7 +913,7 @@ export default function AdminFeatureMatrixPage() {
                                 <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     onClick={() => handleOpenEditModal(row)}
-                                    className="p-1.5 hover:bg-blue-dim text-muted hover:text-blue rounded-md transition-colors"
+                                    className="p-1.5 hover:bg-blue-dim text-muted hover:text-blue rounded-md transition-colors cursor-pointer"
                                     title="Edit Feature Entitlements"
                                   >
                                     <Edit2 className="w-3.5 h-3.5" />
@@ -923,7 +923,7 @@ export default function AdminFeatureMatrixPage() {
                                       setDeletingItem(row);
                                       setIsDeleteModalOpen(true);
                                     }}
-                                    className="p-1.5 hover:bg-red-dim text-muted hover:text-red rounded-md transition-colors"
+                                    className="p-1.5 hover:bg-red-dim text-muted hover:text-red rounded-md transition-colors cursor-pointer"
                                     title="Delete Feature Row"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -1116,7 +1116,7 @@ export default function AdminFeatureMatrixPage() {
                                     },
                                   }))
                                 }
-                                className={`px-2 py-0.5 rounded transition-colors ${
+                                className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
                                   currentVal.mode === "bool"
                                     ? "bg-blue text-white shadow-xs"
                                     : "text-muted hover:text-ink"
@@ -1135,7 +1135,7 @@ export default function AdminFeatureMatrixPage() {
                                     },
                                   }))
                                 }
-                                className={`px-2 py-0.5 rounded transition-colors ${
+                                className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
                                   currentVal.mode === "text"
                                     ? "bg-blue text-white shadow-xs"
                                     : "text-muted hover:text-ink"
@@ -1159,7 +1159,7 @@ export default function AdminFeatureMatrixPage() {
                                     },
                                   }))
                                 }
-                                className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                                className={`px-3 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                                   currentVal.boolVal
                                     ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                                     : "bg-muted/10 text-muted border border-muted/20"
@@ -1231,14 +1231,14 @@ export default function AdminFeatureMatrixPage() {
                   <button
                     type="button"
                     onClick={() => setIsEditModalOpen(false)}
-                    className="px-4 py-2 bg-bg hover:bg-line/40 text-ink rounded-lg text-xs font-semibold transition-colors"
+                    className="px-4 py-2 bg-bg hover:bg-line/40 text-ink rounded-lg text-xs font-semibold transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isCreating || isUpdating}
-                    className="px-4 py-2 bg-blue hover:bg-blue-dark text-white rounded-lg text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-4 py-2 bg-blue hover:bg-blue-dark text-white rounded-lg text-xs font-semibold shadow-xs transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
                   >
                     {isCreating || isUpdating ? (
                       <>

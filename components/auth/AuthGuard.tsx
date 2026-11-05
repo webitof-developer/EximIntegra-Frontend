@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { useAppSelector } from "@/store";
-import { Lock, ShieldAlert } from "lucide-react";
+import { Lock } from "lucide-react";
 
 export interface AuthGuardProps {
   children: React.ReactNode;
@@ -75,6 +75,31 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
+  const isAuthRoute = pathname === "/login" || pathname === "/register";
+
+  // If not authenticated and on a protected route, NEVER render children! Render redirecting UI
+  if (!isAuthenticated && !isAuthRoute) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-line bg-panel flex items-center justify-center animate-pulse">
+            <Image
+              src="/eximintegra-logo-mark.png"
+              alt="EximIntegra"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-xs text-muted font-mono">
+            Session expired. Redirecting to login...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   // Admin cannot open user pages; immediately block render while redirecting to /admin
   if (isAuthenticated && user?.role === "ADMIN" && !pathname.startsWith("/admin")) {
     return (
@@ -92,6 +117,29 @@ export function AuthGuard({ children }: AuthGuardProps) {
           </div>
           <span className="text-xs text-muted font-mono">
             Redirecting to Super Admin Cockpit...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Non-admin cannot open admin pages; immediately block render while redirecting to /dashboard
+  if (isAuthenticated && user?.role !== "ADMIN" && pathname.startsWith("/admin")) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md border border-line bg-panel flex items-center justify-center animate-pulse">
+            <Image
+              src="/eximintegra-logo-mark.png"
+              alt="EximIntegra"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+              priority
+            />
+          </div>
+          <span className="text-xs text-muted font-mono">
+            Access restricted. Redirecting to dashboard...
           </span>
         </div>
       </div>
