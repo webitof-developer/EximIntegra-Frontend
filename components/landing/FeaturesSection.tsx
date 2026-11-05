@@ -78,7 +78,7 @@ const features: FeatureCardItem[] = [
   },
   {
     icon: <Sparkles className="w-5 h-5 text-blue" />,
-    iconBg: "bg-blue text-white",
+    iconBg: "bg-blue-dim text-white",
     badge: "AI COPILOT",
     title: "Akshara AI — Conversational Intelligence",
     description:
